@@ -1,0 +1,9 @@
+# Protect data and config
+<FilesMatch "^(config\.php)$">
+  Require all denied
+</FilesMatch>
+RewriteEngine On
+RewriteRule ^data/ - [F,L]
+# Correct types for the web app
+AddType application/manifest+json .json
+AddType image/png .png
