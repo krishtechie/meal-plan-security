@@ -1,4 +1,2 @@
-   config.php
-   data/
-   *.log
-   .DS_Store
+data/*
+  !data/.htaccess
