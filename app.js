@@ -531,10 +531,10 @@ function render(){
   DAYS.forEach((n,i)=>{ const b=document.createElement('div'); b.className='dayc'+(i===S.day?' on':''); const v=isVeg(i);
     b.innerHTML=`<b>${n}</b><i class="${v?'veg':''}">${v?'VEG':'NON-VEG'}</i>`; b.onclick=()=>{S.day=i;S.view='plan';render();}; d.appendChild(b); });
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.view===S.view));
-  document.getElementById('vPlan').style.display=S.view==='plan'?'block':'none';
-  document.getElementById('vWeek').style.display=S.view==='week'?'block':'none';
-  document.getElementById('vWeight').style.display=S.view==='weight'?'block':'none';
-  document.getElementById('vWorkout').style.display=S.view==='workout'?'block':'none';
+  document.getElementById('vPlan').hidden=S.view!=='plan';
+  document.getElementById('vWeek').hidden=S.view!=='week';
+  document.getElementById('vWeight').hidden=S.view!=='weight';
+  document.getElementById('vWorkout').hidden=S.view!=='workout';
   if(S.view==='plan') renderPlan(); else if(S.view==='week') renderWeek(); else if(S.view==='workout') renderWorkout(); else renderWeight();
   requestAnimationFrame(()=>window.scrollTo(0,_sy));
 }
@@ -554,7 +554,7 @@ function renderPlan(){
     const share=mealShare(m.name); const ptgt=share?Math.round(P().target.p*share):0; const pc = !ptgt?'var(--muted)':(dayOK||mt.p>=ptgt-3)?'var(--mint)':mt.p>=ptgt*0.7?'var(--amber)':'var(--rose)';
     let html=`<div class="time">${tshort}</div><div class="hd"><b>${mname}</b><span>${mt.k} kcal · <b class="pcol" data-c="${pc}">${mt.p}${ptgt?' / '+ptgt:''} g</b></span></div>`;
     m.items.forEach((x,ii)=>{ const it=F[x.id]; if(!it) return;
-      html+=`<div class="item"><div><div class="n">${it.n}</div><div class="eat">Eat: <b>${fmtG(it,x.q)||'as listed'}</b></div><div class="m">${Math.round(it.k*x.q)} kcal · ${Math.round(it.p*x.q)}g P · ${Math.round(it.c*x.q)}g C · ${Math.round(it.f*x.q)}g F ${tagHtml(it.t)}</div></div>
+      html+=`<div class="item" data-cat="${it.cat}"><div><div class="n">${it.n}</div><div class="eat">Eat: <b>${fmtG(it,x.q)||'as listed'}</b></div><div class="m">${Math.round(it.k*x.q)} kcal · ${Math.round(it.p*x.q)}g P · ${Math.round(it.c*x.q)}g C · ${Math.round(it.f*x.q)}g F ${tagHtml(it.t)}</div></div>
         <div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div></div>`; });
     html+=`<button class="btn add" data-a="add" data-mi="${mi}">+ Add food to ${m.name.toLowerCase()}</button>`;
     box.innerHTML=html; wrap.appendChild(box);
