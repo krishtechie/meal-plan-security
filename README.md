@@ -33,13 +33,32 @@ A real web app I built and use daily, a meal and workout planner with a small PH
 
 | Check | Before | After |
 |-------|--------|-------|
-| securityheaders.com grade | | |
-| ZAP alerts (high / medium / low) | | |
+| securityheaders.com grade | **F** (6 headers missing) | |
+| OWASP ZAP alerts (high / medium / low / info) | **0 / 3 / 2 / 3** | |
 | Nikto findings | | |
+
+### Baseline findings (09 Nov 2026)
+
+**securityheaders.com: F.** Missing: Strict-Transport-Security, Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. Screenshot: `reports/headers-before.png`.
+
+**OWASP ZAP 2.17.0, automated scan, Dev Standard policy.** Report: `reports/zap-before.html`.
+
+| Risk | Alert | Addressed in |
+|------|-------|--------------|
+| Medium | Content Security Policy (CSP) header not set | Fix 3 |
+| Medium | Missing anti-clickjacking header (X-Frame-Options) | Fix 3 |
+| Medium | Strict-Transport-Security header not set | Fix 3 |
+| Low | X-Content-Type-Options header missing | Fix 3 |
+| Low | Sub Resource Integrity attribute missing (Google Fonts) | Fix 3 |
+| Info | Information disclosure: suspicious comments in JS | Fix 5 |
+| Info | Modern web application (JS-driven) | n/a |
+| Info | Re-examine cache-control directives | Fix 3 |
+
+**What the scanners cannot see.** Neither tool reports the plain-text password in `config.php`, the absence of rate limiting on `api.php`, the lack of an audit log, or the unvalidated JSON body. These come from the threat model (`docs/threat-model.md`), not from scanning. Fixes 1, 2, 4 and 5 address them.
 
 ## Status
 
-Baseline captured. Starting fix 1.
+Baseline captured (headers F, ZAP 0/3/2/3). Starting fix 1: password hashing.
 
 ## Author
 
