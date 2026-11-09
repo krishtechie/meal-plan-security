@@ -1,0 +1,5 @@
+// Snapshot of data/attempts.json after testing fix 2 (09 Nov 2026).
+// 204.244.247.25 = my own browser, locked out after 5 failures (correct).
+// 160.79.106.x = six probes from one tester spread over four IPs: each counted once, limit never triggered.
+// Lesson: per-IP limiting is bypassed by distributed attempts. Fix 7 adds per-account lockout.
+{"160.79.106.23":{"n":1,"t":1794253256},"160.79.106.20":{"n":1,"t":1794253266},"160.79.106.135":{"n":1,"t":1794253275},"160.79.106.17":{"n":1,"t":1794253284},"204.244.247.25":{"n":5,"t":1794253339}}
