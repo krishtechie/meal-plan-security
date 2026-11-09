@@ -219,3 +219,8 @@ input[type=number],input[type=date]{font:inherit;font-size:16px;padding:10px 12p
 [data-s="s17"]{margin-bottom:8px}
 [data-s="s18"]{margin:8px 0}
 [data-s="s19"]{cursor:pointer}
+
+/* per-item amount input */
+.ctl .amt{width:64px;font:inherit;font-size:16px;padding:6px 6px;border:1px solid var(--line2);border-radius:var(--rs);background:var(--card);color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+.ctl .unit{font-size:12px;color:var(--muted);font-weight:700;min-width:24px}
+@media (max-width:560px){ .ctl .amt{width:60px} }

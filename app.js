@@ -1,7 +1,7 @@
 // ================= FOOD DATABASE =================
 // [id, name, portion, kcal, protein, carbs, fat, type] type: v veg, e egg, n non-veg, t treat(veg), tn treat non-veg, te treat egg
 const CATS = {
-  custom:'Custom / what we ate', mine:'My foods', bf:'Breakfast', carb:'Rice, roti, millets', prot:'Protein', veg:'Vegetables', side:'Dal, rasam, sides', treat:'Treat meals', snack:'Snacks', fruit:'Fruit', drink:'Drinks & tablets', gym:'Gym'
+  all:'All foods', custom:'Custom / what we ate', mine:'My foods', bf:'Breakfast', carb:'Rice, roti, millets', prot:'Protein', veg:'Vegetables', side:'Dal, rasam, sides', treat:'Treat meals', snack:'Snacks', fruit:'Fruit', drink:'Drinks & tablets', gym:'Gym'
 };
 const RAW = {
 bf:[
@@ -516,10 +516,12 @@ function mealShare(name){ const n=name.toLowerCase(); const f=MEAL_SHARE.find(x=
 function tot(items){ const t={k:0,p:0,c:0,f:0}; items.forEach(x=>{ const it=F[x.id]; if(!it) return; t.k+=it.k*x.q; t.p+=it.p*x.q; t.c+=it.c*x.q; t.f+=it.f*x.q; }); for(const k in t) t[k]=Math.round(t[k]); return t; }
 function tagHtml(t){ return t==='v'?'<em>veg</em>':t==='e'?'<em class="e">egg</em>':t==='n'?'<em class="n">non-veg</em>':t==='t'?'<em data-s="s14">treat</em>':t==='tn'?'<em class="n">treat, non-veg</em>':'<em class="e">treat, egg</em>'; }
 function pill(t){ return t==='v'?'v':t==='e'||t==='te'?'e':t==='n'||t==='tn'?'n':'t'; }
-function fmtG(it,q){ if(!it.g) return q===1?'':q+' x'; if(q===1) return it.g; if(/\d+\s*(g|ml)\b/.test(it.g)) return it.g.replace(/(\d+(?:\.\d+)?)\s*(g|ml)\b/g,(m,a,u)=>Math.round(+a*q)+' '+u); return q+' x '+it.g; }
+function baseOf(it){ if(!it.g) return null; let m=it.g.match(/(\d+(?:\.\d+)?)\s*(g|ml)\b/); if(m) return {n:+m[1],unit:m[2],step:m[2]==='ml'?50:10}; m=it.g.match(/^(\d+(?:\.\d+)?)\b/); if(m) return {n:+m[1],unit:'pcs',step:1}; if(/^half\b/i.test(it.g)) return {n:0.5,unit:'pcs',step:0.5}; return null; }
+function fmtG(it,q){ if(!it.g) return q===1?'':q+' x'; if(q===1) return it.g; if(/\d+\s*(g|ml)\b/.test(it.g)) return it.g.replace(/(\d+(?:\.\d+)?)\s*(g|ml)\b/g,(m,a,u)=>Math.round(+a*q)+' '+u); const b=baseOf(it); if(b&&b.unit==='pcs') return it.g.replace(/^(\d+(?:\.\d+)?|half)\b/i,()=>String(+(b.n*q).toFixed(1))); return q+' x '+it.g; }
 
 // ================= RENDER =================
 function render(){
+  const _sy=window.scrollY;
   const ps=PS();
   document.querySelectorAll('.who').forEach(b=>b.classList.toggle('on',b.dataset.who===S.who));
   document.getElementById('whoName').textContent=P().name;
@@ -529,11 +531,12 @@ function render(){
   DAYS.forEach((n,i)=>{ const b=document.createElement('div'); b.className='dayc'+(i===S.day?' on':''); const v=isVeg(i);
     b.innerHTML=`<b>${n}</b><i class="${v?'veg':''}">${v?'VEG':'NON-VEG'}</i>`; b.onclick=()=>{S.day=i;S.view='plan';render();}; d.appendChild(b); });
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.view===S.view));
-  document.getElementById('vPlan').style.display=S.view==='plan'?'':'none';
-  document.getElementById('vWeek').style.display=S.view==='week'?'':'none';
-  document.getElementById('vWeight').style.display=S.view==='weight'?'':'none';
-  document.getElementById('vWorkout').style.display=S.view==='workout'?'':'none';
+  document.getElementById('vPlan').style.display=S.view==='plan'?'block':'none';
+  document.getElementById('vWeek').style.display=S.view==='week'?'block':'none';
+  document.getElementById('vWeight').style.display=S.view==='weight'?'block':'none';
+  document.getElementById('vWorkout').style.display=S.view==='workout'?'block':'none';
   if(S.view==='plan') renderPlan(); else if(S.view==='week') renderWeek(); else if(S.view==='workout') renderWorkout(); else renderWeight();
+  requestAnimationFrame(()=>window.scrollTo(0,_sy));
 }
 function renderPlan(){
   const ps=PS(); const plan=dayPlan();
@@ -552,11 +555,12 @@ function renderPlan(){
     let html=`<div class="time">${tshort}</div><div class="hd"><b>${mname}</b><span>${mt.k} kcal · <b class="pcol" data-c="${pc}">${mt.p}${ptgt?' / '+ptgt:''} g</b></span></div>`;
     m.items.forEach((x,ii)=>{ const it=F[x.id]; if(!it) return;
       html+=`<div class="item"><div><div class="n">${it.n}</div><div class="eat">Eat: <b>${fmtG(it,x.q)||'as listed'}</b></div><div class="m">${Math.round(it.k*x.q)} kcal · ${Math.round(it.p*x.q)}g P · ${Math.round(it.c*x.q)}g C · ${Math.round(it.f*x.q)}g F ${tagHtml(it.t)}</div></div>
-        <div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':`<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div></div>`; });
+        <div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div></div>`; });
     html+=`<button class="btn add" data-a="add" data-mi="${mi}">+ Add food to ${m.name.toLowerCase()}</button>`;
     box.innerHTML=html; wrap.appendChild(box);
   });
   wrap.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>action(b.dataset.a,+b.dataset.mi,+b.dataset.ii));
+  wrap.querySelectorAll('input.amt').forEach(inp=>{ inp.onchange=()=>{ const mi=+inp.dataset.mi, ii=+inp.dataset.ii; const x=plan[mi].items[ii]; const b=baseOf(F[x.id]); const v=parseFloat(inp.value); if(b&&v>0){ x.q=+(v/b.n).toFixed(3); save(); render(); } else render(); }; });
   wrap.querySelectorAll('.pcol').forEach(el=>{ el.style.color=el.dataset.c; });
   const T=tot(all); const rest=document.getElementById('rest').checked; const tk=P().target.k-(rest?P().restCut:0); const tp=P().target.p; const maint=P().maint;
   const pct=(a,b)=>Math.min(100,Math.round(a/b*100));
@@ -644,8 +648,9 @@ function renderWeight(){
 // ================= ACTIONS =================
 function action(a,mi,ii){
   const plan=dayPlan();
-  if(a==='inc'){ plan[mi].items[ii].q=Math.min(3,plan[mi].items[ii].q+0.5); }
-  else if(a==='dec'){ plan[mi].items[ii].q=Math.max(0.5,plan[mi].items[ii].q-0.5); }
+  const it=F[plan[mi]?.items[ii]?.id]; const b=it?baseOf(it):null; const stepQ = b ? b.step/b.n : 0.5;
+  if(a==='inc'){ plan[mi].items[ii].q=+Math.min(5,plan[mi].items[ii].q+stepQ).toFixed(3); }
+  else if(a==='dec'){ plan[mi].items[ii].q=+Math.max(stepQ,plan[mi].items[ii].q-stepQ).toFixed(3); }
   else if(a==='del'){ plan[mi].items.splice(ii,1); }
   else if(a==='swap'){ openSheet(mi,ii); return; }
   else if(a==='add'){ openSheet(mi,null); return; }
@@ -655,18 +660,18 @@ let sheet={mi:0,ii:null,cat:null};
 function openSheet(mi,ii){
   const plan=dayPlan(); sheet={mi,ii,cat:null};
   if(ii!==null){ const cur=F[plan[mi].items[ii].id]; sheet.cat=cur.cat; document.getElementById('shTitle').textContent='Swap in '+plan[mi].name; document.getElementById('shSub').textContent='Current: '+cur.n+' ('+cur.p+' g protein). Sorted by closest protein.'; }
-  else { const names=plan[mi].items.map(x=>F[x.id]&&F[x.id].cat); sheet.cat = ['bf','carb','prot','veg','side','snack','fruit','treat','drink'].find(c=>!names.includes(c)) || 'veg'; if(/breakfast/i.test(plan[mi].name)) sheet.cat='bf'; if(/lunch|dinner/i.test(plan[mi].name)&&!names.includes('prot')) sheet.cat='prot'; if(/snack|morning|pre-gym|bed/i.test(plan[mi].name)) sheet.cat='snack';
-    document.getElementById('shTitle').textContent='Add to '+plan[mi].name; document.getElementById('shSub').textContent='Pick a group, then a food. Portions can be changed after adding.'; }
-  cRows=[]; sheet.cname=''; document.getElementById('search').value=''; renderSheet(); document.getElementById('ov').classList.add('show');
+  else { sheet.cat='all';
+    document.getElementById('shTitle').textContent='Add to '+plan[mi].name; document.getElementById('shSub').textContent='Search any food (rice, carrot fry, curd, mushroom curry...) or pick a group. Set the exact grams, ml or pieces after adding.'; }
+  cRows=[]; sheet.cname=''; document.getElementById('search').value=''; renderSheet(); document.getElementById('ov').classList.add('show'); if(ii===null) setTimeout(()=>document.getElementById('search').focus(),50);
 }
 function renderSheet(){
   const plan=dayPlan(); const cur = sheet.ii!==null ? F[plan[sheet.mi].items[sheet.ii].id] : null;
   const cats=document.getElementById('cats'); cats.innerHTML='';
   Object.keys(CATS).filter(c=>(c!=='gym'||sheet.cat==='gym')&&(c!=='mine'||PS().customs.length)).forEach(c=>{ const b=document.createElement('button'); b.className='btn'+(c===sheet.cat?' on':''); b.textContent=CATS[c]; b.onclick=()=>{sheet.cat=c;renderSheet();}; cats.appendChild(b); });
   const q=document.getElementById('search').value.trim().toLowerCase();
-  document.getElementById('search').style.display = sheet.cat==='custom' ? 'none' : '';
+  document.getElementById('search').style.display = sheet.cat==='custom' ? 'none' : 'block';
   if(sheet.cat==='custom'){ renderCustomForm(); return; }
-  let list = q ? Object.values(F).filter(x=>x.n.toLowerCase().includes(q)&&x.cat!=='gym') : (sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]));
+  let list = q ? Object.values(F).filter(x=>x.n.toLowerCase().includes(q)&&x.cat!=='gym') : (sheet.cat==='all' ? Object.values(F).filter(x=>x.cat!=='gym') : sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]));
   list=list.filter(allowed);
   if(cur) list.sort((a,b)=>Math.abs(a.p-cur.p)-Math.abs(b.p-cur.p));
   list.sort((a,b)=>(REC.has(b.id)?1:0)-(REC.has(a.id)?1:0));
