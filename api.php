@@ -10,8 +10,27 @@ header('Cache-Control: no-store');
 
 $key = $_SERVER['HTTP_X_APP_KEY'] ?? ($_GET['key'] ?? '');
 $a = $_GET['a'] ?? '';
+// Fix 2: rate limit failed logins per IP (5 tries, then 15 min lockout)
+if (!is_dir(DATA_DIR)) { mkdir(DATA_DIR, 0755, true); }
+$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$rlFile = DATA_DIR . '/attempts.json';
+$rl = file_exists($rlFile) ? (json_decode(file_get_contents($rlFile), true) ?: []) : [];
+$now = time();
+foreach ($rl as $k => $v) { if ($now - ($v['t'] ?? 0) > 900) unset($rl[$k]); }   
+// forget entries older than 15 min
+$fails = $rl[$ip]['n'] ?? 0;
+if ($fails >= 5) {
+  http_response_code(429);
+  header('Retry-After: ' . max(1, 900 - ($now - $rl[$ip]['t'])));
+  echo json_encode(['ok' => false, 'error' => 'too many attempts, try again in 15 minutes']); exit;
+}
+
 // Fix 1: compare against a bcrypt hash, never the plain password
-$authed = password_verify($key, APP_PASSWORD_HASH);
+$authed = ($key !== '') && password_verify($key, APP_PASSWORD_HASH);
+if ($key !== '') {
+  if ($authed) { unset($rl[$ip]); } else { $rl[$ip] = ['n' => $fails + 1, 't' => $now]; }
+  file_put_contents($rlFile, json_encode($rl), LOCK_EX);
+}
 if ($a === 'ping') { echo json_encode(['ok' => true, 'auth' => $authed]); exit; }
 if (!$authed) { http_response_code(401); echo json_encode(['ok' => false, 'error' => 'bad password']); exit; }
 
