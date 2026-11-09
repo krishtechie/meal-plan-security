@@ -1,9 +1,37 @@
-# Protect data and config
-<FilesMatch "^(config\.php)$">
+# ---- Meal Planner rules (fixes 3 and 3b). Keep any cPanel-generated lines ABOVE this block. ----
+
+# Protect config and data from the web
+<FilesMatch "^(config\.php|config\.example\.php)$">
   Require all denied
 </FilesMatch>
 RewriteEngine On
+# Fix 3c: force HTTPS so HSTS has a secure first visit
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+# Block the data folder from the web
 RewriteRule ^data/ - [F,L]
-# Correct types for the web app
+
+# Correct types
 AddType application/manifest+json .json
 AddType image/png .png
+AddType font/woff2 .woff2
+
+# Security headers
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Cross-Origin-Resource-Policy "same-origin"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+</IfModule>
+
+# Cache fonts and icons for a year; never cache the app shell or API
+<FilesMatch "\.(woff2|png)$">
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+<FilesMatch "\.(html|php|js|css|json)$">
+  Header set Cache-Control "no-store"
+</FilesMatch>

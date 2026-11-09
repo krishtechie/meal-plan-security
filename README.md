@@ -27,7 +27,7 @@ A real web app I built and use daily, a meal and workout planner with a small PH
 | 3 | Security headers: HSTS, CSP, nosniff, frame deny, referrer policy, permissions policy | A05 Security Misconfiguration | done |
 | 3b | Strict CSP: inline script and styles moved to files, `unsafe-inline` removed, fonts self-hosted, COOP/CORP added | A05 Security Misconfiguration | done |
 | 3c | Forced HTTPS redirect so HSTS has a secure first visit | A02 Cryptographic Failures | done |
-| 4 | Audit log of every read and write | A09 Security Logging and Monitoring Failures | planned |
+| 4 | Audit log of every read and write | A09 Security Logging and Monitoring Failures | done |
 | 5 | Strict validation of the request body | A03 Injection | planned |
 | 6 | Backups and logs moved outside the web root | A05 Security Misconfiguration | planned |
 | 7 | Per-user credentials with per-account lockout | A01 Broken Access Control | planned |
@@ -68,6 +68,10 @@ All six headers sent. Grade F to A. ZAP's three "header not set" Mediums and the
 
 Inline `<script>` moved to `app.js`, `<style>` to `app.css`, 36 inline `style=""` attributes converted to CSS rules, Google Fonts replaced by self-hosted woff2 files. CSP is now `script-src 'self'; style-src 'self'; font-src 'self'` with no `unsafe-inline`, plus `object-src 'none'`, COOP and CORP. Grade A+. ZAP: zero High, Medium or Low. Three Informational notes remain (suspicious comments in JS, "modern web application", cache-control review), none a vulnerability.
 
+### After fix 4
+
+Every API request now appends one JSON line to `data/audit.log`: timestamp, IP, action, user, outcome (`ok`, `bad_password`, `no_key`, `locked`, `bad_body`, `too_large`, `unknown_action`), revision and payload size for writes, truncated user agent. Passwords and data content are never written. The log currently lives beside the data it protects, inside the web-blocked `data/` folder; fix 6 moves both outside the web root.
+
 ### Fix 2 observation
 
 Testing the per-IP lockout (`reports/attempts-after-fix2.json`): my own browser was locked out after 5 failures as designed, but six probes from one tester spread across four IP addresses counted once each and never triggered the limit. Per-IP limiting is bypassed by distributed attempts. Fix 7 adds per-account lockout so the limit follows the credential, not the address.
@@ -81,7 +85,7 @@ Testing the per-IP lockout (`reports/attempts-after-fix2.json`): my own browser 
 
 ## Status
 
-Fixes 1 to 3c done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Next: fix 4, audit log.
+Fixes 1 to 4 done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live. Next: fix 5, input validation.
 
 ## Author
 
