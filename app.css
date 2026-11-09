@@ -14,16 +14,17 @@
 
 /* ---------- Tokens ---------- */
 :root{
-  --bg:#f2f6f3;--bg2:#ffffff;--card:#ffffff;--card2:#f4f8f5;--line:#e2eae4;--line2:#cbd8cf;
-  --text:#132a24;--muted:#5d7169;--dim:#8d9e97;
-  --saff:#0f8f7a;--saff2:#0b7566;--saff3:#e3f3ef;
-  --mint:#6cb33f;--mint2:#5a9a33;--mint3:#edf7e6;
-  --rose:#d9534a;--rose3:#fdecea;--amber:#c98a05;--amber3:#fff4dc;--lilac:#7c5cc4;--lilac3:#f1ebfb;
-  --cat-prot:#0f8f7a;--cat-carb:#d9a441;--cat-veg:#6cb33f;--cat-fruit:#e07a5f;--cat-snack:#7c5cc4;--cat-drink:#4a90c2;--cat-treat:#c04d8a;--cat-other:#9aa8a1;
-  --r:16px;--rs:10px;--rl:22px;
-  --sh1:0 1px 2px rgba(19,42,36,.05),0 1px 1px rgba(19,42,36,.03);
-  --sh2:0 4px 14px rgba(19,42,36,.07),0 1px 3px rgba(19,42,36,.05);
-  --sh3:0 12px 32px rgba(19,42,36,.12);
+  --bg:#f7f7f8;--bg2:#ffffff;--card:#ffffff;--card2:#f3f4f6;--line:#ebecef;--line2:#d9dbe0;
+  --text:#111214;--ink:#111214;--muted:#6b7280;--dim:#9aa0a8;
+  --saff:#111214;--saff2:#111214;--saff3:#f0f1f3;
+  --mint:#2fb673;--mint2:#239a5f;--mint3:#e8f7ee;
+  --gold:#e0a63a;--sky:#4a90e2;
+  --rose:#e5484d;--rose3:#fdecec;--amber:#d9900a;--amber3:#fff4df;--lilac:#7c5cc4;--lilac3:#f1ebfb;
+  --cat-prot:#2fb673;--cat-carb:#e0a63a;--cat-veg:#7cb342;--cat-fruit:#ef6c57;--cat-snack:#8e6ad8;--cat-drink:#4a90e2;--cat-treat:#d94f8a;--cat-other:#9aa0a8;
+  --r:18px;--rs:12px;--rl:24px;
+  --sh1:0 1px 2px rgba(17,18,20,.04),0 2px 6px rgba(17,18,20,.03);
+  --sh2:0 6px 20px rgba(17,18,20,.07),0 1px 3px rgba(17,18,20,.04);
+  --sh3:0 16px 40px rgba(17,18,20,.14);
   --ease:cubic-bezier(.2,.7,.2,1);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -308,3 +309,102 @@ input:focus,textarea:focus{outline:none;border-color:var(--saff);box-shadow:0 0 
   .item .ctl .btn.sw{margin-left:auto}
   .ctl .amt{width:62px}
 }
+
+
+/* ============ v4: humane, remaining-first ============ */
+.sum{padding:0;background:transparent;border:0;box-shadow:none;display:block}
+.hero{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;box-shadow:var(--sh2)}
+.heromain{display:flex;align-items:center;gap:18px}
+.heroring{position:relative;width:124px;height:124px;flex-shrink:0}
+.heroring svg{transform:rotate(-90deg)}
+.heroring circle{fill:none;stroke-width:11;stroke-linecap:round}
+.heroring .bgc{stroke:#eceef1}
+.heroring .lab{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.heroring .lab b{font-family:Sora;font-size:28px;line-height:1;display:block;font-weight:700;letter-spacing:-.02em}
+.heroring .lab span{font-size:10.5px;color:var(--muted);display:block;margin-top:5px;font-weight:600}
+.herotxt .big{font-family:Sora;font-size:20px;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+.herotxt .small{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.mac{display:flex;align-items:center;gap:10px;min-width:0}
+.mac .mring{position:relative;width:56px;height:56px;flex-shrink:0}
+.mac .mring svg{transform:rotate(-90deg)}
+.mac .mring circle{fill:none;stroke-width:5;stroke-linecap:round}
+.mac .mring .bgc{stroke:#eceef1}
+.mac .mring .ico{position:absolute;inset:0;display:grid;place-items:center;background:transparent;width:auto;height:auto}
+.mac .mring .ico svg{width:20px;height:20px}
+.mac b{display:block;font-family:Sora;font-size:15px;font-weight:700;line-height:1.1}
+.mac span{display:block;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.mac small{display:block;font-size:11px;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:560px){ .hero{padding:18px 16px} .heromain{gap:14px} .heroring{width:110px;height:110px} .heroring svg{width:110px;height:110px} .heroring .lab b{font-size:24px} .herotxt .big{font-size:17px} .macros{gap:6px} .mac{flex-direction:column;align-items:flex-start;gap:6px} .mac .mring{width:48px;height:48px} .mac .mring svg{width:48px;height:48px} .mac small{white-space:normal} }
+
+/* category icons */
+.ico{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--card2);color:var(--muted)}
+.ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ico.prot{background:#e8f7ee;color:#1f8a52}.ico.carb,.ico.bf{background:#fdf3df;color:#b07a12}.ico.veg,.ico.side{background:#eef7e4;color:#5a8f2a}
+.ico.fruit{background:#fdece8;color:#c7503c}.ico.snack,.ico.mine{background:#f1ebfb;color:#6a4bb8}.ico.drink,.ico.gym,.ico.fat{background:#e9f1fc;color:#2f6fc1}.ico.treat{background:#fbe8f1;color:#b53b74}
+.item{padding-left:0}
+.item:before{display:none}
+.item{gap:12px}
+
+/* strip as day letters */
+.dayc{min-width:46px;padding:8px 4px 6px;border-radius:14px}
+.dayc b{font-size:13px}
+.dayc i{font-size:0;padding:0;width:6px;height:6px;border-radius:50%;margin:6px auto 0;background:#e9b0ab}
+.dayc i.veg{background:#7cb342}
+.dayc.on{background:var(--ink);border-color:var(--ink);box-shadow:none}
+.dayc.on b{color:#fff}
+.dayc.on i{background:rgba(255,255,255,.7)}
+@media (min-width:900px){ .dayc{min-width:64px} }
+
+/* ink buttons */
+.seg button.on{background:var(--ink)}
+.btn.pri{background:var(--ink);box-shadow:0 2px 10px rgba(17,18,20,.25)}
+.btn.pri:hover{background:#2a2b2f}
+.btn.sw{color:var(--ink);border-color:var(--line2);background:var(--card)}
+.btn.sw:hover{background:var(--card2)}
+.btn.add:hover{border-color:var(--ink);color:var(--ink);background:var(--card2)}
+.daysw.veg{color:#2d6a1e}
+.item .eat{color:var(--ink)}
+.item .eat b{color:var(--ink)}
+.meal:before{background:var(--ink);box-shadow:0 0 0 4px #e6e7ea,0 0 0 6px var(--card)}
+.meal.gym:before{background:var(--mint);box-shadow:0 0 0 4px var(--mint3),0 0 0 6px var(--card)}
+.rules h3:before{background:var(--ink)}
+.ctl .amt:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(17,18,20,.1)}
+input:focus,textarea:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(17,18,20,.1)}
+.pill{background:var(--card2);color:var(--ink)}
+.nav button.on{color:var(--ink);background:var(--card2)}
+.nav button.on:after{background:var(--ink)}
+.warn.ok{background:var(--mint3);border-color:#cfe9d8;color:#1f5a3a}
+.swt input:checked+i{background:var(--ink)}
+.cats .btn.on{background:var(--ink)}
+.opt:hover{border-color:var(--ink)}.opt.cur{border-color:var(--ink);background:var(--card2)}
+.copt:hover{background:var(--card2)}
+.ctot{background:var(--card2);color:var(--ink)}
+.ex .sr{background:var(--card2);color:var(--ink)}
+.wo.today{border-color:var(--ink);box-shadow:0 0 0 3px rgba(17,18,20,.08),var(--sh2)}
+.sync.ok{background:var(--mint3);color:#1f6b42;border-color:#cfe9d8}
+.fixhd,.corehd{color:var(--ink)}
+
+/* centre add button */
+.nav .fab{flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:var(--ink);color:#fff;margin:-22px 6px 0;padding:0;display:grid;place-items:center;box-shadow:0 8px 20px rgba(17,18,20,.28);border:4px solid var(--bg)}
+.nav .fab svg{width:24px;height:24px;stroke:#fff;stroke-width:2.4}
+.nav .fab:active{transform:scale(.95)}
+@media (min-width:900px){ .nav .fab{width:40px;height:40px;margin:0 4px;border:0;border-radius:999px} .nav .fab svg{width:18px;height:18px} }
+
+/* v4 fixes */
+.heroring .lab b{font-size:24px}
+@media (max-width:560px){ .heroring{width:104px;height:104px} .heroring svg{width:104px;height:104px} .heroring .lab b{font-size:21px} .heroring .lab span{font-size:9.5px} .heroring circle{stroke-width:9} .herotxt .big{font-size:16px} }
+.brand h1{font-size:16px}
+@media (max-width:560px){ .brand h1{font-size:15px} }
+@media (max-width:560px){
+  .item{display:grid;grid-template-columns:36px 1fr;column-gap:12px;row-gap:6px;align-items:start}
+  .item .ico{grid-row:1}
+  .item>div:first-of-type{grid-column:2}
+  .item .ctl{grid-column:1/3;width:100%;justify-content:flex-start;margin-top:0}
+}
+
+.heroring .lab b{font-size:21px}
+@media (max-width:560px){ .heroring .lab b{font-size:18px} .heroring .lab span{margin-top:3px} }
+
+@media (min-width:900px){ .macros{grid-template-columns:1fr;gap:12px} .mac{gap:14px} .mac .mring{width:52px;height:52px} .mac .mring svg{width:52px;height:52px} #vPlan{grid-template-columns:380px 1fr} }
+.seg button.on{background:#111214 !important;color:#fff !important}

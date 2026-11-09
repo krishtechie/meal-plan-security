@@ -356,6 +356,21 @@ const ING = [
  ['Banana',89,1.1,23,0.3,120],['Apple',52,0.3,14,0.2,180],['Pear',57,0.4,15,0.1,180],['Clementine',47,0.8,12,0.1,75,'orange mandarin'],['Papaya',43,0.5,11,0.3],['Honeydew',36,0.5,9,0.1],['Blueberries',57,0.7,14,0.3,1.5,'berries'],['Strawberries',32,0.7,8,0.3,12],['Mixed frozen berries',50,0.8,12,0.3,0,'berries mix'],['Grapes',69,0.7,18,0.2,5],['Mango',60,0.8,15,0.4],
  ['Ghee / oil (tsp)',900,0,0,100,5],['Maple syrup / honey (tbsp)',300,0,75,0,20],['Sugar (tsp)',400,0,100,0,4],['Protein bar (piece)',330,33,37,12,60],['Dark chocolate 70%',580,8,45,42,10],
 ];
+const ICON = {
+  prot:'<svg viewBox="0 0 24 24"><path d="M12 3c4 0 7 4.5 7 9.5S16 21 12 21s-7-3.5-7-8.5S8 3 12 3z"/><path d="M9.5 12.5c0-1.4 1.1-2.5 2.5-2.5"/></svg>',
+  carb:'<svg viewBox="0 0 24 24"><path d="M4 11h16v2a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6v-2z"/><path d="M7 11c0-2 1-3 2.5-3S12 9 12 11M12 11c0-2 1-3 2.5-3S17 9 17 11"/></svg>',
+  bf:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
+  veg:'<svg viewBox="0 0 24 24"><path d="M5 19c6 0 13-5 14-14-9 1-14 8-14 14z"/><path d="M5 19c3-4 6-7 9-9"/></svg>',
+  side:'<svg viewBox="0 0 24 24"><path d="M3 12h18a9 9 0 0 1-18 0z"/><path d="M8 8c0-2 1-3 1-5M12 8c0-2 1-3 1-5"/></svg>',
+  fruit:'<svg viewBox="0 0 24 24"><path d="M12 8c-4 0-7 3-7 7s3 6 7 6 7-2 7-6-3-7-7-7z"/><path d="M12 8c0-2 1-4 3-5"/></svg>',
+  snack:'<svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="10" rx="3"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',
+  drink:'<svg viewBox="0 0 24 24"><path d="M6 4h12l-1.5 15a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2L6 4z"/><path d="M7 10h10"/></svg>',
+  fat:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
+  treat:'<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/><path d="M9 21v-6h6v6"/></svg>',
+  gym:'<svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>',
+  mine:'<svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>',
+};
+const ic=(cat)=>`<span class="ico ${cat}">${ICON[cat]||ICON.mine}</span>`;
 const F = {}; const CAT_OF = {};
 for(const c in RAW) RAW[c].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; });
 
@@ -520,11 +535,15 @@ function baseOf(it){ if(!it.g) return null; let m=it.g.match(/(\d+(?:\.\d+)?)\s*
 function fmtG(it,q){ if(!it.g) return q===1?'':q+' x'; if(q===1) return it.g; if(/\d+\s*(g|ml)\b/.test(it.g)) return it.g.replace(/(\d+(?:\.\d+)?)\s*(g|ml)\b/g,(m,a,u)=>Math.round(+a*q)+' '+u); const b=baseOf(it); if(b&&b.unit==='pcs') return it.g.replace(/^(\d+(?:\.\d+)?|half)\b/i,()=>String(+(b.n*q).toFixed(1))); return q+' x '+it.g; }
 
 // ================= RENDER =================
+let _lastView=null,_lastDay=null;
 function render(){
-  const _sy=window.scrollY;
+  const same=(_lastView===S.view&&_lastDay===S.day); const _sy=same?window.scrollY:0; _lastView=S.view; _lastDay=S.day;
   const ps=PS();
   document.querySelectorAll('.who').forEach(b=>b.classList.toggle('on',b.dataset.who===S.who));
   document.getElementById('whoName').textContent=P().name;
+  const hh=new Date().getHours(); const greet=hh<12?'Good morning':hh<17?'Good afternoon':'Good evening';
+  const gEl=document.getElementById('greet'); if(gEl){ gEl.textContent=greet+', '+P().name; }
+  const dEl=document.getElementById('today'); if(dEl){ dEl.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'}); }
   document.getElementById('allVeg').checked=ps.allVeg; document.getElementById('allNonVeg').checked=!!ps.allNonVeg; document.getElementById('eggsVeg').checked=ps.eggsVeg; document.getElementById('seafood').checked=!!ps.seafood;
   const vd=document.getElementById('vegDays'); vd.innerHTML=''; DAYS.forEach((n,i)=>{ const b=document.createElement('button'); const v=isVeg(i); b.className='vd'+(v?' veg':''); b.innerHTML=`${n}<small>${v?'VEG':'NON'}</small>`; b.onclick=()=>toggleVegDay(i); vd.appendChild(b); });
   const d=document.getElementById('days'); d.innerHTML='';
@@ -554,7 +573,7 @@ function renderPlan(){
     const share=mealShare(m.name); const ptgt=share?Math.round(P().target.p*share):0; const pc = !ptgt?'var(--muted)':(dayOK||mt.p>=ptgt-3)?'var(--mint)':mt.p>=ptgt*0.7?'var(--amber)':'var(--rose)';
     let html=`<div class="time">${tshort}</div><div class="hd"><b>${mname}</b><span>${mt.k} kcal · <b class="pcol" data-c="${pc}">${mt.p}${ptgt?' / '+ptgt:''} g</b></span></div>`;
     m.items.forEach((x,ii)=>{ const it=F[x.id]; if(!it) return;
-      html+=`<div class="item" data-cat="${it.cat}"><div><div class="n">${it.n}</div><div class="eat">Eat: <b>${fmtG(it,x.q)||'as listed'}</b></div><div class="m">${Math.round(it.k*x.q)} kcal · ${Math.round(it.p*x.q)}g P · ${Math.round(it.c*x.q)}g C · ${Math.round(it.f*x.q)}g F ${tagHtml(it.t)}</div></div>
+      html+=`<div class="item" data-cat="${it.cat}">${ic(it.cat)}<div><div class="n">${it.n}</div><div class="eat">Eat: <b>${fmtG(it,x.q)||'as listed'}</b></div><div class="m">${Math.round(it.k*x.q)} kcal · ${Math.round(it.p*x.q)}g P · ${Math.round(it.c*x.q)}g C · ${Math.round(it.f*x.q)}g F ${tagHtml(it.t)}</div></div>
         <div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div></div>`; });
     html+=`<button class="btn add" data-a="add" data-mi="${mi}">+ Add food to ${m.name.toLowerCase()}</button>`;
     box.innerHTML=html; wrap.appendChild(box);
@@ -565,15 +584,21 @@ function renderPlan(){
   const T=tot(all); const rest=document.getElementById('rest').checked; const tk=P().target.k-(rest?P().restCut:0); const tp=P().target.p; const maint=P().maint;
   const pct=(a,b)=>Math.min(100,Math.round(a/b*100));
   const kcls=T.k>tk+150?'over':T.k<tk-250?'low':'ok', pcls=T.p<P().pMin?'low':'ok';
-  const ring=(val,tgt,cls,label,unit,color)=>{ const r=42, C=2*Math.PI*r, f=Math.min(1,val/tgt); return `<div class="ringwrap"><div class="ring"><svg width="104" height="104" viewBox="0 0 104 104"><circle class="bgc" cx="52" cy="52" r="${r}"/><circle class="fg" cx="52" cy="52" r="${r}" stroke="${color}" stroke-dasharray="${(C*f).toFixed(1)} ${C.toFixed(1)}"/></svg><div class="lab"><div><b>${val}</b><span>${unit}</span></div></div></div><div class="cap">${label}</div></div>`; };
-  const kcol = kcls==='over'?'var(--rose)':kcls==='low'?'var(--amber)':'var(--saff)';
-  const pcol = pcls==='low'?'var(--amber)':'var(--mint)';
-  document.getElementById('totals').innerHTML = ring(T.k,tk,kcls,'target '+tk,'kcal',kcol) + ring(T.p,tp,pcls,'target '+tp+' g','protein',pcol) + `
-    <div class="kpis">
-      <div class="kpi"><div class="k">Deficit</div><div class="v">${maint-T.k>0?'−':'+'}${Math.abs(maint-T.k)}</div><div class="t">vs ~${maint.toLocaleString()} maint.</div></div>
-      <div class="kpi"><div class="k">Weekly loss</div><div class="v">${((maint-T.k)*7/7700).toFixed(1)} kg</div><div class="t">if held daily</div></div>
-      <div class="kpi"><div class="k">Carbs · Fat</div><div class="v">${T.c} · ${T.f} g</div><div class="t">per day</div></div>
-      <div class="kpi"><div class="k">Protein / kg</div><div class="v">${(T.p/P().kg).toFixed(1)}</div><div class="t">${S.who==='p1'?'aim 1.8 to 2.0':'aim 1.4 to 1.6'}</div></div>
+  const ring=(val,tgt,color,size)=>{ const r=(size/2)-6, C=2*Math.PI*r, f=Math.min(1,Math.max(0,val/tgt)); return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle class="bgc" cx="${size/2}" cy="${size/2}" r="${r}"/><circle class="fg" cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-dasharray="${(C*f).toFixed(1)} ${C.toFixed(1)}"/></svg>`; };
+  const left=tk-T.k; const pLeft=Math.max(0,tp-T.p); const cMax=P().carbMax, fMax=P().fatMax;
+  const kcol = kcls==='over'?'var(--rose)':kcls==='low'?'var(--amber)':'var(--ink)';
+  const status = kcls==='over' ? `${Math.abs(left)} kcal over` : kcls==='low' ? `${left} kcal under, eat a little more` : left>=0 ? `${left} kcal left to eat` : `${Math.abs(left)} kcal over target`;
+  document.getElementById('totals').innerHTML = `
+    <div class="hero">
+      <div class="heromain">
+        <div class="heroring">${ring(T.k,tk,kcol,124)}<div class="lab"><b>${T.k}</b><span>of ${tk} kcal</span></div></div>
+        <div class="herotxt"><div class="big">${status}</div><div class="small">${maint-T.k>0?'−':'+'}${Math.abs(maint-T.k)} kcal vs maintenance · about ${((maint-T.k)*7/7700).toFixed(1)} kg a week at this pace</div></div>
+      </div>
+      <div class="macros">
+        <div class="mac"><div class="mring">${ring(T.p,tp,pcls==='low'?'var(--amber)':'var(--mint)',56)}<i class="ico prot">${ICON.prot}</i></div><div><b>${T.p} g</b><span>protein</span><small>${pLeft>0?pLeft+' g to go':'target met'}</small></div></div>
+        <div class="mac"><div class="mring">${ring(T.c,cMax,T.c>cMax?'var(--rose)':'var(--gold)',56)}<i class="ico carb">${ICON.carb}</i></div><div><b>${T.c} g</b><span>carbs</span><small>${T.c>cMax?(T.c-cMax)+' g over':(cMax-T.c)+' g left'}</small></div></div>
+        <div class="mac"><div class="mring">${ring(T.f,fMax,T.f>fMax?'var(--rose)':'var(--sky)',56)}<i class="ico fat">${ICON.fat}</i></div><div><b>${T.f} g</b><span>fat</span><small>${T.f>fMax?(T.f-fMax)+' g over':(fMax-T.f)+' g left'}</small></div></div>
+      </div>
     </div>`;
   renderWarnings(plan,T,tk,tp);
 }
@@ -737,7 +762,8 @@ document.getElementById('search').oninput=renderSheet;
 document.getElementById('shClose').onclick=closeSheet;
 document.getElementById('ov').onclick=e=>{ if(e.target.id==='ov') closeSheet(); };
 document.querySelectorAll('.who').forEach(b=>b.onclick=()=>{S.who=b.dataset.who; save(); render();});
-document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{S.view=b.dataset.view; render();});
+document.querySelectorAll('.nav button[data-view]').forEach(b=>b.onclick=()=>{S.view=b.dataset.view; render();});
+document.getElementById('fab').onclick=()=>{ S.view='plan'; render(); const plan=dayPlan(); const h=new Date().getHours(); const order=[[7,/waking/i],[10,/breakfast/i],[12,/mid-morning/i],[15,/lunch/i],[17,/pre-gym/i],[21,/dinner/i],[24,/bed/i]]; let mi=plan.findIndex(m=>/lunch/i.test(m.name)); for(const [lim,re] of order){ if(h<lim){ const i=plan.findIndex(m=>re.test(m.name)); if(i>=0){ mi=i; break; } } } openSheet(mi,null); };
 document.getElementById('openSettings').onclick=()=>document.getElementById('ovSet').classList.add('show');
 document.getElementById('setClose').onclick=()=>document.getElementById('ovSet').classList.remove('show');
 document.getElementById('ovSet').onclick=e=>{ if(e.target.id==='ovSet') e.target.classList.remove('show'); };
