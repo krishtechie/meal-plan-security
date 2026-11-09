@@ -166,6 +166,20 @@ prot:[
 ['p_eggfrozenveg','Egg bhurji with frozen veg: 2 whole + 2 whites (8 min)','2 whole + 2 whites + 100 g veg',240,21,8,12,'e'],
 ['p_chkairfry','Chicken drumsticks, air fryer, skinless (25 min, hands-off)','150 g',260,36,0,12,'n'],
 ['p_rajmacan','Rajma from a can, quick masala (10 min)','200 g',250,13,40,3,'v'],
+['p_chkfry','Chicken fry (kodi vepudu)','150 g',290,36,4,14,'n'],
+['p_chk65','Chicken 65 / chilli chicken (fried)','150 g',380,30,14,22,'n'],
+['p_chkkurma','Chicken kurma','150 g',300,32,6,16,'n'],
+['p_chkpepper','Pepper chicken','150 g',260,38,4,10,'n'],
+['p_muttonfry','Mutton fry','120 g',300,28,3,19,'n'],
+['p_eggpulusu','Egg pulusu','2 eggs',220,13,10,14,'e'],
+['p_paneerbm','Paneer butter masala','150 g',380,16,12,30,'v'],
+['p_palakpaneer2','Palak paneer','150 g',260,14,9,19,'v'],
+['p_paneerfry','Paneer fry (tawa)','100 g',280,18,5,21,'v'],
+['p_tofupepper','Tofu pepper fry','150 g',200,22,6,11,'v'],
+['p_soyafry','Soya chunks fry (meal maker vepudu)','50 g dry',200,26,17,5,'v'],
+['p_mushroom_masala','Mushroom masala','150 g',130,5,9,8,'v'],
+['p_senagalu','Guggillu / boiled chana (senagalu) with onion','150 g',200,10,32,3,'v'],
+['p_pesaralu','Boiled green moong (pesalu) sundal','150 g',180,12,30,1,'v'],
 ['p_chkveg','Chicken and veg curry, one pot (150 g chicken + 150 g veg)','300 g',350,43,14,15,'n'],
 ['p_chkveg120','Chicken and veg curry, one pot, small (120 g + 150 g veg)','270 g',300,35,12,12,'n'],
 ['p_fishveg','Fish and veg curry, one pot (150 g fish + 150 g veg)','300 g',300,38,12,12,'n'],
@@ -223,6 +237,31 @@ veg:[
 ['v_beanscarrot','Beans and carrot poriyal','150 g',90,3,13,4,'v'],
 ['v_avocado','Avocado','half',120,1,6,11,'v'],
 ['v_kalemix','Salad pack mix (Sweet Kale or similar), no dressing','100 g',40,2,7,1,'v'],
+['v_carrotfry','Carrot fry (carrot vepudu)','150 g',120,2,15,6,'v'],
+['v_potatofry','Potato fry (bangaladumpa vepudu)','150 g',230,3,30,11,'v'],
+['v_bhendifry','Bhendi fry (bendakaya vepudu)','150 g',130,3,10,9,'v'],
+['v_dondafry','Dondakaya fry (ivy gourd vepudu)','150 g',130,3,10,9,'v'],
+['v_cabbagefry','Cabbage fry with moong dal','150 g',120,5,13,5,'v'],
+['v_beansfry','Beans fry (french beans vepudu)','150 g',110,3,12,6,'v'],
+['v_beetrootfry','Beetroot fry','150 g',110,2,15,5,'v'],
+['v_gobifry','Cauliflower fry (gobi vepudu)','150 g',140,4,10,9,'v'],
+['v_vankayafry','Brinjal fry (vankaya vepudu)','150 g',140,2,10,10,'v'],
+['v_capsicumfry','Capsicum fry','150 g',110,2,10,7,'v'],
+['v_mushroomfry','Mushroom fry (pepper mushroom)','150 g',110,5,6,8,'v'],
+['v_mixedfry','Mixed vegetable fry','150 g',120,3,13,6,'v'],
+['v_sorakayacurry','Sorakaya curry with milk (anapakaya paalu kura)','150 g',110,4,10,6,'v'],
+['v_beerakayacurry','Beerakaya curry (ridge gourd kura)','150 g',80,2,9,4,'v'],
+['v_tomatopappu','Tomato pappu','200 g',210,12,28,5,'v'],
+['v_sorakayapappu','Sorakaya pappu','200 g',200,12,27,5,'v'],
+['v_dosakayapappu','Dosakaya pappu','200 g',200,12,27,5,'v'],
+['v_gongura','Gongura pappu / pachadi','150 g',160,9,18,6,'v'],
+['v_aloogobi','Aloo gobi','150 g',170,4,20,8,'v'],
+['v_aloopalak','Aloo palak','150 g',150,4,18,7,'v'],
+['v_alootomato','Aloo tomato curry','150 g',160,3,24,6,'v'],
+['v_chanamasala','Chana masala','150 g',190,9,27,5,'v'],
+['v_rajmamasala','Rajma masala','150 g',180,9,26,4,'v'],
+['v_egg_fry','Egg fry / egg pepper fry','2 eggs',190,13,2,14,'e'],
+['v_eggomelette_curry','Omelette curry','2 eggs',230,13,6,17,'e'],
 ],
 side:[
 ['s_rasam','Rasam / charu','200 ml',40,1,7,1,'v'],
@@ -238,12 +277,35 @@ side:[
 ['s_oliveoil','Olive oil, on salad','1 tsp',45,0,0,5,'v'],
 ['s_coconutoil','Coconut oil','1 tsp',45,0,0,5,'v'],
 ['s_chutney','Coconut / peanut chutney','2 tbsp',70,2,4,6,'v'],
+['s_tomatochutney','Tomato chutney / pachadi','2 tbsp',40,1,5,2,'v'],
+['s_avakaya','Avakaya (mango pickle)','1 tsp',20,0,1,2,'v'],
+['s_podi','Kandi podi / karam podi with 1 tsp ghee','1 tbsp',90,3,6,6,'v'],
+['s_majjigapulusu','Majjiga pulusu','200 ml',110,5,10,6,'v'],
+['s_pulusu','Pulusu (tamarind gravy)','200 ml',90,2,16,2,'v'],
+['s_dalrasam','Pappu charu','200 ml',80,4,12,2,'v'],
+['s_curd150','Curd, low-fat','150 g',90,6,7,3,'v'],
 ],
 treat:[
 ['t_chkbir','Chicken biryani','1 plate (350 g)',600,30,70,20,'tn'],
 ['t_mutbir','Mutton biryani','1 plate (350 g)',700,30,70,30,'tn'],
 ['t_eggbir','Egg biryani','1 plate',580,22,70,22,'te'],
 ['t_vegbir','Veg biryani','1 plate (350 g)',500,10,80,15,'t'],
+['t_vegbir200','Veg biryani, small','200 g',290,6,46,9,'t'],
+['t_chkbir200','Chicken biryani, small','200 g',340,17,40,11,'tn'],
+['t_eggfriedrice','Egg fried rice','300 g',480,16,70,14,'te'],
+['t_vegfriedrice','Veg fried rice','300 g',420,9,72,11,'t'],
+['t_vegnoodles','Veg noodles (hakka)','300 g',450,10,75,12,'t'],
+['t_chkfriedrice','Chicken fried rice','300 g',520,25,70,15,'tn'],
+['t_curdrice','Curd rice','300 g',380,12,60,9,'t'],
+['t_lemonrice','Lemon rice','250 g',380,6,65,10,'t'],
+['t_tomatorice','Tomato rice / tomato bath','250 g',380,6,65,10,'t'],
+['t_sambarrice','Sambar rice','300 g',360,11,62,6,'t'],
+['t_dosa2chutney','Dosa 2 with chutney and sambar','',480,12,72,16,'t'],
+['t_idli4','Idli 4 with sambar and chutney','',380,12,70,5,'t'],
+['t_upmafull','Upma, big plate','80 g rava',360,8,64,8,'t'],
+['t_pongal','Ven pongal','250 g',420,12,60,14,'t'],
+['t_chapati2curry','Chapati 2 with mixed veg curry','',360,10,52,12,'t'],
+['t_parotta','Parotta with kurma','2',620,12,70,32,'t'],
 ['t_pulao','Veg pulao with raita','300 g',450,10,70,14,'t'],
 ['t_pastachk','Pasta with chicken, white sauce','300 g',600,30,60,25,'tn'],
 ['t_pastaarr','Pasta arrabbiata with veg','300 g',450,12,70,12,'t'],
@@ -337,7 +399,7 @@ gym:[
 };
 // Cost per 30 g protein in Canada, rough: 1 = cheap, 2 = mid, 3 = pricey
 const COST = {p_whey:1,k_whey:1,k_wheymilk:1,d_casein:1,p_soya:1,p_pappu:1,s_pappu:1,p_dalchana:1,p_chana200:1,p_chana100:1,p_chanasalad:1,p_sproutsalad:1,p_milk300:1,d_milk:1,p_sardines:1,p_curd200:1,s_curd100:1,k_curdchana:1,k_chana:1,k_peanuts:1,p_peanutchaat:1,k_sprouts:1,k_bmchana:1,b_oatswhey:1,b_wheymilk:1,b_smoothie:1,b_chilla:1,b_sprouts:1,
-p_whites:2,b_whites:2,b_idlieggs:2,b_dosaeggs:2,b_pohaeggs:2,b_upmaeggs:2,b_idliwhey:1,b_dosawhey:1,b_pesarattuwhey:1,b_pohawhey:1,b_upmacurd:1,b_bananagy:2,b_fruitwhey:1,p_mushpaneer:3,p_chkmush:3,p_falafel:2,p_falafelkale:2,p_chkkale:3,p_paneerkale:3,p_tofukale:2,p_cheesemix:2,p_chkveg:3,p_chkveg120:3,p_fishveg:3,p_fishveg120:3,p_prawnveg:3,p_eggveg:2,p_soyaveg:1,p_tofuveg:2,p_paneerveg:3,p_dalveg:1,k_cheesestick:2,k_cheesestick2:2,k_cheesefruit:2,k_freshmozz:2,p_freshmozz:2,p_mozzsalad:2,p_mozzveg:2,p_khichdi:1,p_soyakeema:1,p_cabbagepappu:1,p_dalfrozenveg:1,p_rajmacan:1,p_eggfrozenveg:2,p_shrimpstirfry:3,p_chkairfry:2,p_palakpaneer:3,b_dahioats:1,b_besan:1,b_pboats:1,b_wheyoatsbanana:1,p_edamame:2,p_tofuscramble:2,p_kaletofu:2,p_kaleegg:2,p_gybowl:2,p_skyrnuts:2,p_chanachaat:1,p_kalechana:1,p_kalepaneer:3,k_whites:2,p_eggc3:2,p_eggc2:2,p_eggbhurji:2,b_eggs32:2,b_eggs22:2,b_eggs2:2,b_omelette:2,b_bhurji:2,k_eggs2:2,b_toasteggs:2,b_ppancake:2,b_rotibhurji:2,p_gy170:2,k_gy:2,k_gyberries:2,b_gyberries:2,b_granolagy:2,d_gybed:2,p_skyr:2,p_cottage:2,k_cottage:2,p_tofu:2,p_tofusalad:2,p_basa:2,p_chklegs:2,p_chkthigh:2,k_bar:2,
+p_whites:2,b_whites:2,p_chkfry:3,p_chk65:3,p_chkkurma:3,p_chkpepper:3,p_muttonfry:3,p_eggpulusu:2,p_paneerbm:3,p_palakpaneer2:3,p_paneerfry:3,p_tofupepper:2,p_soyafry:1,p_mushroom_masala:2,p_senagalu:1,p_pesaralu:1,b_idlieggs:2,b_dosaeggs:2,b_pohaeggs:2,b_upmaeggs:2,b_idliwhey:1,b_dosawhey:1,b_pesarattuwhey:1,b_pohawhey:1,b_upmacurd:1,b_bananagy:2,b_fruitwhey:1,p_mushpaneer:3,p_chkmush:3,p_falafel:2,p_falafelkale:2,p_chkkale:3,p_paneerkale:3,p_tofukale:2,p_cheesemix:2,p_chkveg:3,p_chkveg120:3,p_fishveg:3,p_fishveg120:3,p_prawnveg:3,p_eggveg:2,p_soyaveg:1,p_tofuveg:2,p_paneerveg:3,p_dalveg:1,k_cheesestick:2,k_cheesestick2:2,k_cheesefruit:2,k_freshmozz:2,p_freshmozz:2,p_mozzsalad:2,p_mozzveg:2,p_khichdi:1,p_soyakeema:1,p_cabbagepappu:1,p_dalfrozenveg:1,p_rajmacan:1,p_eggfrozenveg:2,p_shrimpstirfry:3,p_chkairfry:2,p_palakpaneer:3,b_dahioats:1,b_besan:1,b_pboats:1,b_wheyoatsbanana:1,p_edamame:2,p_tofuscramble:2,p_kaletofu:2,p_kaleegg:2,p_gybowl:2,p_skyrnuts:2,p_chanachaat:1,p_kalechana:1,p_kalepaneer:3,k_whites:2,p_eggc3:2,p_eggc2:2,p_eggbhurji:2,b_eggs32:2,b_eggs22:2,b_eggs2:2,b_omelette:2,b_bhurji:2,k_eggs2:2,b_toasteggs:2,b_ppancake:2,b_rotibhurji:2,p_gy170:2,k_gy:2,k_gyberries:2,b_gyberries:2,b_granolagy:2,d_gybed:2,p_skyr:2,p_cottage:2,k_cottage:2,p_tofu:2,p_tofusalad:2,p_basa:2,p_chklegs:2,p_chkthigh:2,k_bar:2,
 p_chk150:3,p_chk120:3,p_tandoori:3,p_fish150:3,p_fish120:3,p_fishgrill:3,p_prawn150:3,p_prawn120:3,p_mutton:3,p_paneer100:3,p_paneer80:3,p_ptikka:3,p_paneersalad:3,p_mushpan:3,b_pbhurji:3,b_rotipaneer:3,k_paneer:3,p_cheese:3,k_cheeseapple:3};
 const costTxt=(id)=>COST[id]?['','$','$$','$$$'][COST[id]]:'';
 const REC = new Set(['b_eggs2','b_eggs2oats','b_eggs2bread','b_idlieggs','b_dosaeggs','b_pohaeggs','b_upmaeggs','b_idliwhey','b_dosawhey','b_pesarattuwhey','b_pohawhey','b_ovn','b_bananagy','b_fruitwhey','b_granolasmall','b_granolanuts','b_nuts','b_oatsmilkchia','b_oatsmilksmall','b_oatswheychia','k_gychia','k_nutsberries','b_eggs32','b_eggs22','b_oatsmilk','b_oats','b_oatswhey','b_pesarattu','b_idli2','b_dosa1','b_poha','b_upma','b_chilla','b_gyberries','b_toasteggs',
@@ -371,6 +433,33 @@ const ICON = {
   mine:'<svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>',
 };
 const ic=(cat)=>`<span class="ico ${cat}">${ICON[cat]||ICON.mine}</span>`;
+const ALIAS = {
+ v_carrotfry:'carrot fry carrot curry carrot poriyal gajar',v_carrot:'carrot fry carrot curry gajar',v_potatofry:'potato fry aloo fry bangaladumpa alu urulagadda',v_aloofry:'potato fry aloo fry',v_aloo:'potato curry aloo curry bangaladumpa',
+ v_bhendifry:'bhendi fry okra fry bendakaya ladyfinger bhindi',v_bhendi:'bhendi fry okra bendakaya bhindi ladyfinger',v_dondafry:'dondakaya fry ivy gourd tindora tendli',v_dondakaya:'dondakaya ivy gourd tindora',
+ v_cabbagefry:'cabbage fry cabbage curry kosu',v_cabbage:'cabbage kosu patta gobi',v_beansfry:'beans fry french beans',v_beans:'beans fry',v_beetrootfry:'beetroot fry beet',v_beetroot:'beetroot curry beet',
+ v_gobifry:'cauliflower fry gobi fry phool gobi',v_gobi:'cauliflower gobi',v_vankayafry:'brinjal fry eggplant vankaya baingan gutti',v_baingan:'brinjal eggplant vankaya baingan',v_capsicumfry:'capsicum fry bell pepper shimla mirch',v_capsicum:'capsicum bell pepper',
+ v_mushroomfry:'mushroom fry pepper mushroom puttagodugulu',v_mushroom:'mushroom curry puttagodugulu',v_mixedfry:'mixed veg fry mixed vegetable',v_mixed:'mixed veg curry',
+ v_sorakayacurry:'sorakaya bottle gourd anapakaya lauki',v_sorakaya:'sorakaya bottle gourd lauki anapakaya',v_beerakayacurry:'beerakaya ridge gourd turai',v_beerakaya:'beerakaya ridge gourd turai',v_dosakaya:'dosakaya yellow cucumber',
+ v_tomatopappu:'tomato pappu tomato dal',v_sorakayapappu:'sorakaya pappu bottle gourd dal',v_dosakayapappu:'dosakaya pappu',v_palakdal:'palak pappu spinach dal palakura',v_palak:'palak spinach palakura',v_gongura:'gongura sorrel',v_methi:'methi menthikura fenugreek',
+ v_aloogobi:'aloo gobi potato cauliflower',v_aloopalak:'aloo palak',v_alootomato:'aloo tomato potato tomato',v_chanamasala:'chana masala chole chickpea curry senagalu',v_rajmamasala:'rajma kidney beans',v_peas:'peas matar batani',
+ v_egg_fry:'egg fry egg pepper fry boiled egg fry',v_eggomelette_curry:'omelette curry',
+ p_pappu:'pappu dal toor dal kandi pappu',s_pappu:'pappu dal',p_dalveg:'dal veg pappu',p_dalfrozenveg:'dal veg',s_sambar:'sambar sambhar',s_rasam:'rasam charu chaaru',s_dalrasam:'pappu charu dal rasam',
+ p_chk150:'chicken curry kodi kura chicken gravy',p_chk120:'chicken curry small',p_chkfry:'chicken fry kodi vepudu chicken roast',p_chk65:'chicken 65 chilli chicken fried chicken',p_chkkurma:'chicken kurma korma',p_chkpepper:'pepper chicken',p_chkveg:'chicken veg curry one pot',p_chkmush:'chicken mushroom',p_tandoori:'tandoori grilled chicken',p_chklegs:'drumstick chicken legs',p_chkairfry:'air fryer chicken drumsticks',
+ p_mutton:'mutton curry goat curry mamsam',p_muttonfry:'mutton fry goat fry',p_eggc3:'egg curry guddu kura anda curry',p_eggc2:'egg curry small',p_eggpulusu:'egg pulusu guddu pulusu',p_eggbhurji:'egg bhurji scrambled eggs',
+ p_paneer100:'paneer curry',p_paneerbm:'paneer butter masala',p_palakpaneer2:'palak paneer',p_palakpaneer:'palak paneer frozen',p_paneerfry:'paneer fry tawa paneer',p_ptikka:'paneer tikka',p_paneerveg:'paneer veg curry',
+ p_tofu:'tofu curry',p_tofupepper:'tofu pepper fry',p_tofuveg:'tofu veg stir fry',p_soya:'soya chunks meal maker',p_soyafry:'soya fry meal maker vepudu',p_soyaveg:'soya veg curry meal maker',p_soyakeema:'soya keema',p_mushroom_masala:'mushroom masala',
+ p_senagalu:'senagalu guggillu boiled chana chickpeas sundal',p_pesaralu:'pesalu green moong sundal sprouts boiled',p_chana200:'chana rajma chickpeas',p_chanachaat:'chana chaat chickpea chaat',
+ c_rice150:'rice white rice annam steamed rice sona masoori basmati',c_rice100:'rice white rice small annam',c_brown:'brown rice',c_roti2:'roti chapati phulka',c_roti1:'roti chapati one',c_mroti2:'millet roti jowar ragi jonna',c_quinoa150:'quinoa',c_millet150:'millet korralu foxtail',c_potato:'boiled potato',
+ c_idli2:'idli idly',c_dosa1:'dosa dosai',c_upma:'upma',c_poha:'poha atukulu',c_pulihora:'pulihora tamarind rice chitrannam',c_noodles:'noodles',c_orgpasta:'pasta',c_bread:'bread toast slices',
+ t_vegbir:'veg biryani vegetable biryani',t_vegbir200:'veg biryani small',t_chkbir:'chicken biryani',t_chkbir200:'chicken biryani small',t_eggbir:'egg biryani',t_panbir:'paneer biryani',t_mutbir:'mutton biryani',t_pulao:'pulao pulav',
+ t_eggfriedrice:'egg fried rice',t_vegfriedrice:'veg fried rice',t_chkfriedrice:'chicken fried rice',t_vegnoodles:'veg noodles hakka chowmein',t_curdrice:'curd rice daddojanam perugannam',t_lemonrice:'lemon rice nimmakaya pulihora chitrannam',t_tomatorice:'tomato rice tomato bath',t_sambarrice:'sambar rice',
+ t_dosa2chutney:'dosa plate 2 dosa',t_idli4:'idli plate 4 idli',t_upmafull:'upma plate',t_pongal:'pongal ven pongal',t_chapati2curry:'chapati curry roti curry',t_parotta:'parotta kurma',t_pizza:'pizza',t_pastachk:'pasta chicken',t_pastaarr:'pasta arrabbiata red sauce',t_pastapan:'pasta paneer',t_puripotato:'puri aloo poori',t_bajji:'bajji punugulu mirchi',t_vada:'vada medu vada garelu',t_samosa:'samosa',t_murukku:'murukku mixture chakli chegodilu',
+ s_chutney:'chutney coconut peanut pachadi',s_tomatochutney:'tomato chutney pachadi',s_avakaya:'avakaya pickle mango pickle achar',s_pickle:'pickle achar',s_podi:'podi kandi podi karam podi gunpowder',s_majjigapulusu:'majjiga pulusu kadhi',s_pulusu:'pulusu tamarind',s_curd100:'curd perugu dahi yogurt',s_curd150:'curd perugu dahi',s_buttermilk:'buttermilk majjiga chaas',s_raita:'raita',s_papad:'papad appadam',s_ghee:'ghee neyyi',
+ k_gy:'greek yogurt',k_whey:'whey protein shake',k_curdchana:'curd chana',k_chana:'roasted chana putnalu',k_peanuts:'peanuts palli groundnut',k_eggs2:'boiled eggs',k_cheesestick:'cheese stick string cheese',k_pbapple:'apple peanut butter',
+ f_apple:'apple',f_banana:'banana arati pandu',f_hbanana:'half banana',f_orange:'orange',f_clementine:'clementine mandarin',f_papaya:'papaya boppayi',f_guava:'guava jama',f_mango:'mango mamidi',f_grapes:'grapes draksha',f_pomeg:'pomegranate danimma anar',f_melon:'watermelon muskmelon',f_berries:'berries blueberries strawberries',f_mixedberries:'mixed berries frozen',
+ b_eggs2:'2 eggs boiled eggs',b_eggs32:'3 eggs boiled',b_oatsmilkchia:'oats milk chia berries',b_oats:'oats water',b_granola:'granola milk',b_idli2:'idli sambar',b_dosa1:'dosa chutney',b_pesarattu:'pesarattu moong dosa',b_poha:'poha atukulu',b_upma:'upma rava',b_toasteggs:'toast eggs bread eggs',b_breadmaple:'bread maple syrup',b_pancake:'pancakes',b_ppancake:'protein pancakes',b_ovn:'overnight oats',
+ d_limewater:'lime water lemon water nimmakaya',d_coffee:'coffee tea green tea',d_milk:'milk 3%',d_milk6:'milk 6%',k_chai:'chai tea masala chai',
+};
 const F = {}; const CAT_OF = {};
 for(const c in RAW) RAW[c].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; });
 
@@ -402,6 +491,43 @@ const PEOPLE = {
 };
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], FULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const VEG_DAYS=new Set([1,4,5]); // Tue, Fri, Sat
+
+// ================= MUSCLE MAP =================
+// Simplified front + back figure. Each region is a path with an id; highlighted via class.
+const BODY = `<svg viewBox="0 0 120 150" class="bodymap" aria-hidden="true">
+<g class="fig front" transform="translate(4,2)">
+ <circle cx="26" cy="12" r="8" class="skin"/>
+ <path d="M14 24h24v30H14z" class="m" data-m="chest"/>
+ <path d="M6 24h8v18H6zM38 24h8v18h-8z" class="m" data-m="shoulders"/>
+ <path d="M6 42h6v18H6zM40 42h6v18h-6z" class="m" data-m="biceps"/>
+ <path d="M14 54h24v22H14z" class="m" data-m="abs"/>
+ <path d="M11 54h3v22h-3zM38 54h3v22h-3z" class="m" data-m="obliques"/>
+ <path d="M5 60h7v16H5zM40 60h7v16h-7z" class="m" data-m="forearms"/>
+ <path d="M14 78h11v34H14zM27 78h11v34H27z" class="m" data-m="quads"/>
+ <path d="M14 114h11v24H14zM27 114h11v24H27z" class="m" data-m="shins"/>
+</g>
+<g class="fig back" transform="translate(66,2)">
+ <circle cx="26" cy="12" r="8" class="skin"/>
+ <path d="M14 22h24v8H14z" class="m" data-m="traps"/>
+ <path d="M6 24h8v18H6zM38 24h8v18h-8z" class="m" data-m="shoulders"/>
+ <path d="M14 30h24v26H14z" class="m" data-m="back"/>
+ <path d="M6 42h6v18H6zM40 42h6v18h-6z" class="m" data-m="triceps"/>
+ <path d="M14 56h24v10H14z" class="m" data-m="lowerback"/>
+ <path d="M14 66h24v14H14z" class="m" data-m="glutes"/>
+ <path d="M14 80h11v30H14zM27 80h11v30H27z" class="m" data-m="hamstrings"/>
+ <path d="M14 112h11v26H14zM27 112h11v26H27z" class="m" data-m="calves"/>
+</g></svg>`;
+function muscleMap(list){ const set=new Set(list); return BODY.replace(/data-m="([a-z]+)"/g,(m,k)=>set.has(k)?`data-m="${k}" class="m on"`:m).replace(/class="m" data-m="([a-z]+)" class="m on"/g,'class="m on" data-m="$1"'); }
+const MUSCLES = {
+ 'Barbell or dumbbell bench press':['chest','triceps','shoulders'],'Incline dumbbell press':['chest','shoulders','triceps'],'Chest-supported machine fly or cable fly':['chest'],'Push-ups (Person 2: incline on a bench)':['chest','triceps','abs'],'Rope triceps pushdown':['triceps'],
+ 'Lat pulldown (wide grip)':['back','biceps'],'Seated cable row':['back','traps','biceps'],'One-arm dumbbell row':['back','biceps','obliques'],'Face pulls':['shoulders','traps','back'],'Dumbbell bicep curl':['biceps'],'Hammer curl':['biceps','forearms'],
+ 'Barbell back squat or leg press':['quads','glutes','hamstrings','abs'],'Walking lunges':['quads','glutes','hamstrings'],'Leg extension':['quads'],'Standing calf raise':['calves'],
+ 'Seated dumbbell shoulder press':['shoulders','triceps'],'Dumbbell lateral raise':['shoulders'],'Rear delt fly (machine or bent over)':['shoulders','back'],'EZ bar or dumbbell curl':['biceps'],'Overhead triceps extension':['triceps'],'Cable or dumbbell shrug':['traps'],
+ 'Romanian deadlift (barbell or dumbbell)':['hamstrings','glutes','lowerback'],'Hip thrust or glute bridge':['glutes','hamstrings'],'Lying or seated leg curl':['hamstrings'],'Bulgarian split squat':['quads','glutes'],
+ 'Plank':['abs','obliques','lowerback'],'Side plank (obliques, love handles)':['obliques','abs'],'Cable woodchop or band chop':['obliques','abs'],'Dead bug':['abs'],'Hanging knee raise or lying leg raise':['abs'],'Russian twist (obliques)':['obliques','abs'],'Bicycle crunch':['abs','obliques'],'Suitcase carry (obliques, anti-lean)':['obliques','forearms','traps'],
+ 'Brisk walk or hike':['quads','calves','glutes'],'Walk + stretching':['quads','calves','hamstrings'],
+};
+const demoLink=(name)=>`https://www.youtube.com/results?search_query=${encodeURIComponent(name.replace(/\(.*?\)/g,'').trim()+' proper form')}`;
 
 // ================= WORKOUTS =================
 // [exercise, cue, Person 1 sets x reps, Person 2 sets x reps]
@@ -463,10 +589,11 @@ function renderWorkout(){
   document.getElementById('woTitle').textContent=P().name+' · weekly split';
   document.getElementById('woSub').textContent = k ? 'Goal: build muscle while cutting. Heavy compound lifts, 6 to 10 reps, add weight every week you hit the top of the range. 60 min, 5 days.' : 'Goal: strong and toned. Same lifts, 10 to 15 reps, lighter weight, glutes and back as priority. 60 min, 5 days. If a week feels flat, drop one set from each exercise, do not skip the day.';
   const w=document.getElementById('woDays'); w.innerHTML='';
+  const lg=document.createElement('div'); lg.className='legend'; lg.innerHTML=`<span class="lgsw"></span> Muscles worked (front and back figure). Tap "Watch demo" for a video of the movement before your first session with it.`; w.appendChild(lg);
   WORKOUTS.forEach(d=>{ const box=document.createElement('div'); box.className='wo'+(d.day===S.day?' today':'');
     let h=`<div class="hd"><b>${DAYS[d.day]} · ${d.name}</b><span>${d.sub}</span></div>`;
-    d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex"><div><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div></div>${sr?`<div class="sr">${sr}</div>`:''}</div>`; });
-    if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex"><div><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div></div><div class="sr">${sr}</div></div>`; }); }
+    d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div><a class="demo" href="${demoLink(e[0])}" target="_blank" rel="noopener">▶ Watch demo</a></div>${sr?`<div class="sr">${sr}</div>`:''}</div>`; });
+    if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div><a class="demo" href="${demoLink(e[0])}" target="_blank" rel="noopener">▶ Watch demo</a></div><div class="sr">${sr}</div></div>`; }); }
     h+=`<div class="foot">${d.foot}</div>`; box.innerHTML=h; w.appendChild(box); });
   const gen=document.createElement('div'); gen.className='rules'; gen.innerHTML=`<h3>Rules for the gym</h3><ul>
     <li><b>Core every gym day, 8 min at the end.</b> Finisher A on Mon, Wed, Fri, finisher B on Tue, Thu. Side planks, chops, twists and carries are the oblique (love handle) work. Be clear on this: core training builds the muscle underneath, the calorie deficit is what removes the fat on top. Both together is what makes the waist change. No amount of crunches works without the deficit.</li>
@@ -696,10 +823,11 @@ function renderSheet(){
   const q=document.getElementById('search').value.trim().toLowerCase();
   document.getElementById('search').style.display = sheet.cat==='custom' ? 'none' : 'block';
   if(sheet.cat==='custom'){ renderCustomForm(); return; }
-  let list = q ? Object.values(F).filter(x=>x.n.toLowerCase().includes(q)&&x.cat!=='gym') : (sheet.cat==='all' ? Object.values(F).filter(x=>x.cat!=='gym') : sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]));
+  const foodSearch=(q)=>{ const words=q.split(/\s+/).filter(Boolean); const esc=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); return Object.values(F).filter(x=>x.cat!=='gym').map(x=>{ const name=x.n.toLowerCase(), al=(ALIAS[x.id]||'').toLowerCase(); let sc=0; for(const w of words){ const ww=new RegExp('(^|[^a-z])'+esc(w)+'([^a-z]|$)'); if(ww.test(name)) sc+=8; else if(name.split(/[\s,/()+·-]+/).some(t=>t.startsWith(w))) sc+=5; else if(ww.test(al)) sc+=4; else if(al.split(/\s+/).some(t=>t.startsWith(w))) sc+=3; else if((name+' '+al).includes(w)) sc+=1; else return null; } return {x,sc}; }).filter(Boolean).sort((a,b)=>b.sc-a.sc||(REC.has(b.x.id)?1:0)-(REC.has(a.x.id)?1:0)||a.x.n.length-b.x.n.length).map(o=>o.x); };
+  let list = q ? foodSearch(q) : (sheet.cat==='all' ? Object.values(F).filter(x=>x.cat!=='gym') : sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]));
   list=list.filter(allowed);
   if(cur) list.sort((a,b)=>Math.abs(a.p-cur.p)-Math.abs(b.p-cur.p));
-  list.sort((a,b)=>(REC.has(b.id)?1:0)-(REC.has(a.id)?1:0));
+  if(!q) list.sort((a,b)=>(REC.has(b.id)?1:0)-(REC.has(a.id)?1:0));
   const o=document.getElementById('opts'); o.innerHTML='';
   if(!list.length) o.innerHTML='<div class="note">Nothing in this group fits today (veg day). Try Protein or Snacks.</div>';
   list.forEach(it=>{ const d=document.createElement('div'); d.className='opt'+(cur&&it.id===cur.id?' cur':'');
