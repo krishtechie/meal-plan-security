@@ -1,4 +1,4 @@
-PERSON 1 & PERSON 2 MEAL PLANNER - hosting setup (about 10 minutes, free)
+MEAL PLANNER - hosting setup 
 ====================================================================
 
 WHAT THIS IS
