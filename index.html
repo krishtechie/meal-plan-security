@@ -824,7 +824,7 @@ let storeOK=true;
 const CLOUD={on:false, key:'', status:'local', rev:{}, timer:{}, busy:{}, dirty:{}};
 function setStatus(t,c){ CLOUD.status=t; const el=document.getElementById('sync'); if(!el) return; el.textContent=t; el.className='sync '+(c||''); }
 function apiUrl(){ return 'api.php'; }
-async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who='+who:''),{method:body?'POST':'GET',headers:{'X-App-Key':CLOUD.key,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'}); if(r.status===401) throw new Error('auth'); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
+async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who='+who:''),{method:body?'POST':'GET',headers:{'X-App-Key':CLOUD.key,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'}); if(r.status===401) throw new Error('auth'); if(r.status===429) throw new Error('locked'); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
 async function cloudInit(){
   if(!/^https?:/.test(location.protocol)) return;
   try{ CLOUD.key=localStorage.getItem('kl-key')||''; }catch(e){}
@@ -839,7 +839,7 @@ async function cloudPull(){
   try{
     for(const who of ['p1','p2']){ const r=await api('get',who); if(r.data){ CLOUD.rev[who]=r.rev; if(!CLOUD.dirty[who]) S.people[who]=r.data; } else if(S.people[who]){ CLOUD.dirty[who]=true; schedulePush(who,0); } }
     loadAllCustoms(); saveLocal(); render(); setStatus('Synced','ok');
-  }catch(e){ if(e.message==='auth'){ askKey('Wrong password. Try again.'); } else setStatus('Offline, saved on this device','warn'); }
+  }catch(e){ if(e.message==='auth'){ askKey('Wrong password. Try again.'); } else if(e.message==='locked'){ askKey('Too many wrong attempts. Wait 15 minutes.'); } else setStatus('Offline, saved on this device','warn'); }else setStatus('Offline, saved on this device','warn'); }
 }
 function schedulePush(who,delay=700){ if(!CLOUD.on||!CLOUD.key) return; CLOUD.dirty[who]=true; clearTimeout(CLOUD.timer[who]); CLOUD.timer[who]=setTimeout(()=>cloudPush(who),delay); }
 async function cloudPush(who){ if(CLOUD.busy[who]){ schedulePush(who,500); return; } CLOUD.busy[who]=true; setStatus('Saving…');
