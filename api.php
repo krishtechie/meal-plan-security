@@ -10,8 +10,10 @@ header('Cache-Control: no-store');
 
 $key = $_SERVER['HTTP_X_APP_KEY'] ?? ($_GET['key'] ?? '');
 $a = $_GET['a'] ?? '';
-if ($a === 'ping') { echo json_encode(['ok' => true, 'auth' => hash_equals(APP_PASSWORD, $key)]); exit; }
-if (!hash_equals(APP_PASSWORD, $key)) { http_response_code(401); echo json_encode(['ok' => false, 'error' => 'bad password']); exit; }
+// Fix 1: compare against a bcrypt hash, never the plain password
+$authed = password_verify($key, APP_PASSWORD_HASH);
+if ($a === 'ping') { echo json_encode(['ok' => true, 'auth' => $authed]); exit; }
+if (!$authed) { http_response_code(401); echo json_encode(['ok' => false, 'error' => 'bad password']); exit; }
 
 $who = preg_replace('/[^a-z0-9_-]/', '', strtolower($_GET['who'] ?? ''));
 if ($who === '') { http_response_code(400); echo json_encode(['ok' => false, 'error' => 'who required']); exit; }
