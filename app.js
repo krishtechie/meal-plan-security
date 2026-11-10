@@ -419,21 +419,26 @@ const ING = [
  ['Ghee / oil (tsp)',900,0,0,100,5],['Maple syrup / honey (tbsp)',300,0,75,0,20],['Sugar (tsp)',400,0,100,0,4],['Protein bar (piece)',330,33,37,12,60],['Dark chocolate 70%',580,8,45,42,10],
 ];
 const ICON = {
-  prot:'<svg viewBox="0 0 24 24"><path d="M12 3c4 0 7 4.5 7 9.5S16 21 12 21s-7-3.5-7-8.5S8 3 12 3z"/><path d="M9.5 12.5c0-1.4 1.1-2.5 2.5-2.5"/></svg>',
-  carb:'<svg viewBox="0 0 24 24"><path d="M4 11h16v2a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6v-2z"/><path d="M7 11c0-2 1-3 2.5-3S12 9 12 11M12 11c0-2 1-3 2.5-3S17 9 17 11"/></svg>',
-  bf:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
-  veg:'<svg viewBox="0 0 24 24"><path d="M5 19c6 0 13-5 14-14-9 1-14 8-14 14z"/><path d="M5 19c3-4 6-7 9-9"/></svg>',
-  side:'<svg viewBox="0 0 24 24"><path d="M3 12h18a9 9 0 0 1-18 0z"/><path d="M8 8c0-2 1-3 1-5M12 8c0-2 1-3 1-5"/></svg>',
-  fruit:'<svg viewBox="0 0 24 24"><path d="M12 8c-4 0-7 3-7 7s3 6 7 6 7-2 7-6-3-7-7-7z"/><path d="M12 8c0-2 1-4 3-5"/></svg>',
-  snack:'<svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="10" rx="3"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',
-  drink:'<svg viewBox="0 0 24 24"><path d="M6 4h12l-1.5 15a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2L6 4z"/><path d="M7 10h10"/></svg>',
-  fat:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
-  treat:'<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/><path d="M9 21v-6h6v6"/></svg>',
-  gym:'<svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>',
-  mine:'<svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>',
+  // SF-style glyphs: 1.6 stroke, round caps, drawn to the 24-grid
+  prot:'<svg viewBox="0 0 24 24"><path d="M12 3.5c3.6 0 6.5 4.3 6.5 9S15.6 20.5 12 20.5 5.5 17.2 5.5 12.5 8.4 3.5 12 3.5z"/><path d="M9.2 13.2c0-1.5 1.1-2.7 2.6-2.9"/></svg>',
+  carb:'<svg viewBox="0 0 24 24"><path d="M3.5 11.5h17v1.2a7 7 0 0 1-7 7h-3a7 7 0 0 1-7-7v-1.2z"/><path d="M8 11.5c0-2.2 1.3-3.5 2.8-3.5s2.4 1 2.4 2.2M12.8 10.2c.4-1.4 1.5-2.2 2.8-2.2 1.4 0 2.6 1.3 2.6 3.5"/></svg>',
+  bf:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg>',
+  veg:'<svg viewBox="0 0 24 24"><path d="M5 19.5c0-8 5.5-13.5 14.5-14.5-.5 9-6 14.5-14.5 14.5z"/><path d="M5 19.5c2.8-4 6-7.2 9.5-9.5"/></svg>',
+  side:'<svg viewBox="0 0 24 24"><path d="M3.5 12.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M9 9.5c0-1.5.8-2 .8-3.5M12.5 9.5c0-1.5.8-2 .8-3.5"/></svg>',
+  fruit:'<svg viewBox="0 0 24 24"><path d="M12 8.5c-1.2-.9-2.6-1.2-4-.8C5 8.6 4 12 5.2 15.3 6.3 18.6 8.5 21 10.3 21c.6 0 1.1-.2 1.7-.5.6.3 1.1.5 1.7.5 1.8 0 4-2.4 5.1-5.7C20 12 19 8.6 16 7.7c-1.4-.4-2.8-.1-4 .8z"/><path d="M12 8.5c0-2 1-3.8 2.8-4.5"/></svg>',
+  snack:'<svg viewBox="0 0 24 24"><rect x="3.5" y="7" width="17" height="10" rx="4"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',
+  drink:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.8 6 11.2A6 6 0 0 1 6 14.2C6 9.8 12 3 12 3z"/><path d="M9 14.5a3 3 0 0 0 2 2.8"/></svg>',
+  fat:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.8 6 11.2A6 6 0 0 1 6 14.2C6 9.8 12 3 12 3z"/></svg>',
+  treat:'<svg viewBox="0 0 24 24"><path d="M4 13.5c1.5 0 1.5 1.5 3 1.5s1.5-1.5 3-1.5 1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5"/><path d="M4.5 13V11a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v2M5 15v4.5h14V15M12 9V6.5M12 4.5v.3"/></svg>',
+  gym:'<svg viewBox="0 0 24 24"><path d="M7 8.5v7M17 8.5v7M3.5 10.5v3M20.5 10.5v3M4.5 9.5v5M19.5 9.5v5M7 12h10"/></svg>',
+  steps:'<svg viewBox="0 0 24 24"><circle cx="13.5" cy="4.5" r="1.6"/><path d="M10.5 21l2-5.5-2.5-2.2 1-4.8 2.5 1.5 2.5 2.5M9 12.5l1.5-4 3-1.2 2.5 1.2 1.5 2.5M14 15.5l2 1.5v4"/></svg>',
+  sleep:'<svg viewBox="0 0 24 24"><path d="M19.5 14.8A8 8 0 0 1 9.2 4.5a8 8 0 1 0 10.3 10.3z"/><path d="M15 3h3.5L15 7h3.5"/></svg>',
+  mine:'<svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.2 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.2 5.9-.9z"/></svg>',
+  water:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.8 6 11.2A6 6 0 0 1 6 14.2C6 9.8 12 3 12 3z"/></svg>',
 };
 const ic=(cat)=>`<span class="ico ${cat}">${ICON[cat]||ICON.mine}</span>`;
 const ALIAS = {
+ s_tadka:'tadka curry base onion tomato ginger garlic popu talimpu oil masala base',s_tadka2:'tadka rich curry base 2 tsp oil',s_curd6:'curd perugu dahi yogurt 6% thick',s_curd3:'curd perugu dahi yogurt 3%',p_mushtom:'mushroom tomato curry puttagodugu kura',p_vegbirleft:'veg biryani leftover biriyani pulao',v_bhendi40:'bhendi fry okra bendakaya vepudu bhindi',v_sweetkalehalf:'sweet kale salad kit costco half bag shared',v_tomcurry:'tomato curry tomato kura',k_mixnuts:'mixed nuts pista walnut cashew trail',k_pista10:'pista pistachio',k_walnut10:'walnut akhrot',k_cashew10:'cashew kaju jeedipappu',k_choc80:'dark chocolate 80 lindt',k_peanut30:'peanuts palli groundnut verusenaga',
  v_carrotfry:'carrot fry carrot curry carrot poriyal gajar',v_carrot:'carrot fry carrot curry gajar',v_potatofry:'potato fry aloo fry bangaladumpa alu urulagadda',v_aloofry:'potato fry aloo fry',v_aloo:'potato curry aloo curry bangaladumpa',
  v_bhendifry:'bhendi fry okra fry bendakaya ladyfinger bhindi',v_bhendi:'bhendi fry okra bendakaya bhindi ladyfinger',v_dondafry:'dondakaya fry ivy gourd tindora tendli',v_dondakaya:'dondakaya ivy gourd tindora',
  v_cabbagefry:'cabbage fry cabbage curry kosu',v_cabbage:'cabbage kosu patta gobi',v_beansfry:'beans fry french beans',v_beans:'beans fry',v_beetrootfry:'beetroot fry beet',v_beetroot:'beetroot curry beet',
@@ -462,6 +467,34 @@ const ALIAS = {
 };
 const F = {}; const CAT_OF = {};
 for(const c in RAW) RAW[c].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; });
+// Telugu kitchen extras: logged as you actually cook and eat them
+const EXTRA = {
+  side:[
+    ['s_tadka','Curry base (tadka): onion, tomato, ginger-garlic, 1 tsp cold-pressed peanut oil','1 serving (60 g)',80,1,6,5,'v'],
+    ['s_tadka2','Curry base, 2 tsp oil (richer tadka)','1 serving (70 g)',125,1,6,10,'v'],
+    ['s_curd6','Curd / perugu from 6% milk','100 g',85,4,5,6,'v'],
+    ['s_curd3','Curd / perugu from 3% milk','100 g',62,4,5,3,'v'],
+  ],
+  prot:[
+    ['p_mushtom','Mushroom tomato curry, home (with tadka)','100 g',75,3,6,5,'v'],
+    ['p_vegbirleft','Veg biryani, home, leftover (with the oil it was cooked in)','100 g',155,3,24,5,'v'],
+  ],
+  veg:[
+    ['v_bhendi40','Bhendi fry (bendakaya vepudu), home, with tadka','100 g',95,2,8,6,'v'],
+    ['v_sweetkalehalf','Sweet Kale salad kit, half bag shared, with dressing and toppings','1/2 bag (about 175 g)',230,5,18,15,'v'],
+    ['v_tomcurry','Tomato pappu-less curry (tomato kura) with tadka','100 g',70,1,7,4,'v'],
+  ],
+  snack:[
+    ['k_mixnuts','Pista + walnut + cashew, roasted','30 g (10 g each)',180,5,7,15,'v'],
+    ['k_pista10','Pistachios, roasted, shelled','10 g',56,2,3,4,'v'],
+    ['k_walnut10','Walnuts','10 g',65,2,1,7,'v'],
+    ['k_cashew10','Cashews, roasted','10 g',56,2,3,4,'v'],
+    ['k_choc80','Dark chocolate 80%','10 g',58,1,4,4,'v'],
+    ['k_peanut30','Peanuts, roasted (palli)','30 g',170,8,5,14,'v'],
+  ],
+};
+for(const c in EXTRA) EXTRA[c].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; if(RAW[c]) RAW[c].push(r); });
+
 
 // ================= PEOPLE & TEMPLATES =================
 // template meal: {name,time,nv:[ids],v:[ids]}
@@ -710,19 +743,21 @@ function fmtG(it,q){ if(!it.g) return q===1?'':q+' x'; if(q===1) return it.g; if
 
 // ================= RENDER =================
 let _lastView=null,_lastDay=null;
+// Date of weekday i (0=Mon) in the current week
+function weekDate(i){ const t=new Date(); const dow=(t.getDay()+6)%7; const d=new Date(t); d.setDate(t.getDate()-dow+i); return d; }
 function render(){
   const same=(_lastView===S.view&&_lastDay===S.day); const _sy=same?window.scrollY:0; _lastView=S.view; _lastDay=S.day;
   const ps=PS();
   document.querySelectorAll('.who').forEach(b=>b.classList.toggle('on',b.dataset.who===S.who));
   document.getElementById('whoName').textContent=P().name;
   const hh=new Date().getHours(); const greet=hh<12?'Good morning':hh<17?'Good afternoon':'Good evening';
-  const gEl=document.getElementById('greet'); if(gEl){ gEl.textContent=greet+', '+P().name; }
+  const gEl=document.getElementById('greet'); if(gEl){ gEl.textContent=(window.innerWidth<560?greet.replace('Good ','').replace(/^./,c=>c.toUpperCase()):greet)+', '+P().name; }
   const dEl=document.getElementById('today'); if(dEl){ dEl.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'}); }
   document.getElementById('allVeg').checked=ps.allVeg; document.getElementById('allNonVeg').checked=!!ps.allNonVeg; document.getElementById('eggsVeg').checked=ps.eggsVeg; document.getElementById('seafood').checked=!!ps.seafood;
   const vd=document.getElementById('vegDays'); vd.innerHTML=''; DAYS.forEach((n,i)=>{ const b=document.createElement('button'); const v=isVeg(i); b.className='vd'+(v?' veg':''); b.innerHTML=`${n}<small>${v?'VEG':'NON'}</small>`; b.onclick=()=>toggleVegDay(i); vd.appendChild(b); });
   const d=document.getElementById('days'); d.innerHTML='';
-  DAYS.forEach((n,i)=>{ const b=document.createElement('div'); b.className='dayc'+(i===S.day?' on':''); const v=isVeg(i);
-    b.innerHTML=`<b>${n}</b><i class="${v?'veg':''}">${v?'VEG':'NON-VEG'}</i>`; b.onclick=()=>{S.day=i;S.view='plan';render();}; d.appendChild(b); });
+  DAYS.forEach((n,i)=>{ const b=document.createElement('div'); const todayIdx=(new Date().getDay()+6)%7; b.className='dayc'+(i===S.day?' on':'')+(i<todayIdx?' past':''); const v=isVeg(i);
+    const dt=weekDate(i); b.innerHTML=`<small>${n}</small><b>${dt.getDate()}</b><i class="${v?'veg':''}" title="${v?'Veg day':'Non-veg day'}"></i>`; b.onclick=()=>{S.day=i;S.view='plan';render();}; d.appendChild(b); });
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.view===S.view));
   document.getElementById('vPlan').hidden=S.view!=='plan';
   document.getElementById('vWeek').hidden=S.view!=='week';
@@ -734,6 +769,8 @@ function render(){
 function renderPlan(){
   const ps=PS(); const plan=dayPlan();
   document.getElementById('title').textContent=P().name+' · '+FULL[S.day];
+  const other=S.who==='p1'?'p2':'p1'; const cb=document.getElementById('copyDay'); cb.textContent='Copy to '+PEOPLE[other].name; cb.title='Give '+PEOPLE[other].name+' the same meals, scaled to their portions';
+  cb.onclick=()=>{ if(!confirm(`Replace ${PEOPLE[other].name}'s ${FULL[S.day]} with what ${P().name} ate, portions scaled to ${PEOPLE[other].name}'s target? Non-veg and eggs are dropped on ${PEOPLE[other].name}'s veg days.`)) return; const n=copyDayTo(other); schedulePush(other); alert(`${n} items copied to ${PEOPLE[other].name}. Tap ${PEOPLE[other].name} at the top to review.`); };
   const sw=document.getElementById('daySwitch'); sw.className='daysw'+(isVeg()?' veg':''); sw.textContent = isVeg() ? 'Veg day · tap for non-veg' : 'Non-veg day · tap for veg'; sw.onclick=()=>toggleVegDay(S.day);
   document.getElementById('subtitle').textContent = isVeg() ? (ps.allVeg?'Veg month is on. ':'Veg day. ')+'Protein from paneer, pappu, Greek yogurt, soya, tofu and whey'+(ps.eggsVeg?' (eggs allowed).':' (no eggs).') : (ps.allNonVeg?'Non-veg every day is on. ':'Non-veg day. ')+'Chicken at lunch and dinner, same dishes as Person 2, bigger portions.';
   const n=document.getElementById('pnotes'); n.innerHTML=P().notes||''; n.style.display=P().notes?'block':'none';
@@ -741,15 +778,16 @@ function renderPlan(){
   const dayP=plan.reduce((n,m)=>n+tot(m.items).p,0); const dayOK=dayP>=P().target.p-10;
   plan.forEach((m,mi)=>{
     const mt=tot(m.items); all.push(...m.items);
-    const box=document.createElement('div'); box.className='meal'+(/gym/i.test(m.name)?' gym':'');
+    const box=document.createElement('div'); box.className='meal'+(/^gym$/i.test(m.name.trim())?' gym':'');
     const tshort=m.time.replace(' to ','–').replace(/:00/g,'').replace(/ (am|pm)/g,'$1');
-    const wo=WORKOUTS.find(x=>x.day===S.day); const mname=/gym/i.test(m.name)&&wo?`Gym · ${wo.name}`:m.name;
+    const wo=WORKOUTS.find(x=>x.day===S.day); const mname=/^gym$/i.test(m.name.trim())&&wo?`Gym · ${wo.name}`:m.name;
     const share=mealShare(m.name); const ptgt=share?Math.round(P().target.p*share):0; const pc = !ptgt?'var(--muted)':(dayOK||mt.p>=ptgt-3)?'var(--mint)':mt.p>=ptgt*0.7?'var(--amber)':'var(--rose)';
-    let html=`<div class="time">${tshort}</div><div class="hd"><b>${mname}</b><span>${mt.k} kcal · <b class="pcol" data-c="${pc}">${mt.p}${ptgt?' / '+ptgt:''} g</b></span></div>`;
+    const mcat=/gym/i.test(m.name)?'gym':/breakfast/i.test(m.name)?'bf':/waking/i.test(m.name)?'drink':/lunch|dinner/i.test(m.name)?'prot':'snack';
+    let html=`<div class="hd"><span class="ico ${mcat} tile">${ICON[mcat]||ICON.mine}</span><div class="hdt"><b>${mname}</b><span><em>${tshort}</em> · ${mt.k} kcal${ptgt?` · <b class="pcol" data-c="${pc}">${mt.p} / ${ptgt} g protein</b>`:''}</span></div><button class="btn addr" data-a="add" data-mi="${mi}" title="Add food" aria-label="Add food to ${m.name}">+</button></div>`;
     m.items.forEach((x,ii)=>{ const it=F[x.id]; if(!it) return;
-      html+=`<div class="item" data-cat="${it.cat}">${ic(it.cat)}<div><div class="n">${it.n}</div><div class="eat">Eat: <b>${fmtG(it,x.q)||'as listed'}</b></div><div class="m">${Math.round(it.k*x.q)} kcal · ${Math.round(it.p*x.q)}g P · ${Math.round(it.c*x.q)}g C · ${Math.round(it.f*x.q)}g F ${tagHtml(it.t)}</div></div>
+      html+=`<div class="item" data-cat="${it.cat}">${ic(it.cat)}<div><div class="n">${it.n}</div><div class="eat">Eat <b>${fmtG(it,x.q)||'as listed'}</b> · ${Math.round(it.k*x.q)} kcal</div><div class="chips"><span class="chip p">Protein ${Math.round(it.p*x.q)} g</span><span class="chip c">Carbs ${Math.round(it.c*x.q)} g</span><span class="chip f">Fat ${Math.round(it.f*x.q)} g</span>${tagHtml(it.t)}</div></div>
         <div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div></div>`; });
-    html+=`<button class="btn add" data-a="add" data-mi="${mi}">+ Add food to ${m.name.toLowerCase()}</button>`;
+    if(!m.items.length) html+=`<button class="btn add" data-a="add" data-mi="${mi}">+ Add food to ${m.name.toLowerCase().replace(/ \(.*\)/,'')}</button>`;
     box.innerHTML=html; wrap.appendChild(box);
   });
   wrap.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>action(b.dataset.a,+b.dataset.mi,+b.dataset.ii));
@@ -762,19 +800,73 @@ function renderPlan(){
   const left=tk-T.k; const pLeft=Math.max(0,tp-T.p); const cMax=P().carbMax, fMax=P().fatMax;
   const kcol = kcls==='over'?'var(--rose)':kcls==='low'?'var(--amber)':'var(--ink)';
   const status = kcls==='over' ? `${Math.abs(left)} kcal over` : kcls==='low' ? `${left} kcal under, eat a little more` : left>=0 ? `${left} kcal left to eat` : `${Math.abs(left)} kcal over target`;
+  const gauge=(val,tgt,color)=>{ const size=180, r=74, cx=90, cy=92; const a0=135, sweep=270; const f=Math.min(1,Math.max(0,val/tgt));
+    const pt=(a)=>{ const t=(a)*Math.PI/180; return [cx+r*Math.cos(t), cy+r*Math.sin(t)]; };
+    const arc=(a1,a2)=>{ const [x1,y1]=pt(a1),[x2,y2]=pt(a2); const big=(a2-a1)>180?1:0; return `M${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${big} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`; };
+    const a2=a0+Math.max(0.01,sweep*f);
+    return `<svg class="gauge" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="gg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#7ad0b8"/><stop offset="1" stop-color="#c7b8ff"/></linearGradient></defs><path class="gbg" d="${arc(a0,a0+sweep)}"/><path class="gfg" d="${arc(a0,a2)}" stroke="${kcls==='ok'?'url(#gg)':color}"/><circle class="gdot" cx="${pt(a2)[0].toFixed(1)}" cy="${pt(a2)[1].toFixed(1)}" r="5"/></svg>`; };
+  const gcol = kcls==='over'?'var(--rose)':kcls==='low'?'var(--amber)':'var(--acc)';
+  const glabel = left>=0 ? 'Still can eat' : 'Over target by';
+  const mini=(val,tgt,cls)=>{ const r=15,C=2*Math.PI*r,f=Math.min(1,Math.max(0,val/tgt)); return `<svg class="mini ${cls}" viewBox="0 0 40 40"><circle class="mbg" cx="20" cy="20" r="${r}"/><circle class="mfg" cx="20" cy="20" r="${r}" stroke-dasharray="${(C*f).toFixed(1)} ${C.toFixed(1)}"/></svg>`; };
+  const bar=(cls,label,val,tgt,ic,over)=>{ const pc=Math.min(100,Math.round(val/tgt*100)); return `<div class="bar ${cls}${over?' over':''}"><span class="mwrap">${mini(val,tgt,cls)}<span class="ico ${ic} tile">${ICON[ic]}</span></span><div class="bart"><div class="barl"><b>${label}</b><span>${val} / ${tgt} g</span></div><div class="bartrack"><i data-w="${pc}"></i></div></div></div>`; };
   document.getElementById('totals').innerHTML = `
     <div class="hero">
-      <div class="heromain">
-        <div class="heroring">${ring(T.k,tk,kcol,124)}<div class="lab"><b>${T.k}</b><span>of ${tk} kcal</span></div></div>
-        <div class="herotxt"><div class="big">${status}</div><div class="small">${maint-T.k>0?'−':'+'}${Math.abs(maint-T.k)} kcal vs maintenance · about ${((maint-T.k)*7/7700).toFixed(1)} kg a week at this pace</div></div>
+      <div class="gcard">
+        <div class="gwrap">${gauge(T.k,tk,gcol)}<div class="glab" data-l="${glabel}"><span>${glabel}</span><b>${Math.abs(left)}</b><small>kcal</small></div></div>
+        <div class="gpill">${T.k} / ${tk} kcal</div>
       </div>
-      <div class="macros">
-        <div class="mac"><div class="mring">${ring(T.p,tp,pcls==='low'?'var(--amber)':'var(--mint)',56)}<i class="ico prot">${ICON.prot}</i></div><div><b>${T.p} g</b><span>protein</span><small>${pLeft>0?pLeft+' g to go':'target met'}</small></div></div>
-        <div class="mac"><div class="mring">${ring(T.c,cMax,T.c>cMax?'var(--rose)':'var(--gold)',56)}<i class="ico carb">${ICON.carb}</i></div><div><b>${T.c} g</b><span>carbs</span><small>${T.c>cMax?(T.c-cMax)+' g over':(cMax-T.c)+' g left'}</small></div></div>
-        <div class="mac"><div class="mring">${ring(T.f,fMax,T.f>fMax?'var(--rose)':'var(--sky)',56)}<i class="ico fat">${ICON.fat}</i></div><div><b>${T.f} g</b><span>fat</span><small>${T.f>fMax?(T.f-fMax)+' g over':(fMax-T.f)+' g left'}</small></div></div>
+      <div class="bars">
+        ${bar('p','Protein',T.p,tp,'prot',false)}
+        ${bar('c','Carbs',T.c,cMax,'carb',T.c>cMax)}
+        ${bar('f','Fat',T.f,fMax,'fat',T.f>fMax)}
       </div>
+      <div class="pace">${status}. ${maint-T.k>0?'−':'+'}${Math.abs(maint-T.k)} kcal vs maintenance, about ${Math.abs((maint-T.k)*7/7700).toFixed(1)} kg a week at this pace.</div>
     </div>`;
+  document.querySelectorAll('.bartrack i').forEach(i=>{ i.style.width=i.dataset.w+'%'; });
   renderWarnings(plan,T,tk,tp);
+  renderCheckin();
+}
+
+// ---- Daily check-in: water, steps, sleep. Keyed by real date, per person ----
+function dkey(){ return weekDate(S.day).toISOString().slice(0,10); }
+function dlog(){ const ps=PS(); if(!ps.log) ps.log={}; const k=dkey(); if(!ps.log[k]) ps.log[k]={water:0,steps:'',bed:'',wake:''}; return ps.log[k]; }
+function toMin(t){ if(!t) return null; const [h,m]=t.split(':').map(Number); return h*60+m; }
+function fmtT(min){ min=((min%1440)+1440)%1440; const h=Math.floor(min/60), m=min%60; const ap=h>=12?'pm':'am'; const hh=h%12||12; return `${hh}:${String(m).padStart(2,'0')} ${ap}`; }
+function renderCheckin(){
+  const el=document.getElementById('checkin'); if(!el) return; const L=dlog(); const cups=8;
+  const stepsT=P().name==='Person 1'?9000:8000; const st=parseInt(L.steps)||0; const sPc=Math.min(100,Math.round(st/stepsT*100));
+  let slp=null, bedSug='';
+  const wake=toMin(L.wake||'06:30'); if(L.bed&&L.wake){ const b=toMin(L.bed); slp=((wake-b)+1440)%1440/60; }
+  bedSug=fmtT(wake-7.5*60);
+  const sleepTxt = slp===null ? `Aim 7 to 8 h. For a ${fmtT(wake)} wake-up, lights out by <b>${bedSug}</b>.` : slp<6.5 ? `<b>${slp.toFixed(1)} h</b>, short. Under 7 h the body drops muscle, not fat, on the same food. Tonight: bed by <b>${bedSug}</b>.` : slp>9 ? `<b>${slp.toFixed(1)} h</b>, more than needed. Keep wake-up fixed at ${fmtT(wake)}.` : `<b>${slp.toFixed(1)} h</b>, on target. Keep it.`;
+  el.innerHTML=`<div class="ck">
+    <div class="ckhd"><b>Day check-in</b><span>${weekDate(S.day).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})} · ${P().name}</span></div>
+    <div class="ckrow"><div class="ckl"><span class="ico drink tile">${ICON.drink}</span><div><b>Water</b><span>${L.water*250>=1000?(L.water*0.25).toFixed(2).replace(/\.?0+$/,'')+' L':L.water*250+' ml'} of 2.5 L · tap a cup</span></div></div>
+      <div class="cups">${Array.from({length:cups},(_,i)=>`<button class="cup${i<L.water?' on':''}" data-cup="${i+1}" aria-label="${(i+1)*250} ml"></button>`).join('')}</div></div>
+    <div class="ckrow"><div class="ckl"><span class="ico gym tile">${ICON.steps}</span><div><b>Steps</b><span>${st?st.toLocaleString()+' of '+stepsT.toLocaleString():'Target '+stepsT.toLocaleString()+' · enter from your phone at night'}</span></div></div>
+      <div class="ckin"><input type="number" inputmode="numeric" id="ckSteps" placeholder="8000" value="${L.steps||''}"><div class="bartrack"><i data-w="${sPc}"></i></div></div></div>
+    <div class="ckrow"><div class="ckl"><span class="ico snack tile">${ICON.sleep}</span><div><b>Sleep</b><span>${sleepTxt}</span></div></div>
+      <div class="cktimes"><label>Bed<input type="time" id="ckBed" value="${L.bed||''}"></label><label>Woke<input type="time" id="ckWake" value="${L.wake||''}"></label></div></div>
+    <div class="cknote">Evening routine: gym 5 to 6, dinner by 7:30, 10 min walk, screens off 30 min before bed. Weigh in the morning after the bathroom, before water.</div>
+  </div>`;
+  el.querySelectorAll('.cup').forEach(b=>b.onclick=()=>{ const n=+b.dataset.cup; L.water = (L.water===n)? n-1 : n; save(); renderCheckin(); });
+  el.querySelector('#ckSteps').onchange=e=>{ L.steps=e.target.value; save(); renderCheckin(); };
+  el.querySelector('#ckBed').onchange=e=>{ L.bed=e.target.value; save(); renderCheckin(); };
+  el.querySelector('#ckWake').onchange=e=>{ L.wake=e.target.value; save(); renderCheckin(); };
+  el.querySelectorAll('.bartrack i').forEach(i=>{ i.style.width=i.dataset.w+'%'; });
+}
+
+// Copy today's food to the other person, portions scaled to their calorie target (same dishes, their size)
+function copyDayTo(other){
+  const me=S.who; const src=dayPlan(); const ratio=PEOPLE[other].target.k/P().target.k;
+  const items=src.map(m=>({name:m.name,items:m.items.map(x=>({id:x.id,q:Math.max(0.25,Math.round(x.q*ratio*4)/4)}))}));
+  const customs=PS().customs;
+  S.who=other; const ps=PS(); customs.forEach(c=>{ if(!ps.customs.find(k=>k.id===c.id)) ps.customs.push(c); F[c.id]=c; });
+  const dst=dayPlan(); let n=0;
+  items.forEach((m,i)=>{ const key=m.name.replace(/ \(.*\)/,'').toLowerCase(); let t=dst[i]&&dst[i].name.replace(/ \(.*\)/,'').toLowerCase()===key?dst[i]:dst.find(d=>d.name.replace(/ \(.*\)/,'').toLowerCase()===key); if(!t) t=dst[Math.min(i,dst.length-1)]; if(!t) return;
+    const allowedHere=(id)=>{ const it=F[id]; if(!it) return false; if(isVeg()&&(it.t==='n'||it.t==='tn')) return false; if(isVeg()&&!ps.eggsVeg&&(it.t==='e'||it.t==='te')) return false; return true; };
+    t.items=m.items.filter(x=>allowedHere(x.id)); n+=t.items.length; });
+  save(); S.who=me; return n;
 }
 function treatCount(items){ return items.filter(x=>F[x.id]&&F[x.id].cat==='treat').length; }
 function renderWarnings(plan,T,tk,tp){
@@ -816,8 +908,11 @@ function renderWarnings(plan,T,tk,tp){
     if(fat) fixes.push({t:`Biggest fat source is ${fat.it.n} <span data-s="s15">(${Math.round(fat.fv)} g fat). Swap it for a leaner option.</span>`, label:'Swap', run:()=>openSheet(fat.mi,fat.ii)}); }
   const w=document.getElementById('warn');
   if(!out.length){ w.style.display='block'; w.className='warn ok'; w.innerHTML=`<b>On target.</b> ${T.k} kcal, ${T.p} g protein, ${maintDeficit(T.k)} kcal deficit. This is the day that gets you lean. Repeat it.`; return; }
+  const hrNow=new Date().getHours(); if(T.k<tk-250&&hrNow>=15&&S.day===((new Date().getDay()+6)%7)) out.push({l:'amb',t:`It is after 3 pm and you are ${tk-T.k} kcal short. Put the gap into dinner or the evening snack: protein first (whey, Greek yogurt, paneer, soya, chicken), then a fist of rice. Do not skip it, under-eating today costs muscle, not fat.`});
   w.style.display='block'; w.className='warn'; w.innerHTML=out.map(o=>`<div class="wi ${o.l}"><span class="dot" aria-hidden="true">${o.l==="red"?"!":"•"}</span><span class="wt">${o.t}</span></div>`).join('')
-    + (fixes.length?`<div class="fixhd">Quick fixes</div>`+fixes.map((f,i)=>`<div class="fix"><span>${f.t}</span><button class="btn sw" data-fix="${i}">${f.label}</button></div>`).join(''):'');
+    + (()=>{ const more=[],less=[]; fixes.forEach((f,i)=>{ (/^(Shrink|Swap)/.test(f.label)||/^Biggest fat/.test(f.t)?less:more).push(i); });
+        const grp=(hd,ids)=>ids.length?`<div class="fixhd">${hd}</div>`+ids.map(i=>`<div class="fix"><span>${fixes[i].t}</span><button class="btn sw" data-fix="${i}">${fixes[i].label}</button></div>`).join(''):'';
+        return grp('Eat more of this',more)+grp('Eat less of this',less); })();
   w.querySelectorAll('button[data-fix]').forEach(b=>b.onclick=()=>fixes[+b.dataset.fix].run());
 }
 function maintDeficit(k){ return P().maint-k; }
@@ -940,6 +1035,9 @@ document.querySelectorAll('.who').forEach(b=>b.onclick=()=>{S.who=b.dataset.who;
 document.querySelectorAll('.nav button[data-view]').forEach(b=>b.onclick=()=>{S.view=b.dataset.view; render();});
 document.getElementById('fab').onclick=()=>{ S.view='plan'; render(); const plan=dayPlan(); const h=new Date().getHours(); const order=[[7,/waking/i],[10,/breakfast/i],[12,/mid-morning/i],[15,/lunch/i],[17,/pre-gym/i],[21,/dinner/i],[24,/bed/i]]; let mi=plan.findIndex(m=>/lunch/i.test(m.name)); for(const [lim,re] of order){ if(h<lim){ const i=plan.findIndex(m=>re.test(m.name)); if(i>=0){ mi=i; break; } } } openSheet(mi,null); };
 document.getElementById('openSettings').onclick=()=>document.getElementById('ovSet').classList.add('show');
+document.getElementById('openGuide').onclick=()=>document.getElementById('ovGuide').classList.add('show');
+document.getElementById('guideClose').onclick=()=>document.getElementById('ovGuide').classList.remove('show');
+document.getElementById('ovGuide').onclick=e=>{ if(e.target.id==='ovGuide') document.getElementById('ovGuide').classList.remove('show'); };
 document.getElementById('setClose').onclick=()=>document.getElementById('ovSet').classList.remove('show');
 document.getElementById('ovSet').onclick=e=>{ if(e.target.id==='ovSet') e.target.classList.remove('show'); };
 document.getElementById('allVeg').onchange=e=>{ PS().allVeg=e.target.checked; if(e.target.checked) PS().allNonVeg=false; save(); render(); };

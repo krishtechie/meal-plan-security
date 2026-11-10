@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=5">
+<link rel="stylesheet" href="app.css?v=10">
 </head>
 <body>
 <div class="app">
@@ -22,10 +22,10 @@
   </header>
 
   <nav class="nav"><div class="in">
-    <button data-view="plan" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Plan</button>
-    <button data-view="week"><svg viewBox="0 0 24 24"><path d="M4 19V5M10 19V9M16 19v-6M22 19H2"/></svg>Week</button>
-    <button data-view="workout"><svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>Workout</button>
-    <button data-view="weight"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 5-8 4 5"/></svg>Weight</button>
+    <button data-view="plan" class="on"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5"/><path d="M3.5 9.5h17M8 2.5v3.5M16 2.5v3.5M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/></svg>Plan</button>
+    <button data-view="week"><svg viewBox="0 0 24 24"><rect x="3.5" y="12" width="4" height="8" rx="1.2"/><rect x="10" y="6" width="4" height="14" rx="1.2"/><rect x="16.5" y="9" width="4" height="11" rx="1.2"/></svg>Week</button>
+    <button data-view="workout"><svg viewBox="0 0 24 24"><path d="M7 8.5v7M17 8.5v7M3.5 10.5v3M20.5 10.5v3M4.5 9.5v5M19.5 9.5v5M7 12h10"/></svg>Workout</button>
+    <button data-view="weight"><svg viewBox="0 0 24 24"><path d="M3.5 16.5l4.5-5.5 4 3.5 4.5-6.5 4 4"/><circle cx="20.5" cy="12" r="1.2"/></svg>Weight</button>
   </div></nav>
   <button id="fab" class="fab" title="Log food" aria-label="Log food"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
 
@@ -33,11 +33,62 @@
     <div class="strip" id="days"></div>
     <div class="sum" id="totals"></div>
     <div class="warn" id="warn"></div>
-    <div class="title"><h2 id="title"></h2><button class="daysw" id="daySwitch"></button></div>
+    <div class="title"><h2 id="title"></h2><div class="tbtns"><button class="daysw" id="daySwitch"></button><button class="daysw copy" id="copyDay"></button></div></div>
     <div class="note" id="subtitle" data-s="s3"></div>
     <div class="tl" id="meals"></div>
     <div class="rules" id="pnotes" data-s="s4"></div>
-    <div class="rules">
+    <div class="checkin" id="checkin"></div>
+    <div class="guidebtn"><button class="btn q" id="openGuide">Read the plan guide</button></div>
+  </section>
+
+  <section id="vWeek" hidden>
+    <div class="title"><h2 id="wkTitle"></h2></div>
+    <div class="note" data-s="s6">Totals for each day as currently set. Tap a row to open that day.</div>
+    <div class="tblwrap"><table><thead><tr><th>Day</th><th>Type</th><th>kcal</th><th>Protein</th><th class="hide-m">Carbs</th><th class="hide-m">Fat</th></tr></thead><tbody id="wkBody"></tbody></table></div>
+  </section>
+
+  <section id="vWorkout" hidden>
+    <div class="title"><h2 id="woTitle"></h2></div>
+    <div class="note" data-s="s6" id="woSub"></div>
+    <div id="woDays"></div>
+  </section>
+
+  <section id="vWeight" hidden>
+    <div class="title"><h2 id="wtTitle"></h2></div>
+    <div class="note">Weigh in the morning after the bathroom, before food. Synced for both of you.</div>
+    <div class="frm"><input type="date" id="wtDate"><input type="number" step="0.1" id="wtVal" placeholder="kg"><button class="btn pri" id="wtAdd">Add</button></div>
+    <div class="kpis3" id="wtStats"></div>
+    <div class="tblwrap"><table><thead><tr><th>Date</th><th>kg</th><th>7-day avg</th><th></th></tr></thead><tbody id="wtBody"></tbody></table></div>
+  </section>
+</div>
+
+<div class="ov" id="ov">
+  <div class="sheet">
+    <h3 id="shTitle"></h3>
+    <div class="sub" id="shSub"></div>
+    <div class="note" data-s="s7">★ = recommended, always listed first</div>
+    <div class="cats" id="cats"></div>
+    <input class="search" id="search" placeholder="Search food...">
+    <div id="opts"></div>
+    <button class="btn close q" id="shClose">Close</button>
+  </div>
+</div>
+
+<div class="ov" id="ovKey">
+  <div class="sheet" data-s="s8">
+    <h3>Sign in to sync</h3>
+    <div class="sub">Enter the app password set in config.php on your hosting. You do this once per phone or browser.</div>
+    <input class="search" id="keyIn" type="password" placeholder="App password" autocomplete="current-password">
+    <div class="sub" id="keyMsg" data-s="s9"></div>
+    <div class="row2"><button class="btn pri" id="keyGo">Sign in</button><button class="btn q" id="keySkip">Use this device only</button></div>
+  </div>
+</div>
+
+<div class="ov" id="ovGuide">
+  <div class="sheet">
+    <h3>Plan guide</h3>
+    <div class="sub">The rules behind the numbers. Read once, then let the app do the nagging.</div>
+    <div class="rules guide">
       <h3>Lean as fast as possible, no shortcuts</h3>
       <ul>
         <li><b>The deficit is set at the fastest safe pace:</b> about 650 kcal a day under maintenance, 0.6 to 0.7 kg a week. Going lower than the floor (Person 1 1,700, Person 2 1,350) is the shortcut that backfires: you lose muscle, look softer at the same weight, and rebound.</li>
@@ -85,54 +136,13 @@
       </ul>
       <div class="note">Workouts live in the Workout tab, split by body part per day.</div>
     </div>
-  </section>
-
-  <section id="vWeek" hidden>
-    <div class="title"><h2 id="wkTitle"></h2></div>
-    <div class="note" data-s="s6">Totals for each day as currently set. Tap a row to open that day.</div>
-    <div class="tblwrap"><table><thead><tr><th>Day</th><th>Type</th><th>kcal</th><th>Protein</th><th class="hide-m">Carbs</th><th class="hide-m">Fat</th></tr></thead><tbody id="wkBody"></tbody></table></div>
-  </section>
-
-  <section id="vWorkout" hidden>
-    <div class="title"><h2 id="woTitle"></h2></div>
-    <div class="note" data-s="s6" id="woSub"></div>
-    <div id="woDays"></div>
-  </section>
-
-  <section id="vWeight" hidden>
-    <div class="title"><h2 id="wtTitle"></h2></div>
-    <div class="note">Weigh in the morning after the bathroom, before food. Saved on this phone only.</div>
-    <div class="frm"><input type="date" id="wtDate"><input type="number" step="0.1" id="wtVal" placeholder="kg"><button class="btn pri" id="wtAdd">Add</button></div>
-    <div class="kpis3" id="wtStats"></div>
-    <div class="tblwrap"><table><thead><tr><th>Date</th><th>kg</th><th>7-day avg</th><th></th></tr></thead><tbody id="wtBody"></tbody></table></div>
-  </section>
-</div>
-
-<div class="ov" id="ov">
-  <div class="sheet">
-    <h3 id="shTitle"></h3>
-    <div class="sub" id="shSub"></div>
-    <div class="note" data-s="s7">★ = recommended, always listed first</div>
-    <div class="cats" id="cats"></div>
-    <input class="search" id="search" placeholder="Search food...">
-    <div id="opts"></div>
-    <button class="btn close q" id="shClose">Close</button>
-  </div>
-</div>
-
-<div class="ov" id="ovKey">
-  <div class="sheet" data-s="s8">
-    <h3>Sign in to sync</h3>
-    <div class="sub">Enter the app password set in config.php on your hosting. You do this once per phone or browser.</div>
-    <input class="search" id="keyIn" type="password" placeholder="App password" autocomplete="current-password">
-    <div class="sub" id="keyMsg" data-s="s9"></div>
-    <div class="row2"><button class="btn pri" id="keyGo">Sign in</button><button class="btn q" id="keySkip">Use this device only</button></div>
+    <button class="btn close q" id="guideClose">Done</button>
   </div>
 </div>
 <div class="ov" id="ovSet">
   <div class="sheet">
     <h3>Settings for <span id="whoName"></span></h3>
-    <div class="sub">Saved on this phone. Each person has their own.</div>
+    <div class="sub">Each person has their own. Changes sync to your hosting.</div>
     <div class="tgl" data-s="s10"><span>Veg days<small>Tap a day to switch it between veg and non-veg. Default is Tue, Fri, Sat.</small></span><div class="vdays" id="vegDays"></div></div>
     <label class="tgl"><span>Veg every day<small>Karthika Masam, vratam, fasting month. Overrides the days above while on.</small></span><span class="swt"><input type="checkbox" id="allVeg"><i></i></span></label>
     <label class="tgl"><span>Non-veg every day<small>Chicken at lunch and dinner all week. Overrides the days above while on.</small></span><span class="swt"><input type="checkbox" id="allNonVeg"><i></i></span></label>
@@ -153,6 +163,6 @@
   </div>
 </div>
 
-<script src="app.js?v=5" defer></script>
+<script src="app.js?v=10" defer></script>
 </body>
 </html>
