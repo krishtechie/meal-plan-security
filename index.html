@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=26">
+<link rel="stylesheet" href="app.css?v=27">
 </head>
 <body>
 <div class="app">
@@ -45,7 +45,8 @@
 
   <section id="vWeek" hidden>
     <div class="title"><h2 id="wkTitle"></h2></div>
-    <div class="note" data-s="s6">Totals for each day as currently set. Tap a row to open that day.</div>
+    <div id="score"></div>
+    <div class="note" data-s="s6">Totals for each day as logged. Tap a row to open that day.</div>
     <div class="tblwrap"><table><thead><tr><th>Day</th><th>Type</th><th>kcal</th><th>Protein</th><th class="hide-m">Carbs</th><th class="hide-m">Fat</th></tr></thead><tbody id="wkBody"></tbody></table></div>
   </section>
 
@@ -64,6 +65,7 @@
       <button class="btn pri wide" id="wtAdd">Add weigh-in</button>
     </div>
     <div class="kpis3" id="wtStats"></div>
+    <div class="card chart" id="wtChart"></div>
     <div class="tblwrap"><table><thead><tr><th>Date</th><th>kg</th><th>7-day avg</th><th></th></tr></thead><tbody id="wtBody"></tbody></table></div>
   </section>
 </div>
@@ -83,8 +85,9 @@
 <div class="ov" id="ovKey">
   <div class="sheet" data-s="s8">
     <h3>Sign in to sync</h3>
-    <div class="sub">Enter the app password set in config.php on your hosting. You do this once per phone or browser.</div>
-    <input class="search" id="keyIn" type="password" placeholder="App password" autocomplete="current-password">
+    <div class="sub">Who is this phone? Each of you has your own password. You do this once per phone or browser.</div>
+    <div class="theme" id="keyWho"><button type="button" data-u="p1" class="on">Person 1</button><button type="button" data-u="p2">Person 2</button></div>
+    <input class="search" id="keyIn" type="password" placeholder="Password" autocomplete="current-password" data-s="s13">
     <div class="sub" id="keyMsg" data-s="s9"></div>
     <div class="row2"><button class="btn pri" id="keyGo">Sign in</button><button class="btn q" id="keySkip">Use this device only</button></div>
   </div>
@@ -168,6 +171,6 @@
   </div>
 </div>
 
-<script src="app.js?v=26" defer></script>
+<script src="app.js?v=27" defer></script>
 </body>
 </html>

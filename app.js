@@ -747,6 +747,13 @@ const CORE = {
     ['Suitcase carry (obliques, anti-lean)','Heavy dumbbell in one hand, walk tall 20 m, switch','3 x 20 m each','3 x 20 m each'],
   ]},
 };
+
+// ---- Workout log: weight x reps x sets per exercise, keyed by date ----
+function wlogPrev(name){ const ps=PS(); const today=ymd(new Date()); const keys=Object.keys(ps.wlog||{}).filter(k=>k<today&&ps.wlog[k][name]).sort(); if(!keys.length) return null; const k=keys[keys.length-1]; return Object.assign({d:k},ps.wlog[k][name]); }
+function wlogHtml(name){ const ps=PS(); const cur=((ps.wlog||{})[ymd(new Date())]||{})[name]||{}; const prev=wlogPrev(name);
+  const hint=prev?`Last ${new Date(prev.d+'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}: <b>${prev.w} kg × ${prev.r}</b>${prev.s?' × '+prev.s:''}${prev.w&&cur.w&&cur.w>prev.w?' · <em class="up">+'+(cur.w-prev.w).toFixed(1)+' kg</em>':''}`:'First time: pick a weight you can do for the top of the range with 2 reps left';
+  return `<div class="wlog" data-ex="${name.replace(/"/g,'&quot;')}"><div class="wlin"><label><span>kg</span><input class="lw" type="number" inputmode="decimal" step="0.5" min="0" value="${cur.w||''}" placeholder="0" autocomplete="off" name="log-kg"></label><label><span>reps</span><input class="lr" type="number" inputmode="numeric" min="0" value="${cur.r||''}" placeholder="0" autocomplete="off" name="log-reps"></label><label><span>sets</span><input class="ls" type="number" inputmode="numeric" min="0" value="${cur.s||''}" placeholder="0" autocomplete="off" name="log-sets"></label><span class="ldone${cur.w&&cur.r?' on':''}" aria-hidden="true">✓</span></div><div class="wlhint">${hint}</div></div>`; }
+function wlogLast(name){ const prev=wlogPrev(name); return prev?`<div class="wlhint">Last: <b>${prev.w} kg × ${prev.r}</b>${prev.s?' × '+prev.s:''} on ${new Date(prev.d+'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}</div>`:''; }
 function renderWorkout(){
   const k=S.who==='p1';
   document.getElementById('woTitle').textContent=P().name+' · weekly split';
@@ -758,9 +765,11 @@ function renderWorkout(){
   sorted.forEach(d=>{ const open=!!S.woOpen[d.day]; const box=document.createElement('div'); box.className='wo'+(d.day===todayIdx?' today':'')+(open?' open':' closed');
     const n=d.ex.length+(d.day<=4?4:0);
     let h=`<button type="button" class="hd wohd" aria-expanded="${open}"><span class="wol"><b>${d.day===todayIdx?'Today · ':''}${DAYS[d.day]} · ${d.name}</b><span>${d.sub||(n+' exercises')}</span></span><span class="chev" aria-hidden="true">›</span></button><div class="wobody">`;
-    d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div>${demoHtml(e[0])}</div>${sr?`<div class="sr">${sr}</div>`:''}</div>`; });
+    d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div>${demoHtml(e[0])}${d.day===todayIdx&&S.week===0?wlogHtml(e[0]):wlogLast(e[0])}</div>${sr?`<div class="sr">${sr}</div>`:''}</div>`; });
     if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div>${demoHtml(e[0])}</div><div class="sr">${sr}</div></div>`; }); }
-    h+=`<div class="foot">${d.foot}</div></div>`; box.innerHTML=h; box.querySelector('.wohd').onclick=()=>{ S.woOpen[d.day]=!S.woOpen[d.day]; renderWorkout(); }; w.appendChild(box); });
+    h+=`<div class="foot">${d.foot}</div></div>`; box.innerHTML=h; box.querySelector('.wohd').onclick=()=>{ S.woOpen[d.day]=!S.woOpen[d.day]; renderWorkout(); };
+    box.querySelectorAll('.wlog').forEach(row=>{ const name=row.dataset.ex; const inW=row.querySelector('.lw'), inR=row.querySelector('.lr'), inS=row.querySelector('.ls'); const upd=()=>{ const ps=PS(); ps.wlog=ps.wlog||{}; const key=ymd(new Date()); ps.wlog[key]=ps.wlog[key]||{}; const v={w:+inW.value||0,r:+inR.value||0,s:+inS.value||0}; if(!v.w&&!v.r&&!v.s) delete ps.wlog[key][name]; else ps.wlog[key][name]=v; save(); row.querySelector('.ldone').classList.toggle('on',!!(v.w&&v.r)); }; [inW,inR,inS].forEach(i=>i.onchange=upd); });
+    w.appendChild(box); });
   const gen=document.createElement('div'); gen.className='rules'; gen.innerHTML=`<h3>Rules for the gym</h3><ul>
     <li><b>Core every gym day, 8 min at the end.</b> Finisher A on Mon, Wed, Fri, finisher B on Tue, Thu. Side planks, chops, twists and carries are the oblique (love handle) work. Be clear on this: core training builds the muscle underneath, the calorie deficit is what removes the fat on top. Both together is what makes the waist change. No amount of crunches works without the deficit.</li>
     <li><b>Warm up 5 min</b> on the bike or incline walk, then 2 light sets of the first exercise before your working sets.</li>
@@ -780,19 +789,21 @@ try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'null'); if(o&&o.peo
 loadAllCustoms();
 let storeOK=true;
 // ---------- CLOUD SYNC (api.php on your own hosting) ----------
-const CLOUD={on:false, key:'', status:'local', rev:{}, timer:{}, busy:{}, dirty:{}};
+const CLOUD={on:false, key:'', user:'', status:'local', rev:{}, timer:{}, busy:{}, dirty:{}};
 function setStatus(t,c){ CLOUD.status=t; const el=document.getElementById('sync'); if(!el) return; el.textContent=t; el.className='sync '+(c||''); }
 function apiUrl(){ return 'api.php'; }
-async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who='+who:''),{method:body?'POST':'GET',headers:{'X-App-Key':CLOUD.key,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'}); if(r.status===401) throw new Error('auth'); if(r.status===429) throw new Error('locked'); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
+async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who='+who:''),{method:body?'POST':'GET',headers:{'X-App-Key':CLOUD.key,'X-App-User':CLOUD.user||'p1','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'}); if(r.status===401) throw new Error('auth'); if(r.status===422){ let j={}; try{ j=await r.json(); }catch(e){} throw new Error('rejected: '+(j.error||'')); } if(r.status===429) throw new Error('locked'); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
 async function cloudInit(){
   if(!/^https?:/.test(location.protocol)) return;
-  try{ CLOUD.key=localStorage.getItem('kl-key')||''; }catch(e){}
+  try{ CLOUD.key=localStorage.getItem('kl-key')||''; CLOUD.user=localStorage.getItem('kl-user')||''; }catch(e){}
+  if(CLOUD.user&&S.people[CLOUD.user]) S.who=CLOUD.user;
   let ping; try{ ping=await api('ping'); }catch(e){ return; }   // no api.php here -> stay local (e.g. the claude.ai copy)
   CLOUD.on=true;
   if(!ping.auth){ askKey(); return; }
   await cloudPull();
 }
-function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.add('show'); document.getElementById('keyMsg').textContent=msg||''; setStatus('Not signed in','warn'); }
+function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.add('show'); document.getElementById('keyMsg').textContent=msg||''; setStatus('Not signed in','warn'); const u=CLOUD.user||S.who; document.querySelectorAll('#keyWho button').forEach(b=>b.classList.toggle('on',b.dataset.u===u)); }
+document.querySelectorAll('#keyWho button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('#keyWho button').forEach(x=>x.classList.toggle('on',x===b)); });
 async function cloudPull(){
   setStatus('Syncing…');
   try{
@@ -803,7 +814,7 @@ async function cloudPull(){
 function schedulePush(who,delay=700){ if(!CLOUD.on||!CLOUD.key) return; CLOUD.dirty[who]=true; clearTimeout(CLOUD.timer[who]); CLOUD.timer[who]=setTimeout(()=>cloudPush(who),delay); }
 async function cloudPush(who){ if(CLOUD.busy[who]){ schedulePush(who,500); return; } CLOUD.busy[who]=true; setStatus('Saving…');
   try{ const r=await api('put',who,{data:S.people[who]}); CLOUD.rev[who]=r.rev; CLOUD.dirty[who]=false; setStatus('Synced','ok'); }
-  catch(e){ if(e.message==='auth') askKey('Wrong password. Try again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes.'); else { setStatus('Offline, will retry','warn'); setTimeout(()=>schedulePush(who,0),15000); } }
+  catch(e){ if(e.message==='auth') askKey('Wrong password. Try again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes.'); else if(/^rejected/.test(e.message)){ setStatus('Not saved: server rejected the data','warn'); console.warn(e.message); } else { setStatus('Offline, will retry','warn'); setTimeout(()=>schedulePush(who,0),15000); } }
   finally{ CLOUD.busy[who]=false; } }
 // refresh from the server when the app comes back to the foreground (other phone may have changed things)
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&CLOUD.on&&CLOUD.key&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
@@ -893,7 +904,7 @@ function renderPlan(){
     m.items.forEach((x,ii)=>{ const it=F[x.id]; if(!it) return;
       html+=`<div class="item" data-cat="${it.cat}">${ic(it.cat)}<div><div class="n">${it.n}</div><div class="eat">Eat <b>${fmtG(it,x.q)||'as listed'}</b> · ${Math.round(it.k*x.q)} kcal</div><div class="chips"><span class="chip p">Protein ${Math.round(it.p*x.q)} g</span><span class="chip c">Carbs ${Math.round(it.c*x.q)} g</span><span class="chip f">Fat ${Math.round(it.f*x.q)} g</span>${tagHtml(it.t)}</div></div>
         <div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div></div>`; });
-    if(!m.items.length) html+=`<button class="btn add" data-a="add" data-mi="${mi}">+ Add food to ${m.name.toLowerCase().replace(/ \(.*\)/,'')}</button>`;
+    if(!m.items.length){ const y=yesterdayMeal(mi); html+=`<div class="addrow"><button class="btn add" data-a="add" data-mi="${mi}">+ Add food</button>${y?`<button class="btn add yd" data-a="yday" data-mi="${mi}" title="${y.map(x=>F[x.id]?F[x.id].n:'').join(', ')}">↺ Same as yesterday</button>`:''}</div>`; }
     box.innerHTML=html; wrap.appendChild(box);
   });
   wrap.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>action(b.dataset.a,+b.dataset.mi,+b.dataset.ii));
@@ -986,6 +997,9 @@ function copyDayTo(other){
     t.items=m.items.filter(x=>allowedHere(x.id)); n+=t.items.length; });
   save(); S.who=me; return n;
 }
+
+// Yesterday's items for the same meal slot (by date, for this person)
+function yesterdayMeal(mi){ const ps=PS(); const d=weekDate(S.day); d.setDate(d.getDate()-1); const key=ymd(d); const k=Object.keys(ps.days).find(x=>x.startsWith(key)); if(!k) return null; const plan=ps.days[k]; const name=dayPlan()[mi].name; const m=plan.find(mm=>mm.name===name)||plan[mi]; return m&&m.items.length?m.items.filter(x=>F[x.id]):null; }
 function treatCount(items){ return items.filter(x=>F[x.id]&&F[x.id].cat==='treat').length; }
 function renderWarnings(plan,T,tk,tp){
   const p=P(); const out=[]; const red=(t)=>out.push({l:'red',t}), amb=(t)=>out.push({l:'amb',t});
@@ -1036,15 +1050,66 @@ function renderWarnings(plan,T,tk,tp){
   w.querySelectorAll('button[data-fix]').forEach(b=>b.onclick=()=>fixes[+b.dataset.fix].run());
 }
 function maintDeficit(k){ return P().maint-k; }
+function renderScore(){
+  const el=document.getElementById('score'); if(!el) return; const ps=PS(); const p=P(); const todayIdx=(new Date().getDay()+6)%7;
+  const days=[]; for(let i=0;i<7;i++){ if(S.week===0&&i>todayIdx) break; const k=dayKeyFor(i)+(isVeg(i)?'v':'n')+(ps.eggsVeg?'e':'x'); const plan=ps.days[k]; if(!plan) continue; const items=[]; plan.forEach(m=>items.push(...m.items)); if(!items.length) continue; const t=tot(items); days.push({i,t,ok:t.k>=p.floor&&t.k<=p.target.k+100,pok:t.p>=p.pMin}); }
+  const logs=[]; for(let i=0;i<7;i++){ const L=(ps.log||{})[ymd(weekDate(i))]; if(L) logs.push(L); }
+  const n=days.length; const onT=days.filter(d=>d.ok).length; const pOK=days.filter(d=>d.pok).length; const avgP=n?Math.round(days.reduce((a,d)=>a+d.t.p,0)/n):0; const avgK=n?Math.round(days.reduce((a,d)=>a+d.t.k,0)/n):0;
+  const steps=logs.reduce((a,L)=>a+(parseInt(L.steps)||0),0); const water=logs.reduce((a,L)=>a+(L.water||0),0)*250;
+  const sl=logs.filter(L=>L.bed&&L.wake).map(L=>(((toMin(L.wake)-toMin(L.bed))+1440)%1440)/60); const avgS=sl.length?(sl.reduce((a,b)=>a+b,0)/sl.length):null;
+  const ws=[...ps.weights].sort((a,b)=>a.d<b.d?-1:1); const wkStart=ymd(weekDate(0)); const before=ws.filter(x=>x.d<wkStart), during=ws.filter(x=>x.d>=wkStart); const wchg=(before.length&&during.length)?during[during.length-1].w-before[before.length-1].w:null;
+  const maint=p.maint||(S.who==='p1'?2550:2200); const deficit=n?Math.round((maint-avgK)*n):0;
+  const tile=(k,v,t,cls='')=>`<div class="st ${cls}"><div class="k">${k}</div><div class="v">${v}</div><div class="t">${t}</div></div>`;
+  const grade = !n?'':(onT/n>=0.8&&pOK/n>=0.8)?'On track':(onT/n>=0.5)?'Getting there':'Off plan';
+  el.innerHTML=`<div class="scard"><div class="schd"><b>${S.week===0?'This week so far':'Week summary'}</b><span class="grade ${grade.replace(/ .*/,'').toLowerCase()}">${grade}</span></div>
+    <div class="stiles">
+      ${tile('Days on target',n?`${onT}<small>/${n}</small>`:'–',n?'calories in range':'nothing logged yet',onT===n&&n?'good':'')}
+      ${tile('Protein hit',n?`${pOK}<small>/${n}</small>`:'–',n?`avg ${avgP} g`:'',pOK===n&&n?'good':'')}
+      ${tile('Deficit',n?`${deficit>0?'−':'+'}${Math.abs(deficit).toLocaleString()}`:'–',n?`kcal · about ${(deficit/7700).toFixed(2)} kg`:'',deficit>0?'good':'')}
+      ${tile('Steps',steps?steps.toLocaleString():'–',logs.length?`avg ${Math.round(steps/Math.max(1,logs.length)).toLocaleString()} a day`:'')}
+      ${tile('Sleep',avgS!==null?avgS.toFixed(1)+'<small> h</small>':'–',avgS!==null?(avgS>=7?'on target':'under 7 h'):'',avgS!==null&&avgS>=7?'good':'')}
+      ${tile('Water',water?(water/1000).toFixed(1)+'<small> L</small>':'–',logs.length?'total this week':'')}
+      ${tile('Weight',wchg!==null?`${wchg<=0?'':'+'}${wchg.toFixed(1)}<small> kg</small>`:'–',wchg!==null?'vs last weigh-in before this week':'weigh in to compare',wchg!==null&&wchg<0?'good':'')}
+    </div></div>`;
+}
 function renderWeek(){
-  document.getElementById('wkTitle').textContent=P().name+' · this week';
+  renderScore();
+  document.getElementById('wkTitle').textContent=P().name+(S.week===0?' · this week':S.week<0?' · '+Math.abs(S.week)+' week'+(S.week<-1?'s':'')+' ago':' · next week');
   const b=document.getElementById('wkBody'); b.innerHTML='';
-  let sk=0,sp=0;
-  DAYS.forEach((n,i)=>{ const items=[]; dayPlan(i).forEach(m=>items.push(...m.items)); const t=tot(items); sk+=t.k; sp+=t.p;
+  let sk=0,sp=0,nd=0; const ps=PS(); const todayIdx=(new Date().getDay()+6)%7;
+  DAYS.forEach((n,i)=>{ const key=dayKeyFor(i)+(isVeg(i)?'v':'n')+(ps.eggsVeg?'e':'x'); const plan=ps.days[key]; const items=[]; (plan||[]).forEach(m=>items.push(...m.items)); const logged=items.length>0; const t=tot(items); if(logged){ sk+=t.k; sp+=t.p; nd++; }
     const tr=document.createElement('tr'); tr.style.cursor='pointer'; tr.onclick=()=>{S.day=i;S.view='plan';render();};
-    const p=P(); const kc = t.k<p.floor||t.k>p.target.k+300?'var(--rose)':(t.k<p.target.k-150||t.k>p.target.k+100)?'var(--amber)':'var(--mint)'; const pc = t.p<p.pMin?'var(--rose)':t.p<p.target.p-10?'var(--amber)':'var(--mint)';
-    tr.innerHTML=`<td><b>${DAYS[i]}</b></td><td><span class="pill ${isVeg(i)?'v':'n'}">${isVeg(i)?'Veg':'Non-veg'}</span></td><td class="wk" data-c="${kc}">${t.k}</td><td class="wk" data-c="${pc}">${t.p} g</td><td class="hide-m">${t.c} g</td><td class="hide-m">${t.f} g</td>`; b.appendChild(tr); tr.querySelectorAll('.wk').forEach(el=>{ el.style.color=el.dataset.c; el.style.fontWeight='700'; }); });
-  const tr=document.createElement('tr'); tr.innerHTML=`<td><b>Avg</b></td><td></td><td><b>${Math.round(sk/7)}</b></td><td><b>${Math.round(sp/7)} g</b></td><td class="hide-m"></td><td class="hide-m"></td>`; b.appendChild(tr);
+    const p=P(); const kc = t.k<p.floor||t.k>p.target.k+300?'var(--red)':(t.k<p.target.k-150||t.k>p.target.k)?'var(--orange)':'var(--green)'; const pc = t.p<p.pMin?'var(--red)':t.p<p.target.p-10?'var(--orange)':'var(--green)';
+    const isT=S.week===0&&i===todayIdx; const fut=S.week>0||(S.week===0&&i>todayIdx);
+    tr.innerHTML=`<td><b>${DAYS[i]}${isT?' <span class="tdot" aria-label="today"></span>':''}</b></td><td><span class="pill ${isVeg(i)?'v':'n'}">${isVeg(i)?'Veg':'Non-veg'}</span></td>`+(logged?`<td class="wk" data-c="${kc}">${t.k}</td><td class="wk" data-c="${pc}">${t.p} g</td><td class="hide-m">${t.c} g</td><td class="hide-m">${t.f} g</td>`:`<td class="dimtd" colspan="4">${fut?'Not yet':'Not logged'}</td>`); b.appendChild(tr); tr.querySelectorAll('.wk').forEach(el=>{ el.style.color=el.dataset.c; el.style.fontWeight='700'; }); });
+  const tr=document.createElement('tr'); tr.innerHTML=`<td><b>Avg</b></td><td><span class="dimtd">${nd} day${nd===1?'':'s'}</span></td><td><b>${nd?Math.round(sk/nd):'–'}</b></td><td><b>${nd?Math.round(sp/nd)+' g':'–'}</b></td><td class="hide-m"></td><td class="hide-m"></td>`; b.appendChild(tr);
+}
+
+function renderWeightChart(ws){
+  const el=document.getElementById('wtChart'); if(!el) return;
+  if(ws.length<2){ el.innerHTML=`<div class="chhd"><b>Trend</b><span>Add two or more weigh-ins to see the line</span></div><div class="chempty">Weigh in each morning. The 7-day average line is the one to watch, daily numbers bounce 1 kg with water and salt.</div>`; return; }
+  const goal=S.who==='p1'?80:75; const days=30; const end=new Date(); const startD=new Date(); startD.setDate(end.getDate()-days+1);
+  const pts=ws.filter(x=>new Date(x.d+'T12:00')>=startD); const all=ws;
+  const avgAt=(i)=>{ const sl=all.slice(Math.max(0,i-6),i+1); return sl.reduce((a,x)=>a+x.w,0)/sl.length; };
+  const avg=all.map((x,i)=>({d:x.d,w:avgAt(i)})).filter(x=>new Date(x.d+'T12:00')>=startD);
+  const W=360,H=170,L=34,R=12,T=14,B=26; const xs=(d)=>L+((new Date(d+'T12:00')-startD)/(days-1)/864e5)*(W-L-R);
+  const vals=pts.map(x=>x.w).concat(avg.map(x=>x.w)); let lo=Math.min(...vals,goal), hi=Math.max(...vals); const pad=Math.max(0.5,(hi-lo)*0.15); lo=Math.floor((lo-pad)*2)/2; hi=Math.ceil((hi+pad)*2)/2;
+  const ys=(w)=>T+(hi-w)/(hi-lo)*(H-T-B);
+  const path=(arr)=>arr.map((x,i)=>(i?'L':'M')+xs(x.d).toFixed(1)+' '+ys(x.w).toFixed(1)).join(' ');
+  const grid=[]; const step=(hi-lo)>6?2:(hi-lo)>3?1:0.5; for(let v=lo;v<=hi+0.001;v+=step) grid.push(v);
+  const first=pts[0], last=pts[pts.length-1]; const change=(last.w-first.w); const avgLast=avg[avg.length-1].w, avgFirst=avg[0].w;
+  const wk=(()=>{ const prev=all.filter(x=>new Date(x.d+'T12:00')<=new Date(Date.now()-7*864e5)); if(!prev.length) return null; const pi=all.indexOf(prev[prev.length-1]); return avgAt(all.length-1)-avgAt(pi); })();
+  const fmtDay=(d)=>new Date(d+'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  el.innerHTML=`<div class="chhd"><b>Last 30 days</b><span>${wk===null?'':(wk<=0?'':'+')+wk.toFixed(1)+' kg this week (7-day avg)'}</span></div>
+  <svg class="wchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight over the last 30 days">
+    ${grid.map(v=>`<line class="g" x1="${L}" x2="${W-R}" y1="${ys(v).toFixed(1)}" y2="${ys(v).toFixed(1)}"/><text class="gl" x="${L-6}" y="${(ys(v)+4).toFixed(1)}" text-anchor="end">${v}</text>`).join('')}
+    ${goal>=lo&&goal<=hi?`<line class="goal" x1="${L}" x2="${W-R}" y1="${ys(goal).toFixed(1)}" y2="${ys(goal).toFixed(1)}"/><text class="goaltxt" x="${W-R}" y="${(ys(goal)-4).toFixed(1)}" text-anchor="end">goal ${goal}</text>`:''}
+    <path class="raw" d="${path(pts)}"/>
+    <path class="avg" d="${path(avg)}"/>
+    ${pts.map(x=>`<circle class="dot" cx="${xs(x.d).toFixed(1)}" cy="${ys(x.w).toFixed(1)}" r="3"><title>${x.d}: ${x.w} kg</title></circle>`).join('')}
+    <text class="gl" x="${L}" y="${H-8}">${fmtDay(ymd(startD))}</text><text class="gl" x="${W-R}" y="${H-8}" text-anchor="end">Today</text>
+  </svg>
+  <div class="chleg"><span><i class="raw"></i>Daily</span><span><i class="avg"></i>7-day average</span><span><i class="goal"></i>Goal</span></div>`;
 }
 function renderWeight(){
   const ps=PS(); document.getElementById('wtTitle').textContent=P().name+' · weight log';
@@ -1055,6 +1120,7 @@ function renderWeight(){
   const b=document.getElementById('wtBody'); b.innerHTML='';
   ws.slice().reverse().forEach((x,ri)=>{ const idx=ws.length-1-ri; const tr=document.createElement('tr'); tr.innerHTML=`<td>${x.d}</td><td><b>${x.w}</b></td><td>${avg7(idx)}</td><td><button class="btn x" data-d="${x.d}">×</button></td>`; b.appendChild(tr); });
   b.querySelectorAll('button[data-d]').forEach(bt=>bt.onclick=()=>{ ps.weights=ps.weights.filter(x=>x.d!==bt.dataset.d); save(); render(); });
+  renderWeightChart(ws);
   const st=document.getElementById('wtStats'); const start=S.who==='p1'?88:85;
   if(ws.length){ const last=ws[ws.length-1].w; const first=ws[0].w; st.innerHTML=`<div class="kpi"><div class="k">Latest</div><div class="v">${last}</div><div class="t">${ws[ws.length-1].d}</div></div><div class="kpi"><div class="k">7-day avg</div><div class="v">${avg7(ws.length-1)}</div><div class="t">judge by this</div></div><div class="kpi"><div class="k">Change</div><div class="v">${(last-first)>0?'+':''}${(last-first).toFixed(1)}</div><div class="t">since ${ws[0].d}</div></div>`; }
   else st.innerHTML=`<div class="kpi"><div class="k">Start</div><div class="v">${start}</div><div class="t">kg, Nov 2026</div></div><div class="kpi"><div class="k">Goal</div><div class="v">${S.who==='p1'?80:75}</div><div class="t">first milestone</div></div><div class="kpi"><div class="k">Pace</div><div class="v">0.5</div><div class="t">kg per week</div></div>`;
@@ -1069,6 +1135,7 @@ function action(a,mi,ii){
   else if(a==='del'){ plan[mi].items.splice(ii,1); }
   else if(a==='swap'){ openSheet(mi,ii); return; }
   else if(a==='add'){ openSheet(mi,null); return; }
+  if(a==='yday'){ const y=yesterdayMeal(mi); if(y){ plan[mi].items=y.map(x=>({id:x.id,q:x.q})); save(); render(); } return; }
   save(); render();
 }
 let sheet={mi:0,ii:null,cat:null};
@@ -1220,17 +1287,18 @@ function xlsx(sheets){ const files=[];
   sheets.forEach((s,i)=>files.push({name:`xl/worksheets/sheet${i+1}.xml`,data:sheetXml(s.rows)}));
   return zipStore(files); }
 function exportRows(){ const me=S.who; const food=[['Date','Day','Person','Veg day','Meal','Item','Eat','Qty x','kcal','Protein g','Carbs g','Fat g']];
-  const ck=[['Date','Person','Water ml','Steps','Bedtime','Wake up','Sleep h']]; const wt=[['Date','Person','kg']];
+  const ck=[['Date','Person','Water ml','Steps','Bedtime','Wake up','Sleep h']]; const wt=[['Date','Person','kg']]; const wl=[['Date','Person','Exercise','kg','Reps','Sets']];
   ['p1','p2'].forEach(who=>{ S.who=who; const ps=PS(); const name=PEOPLE[who].name;
     migrateDays(ps); Object.keys(ps.days).sort().forEach(k=>{ const date=k.slice(0,10); if(!/^\d{4}-\d\d-\d\d/.test(date)) return; const dn=new Date(date+'T12:00').toLocaleDateString(undefined,{weekday:'short'}); const veg=k[10]==='v';
       ps.days[k].forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; food.push([date,dn,name,veg?'Veg':'Non-veg',m.name,it.n,fmtG(it,x.q)||it.g,x.q,Math.round(it.k*x.q),Math.round(it.p*x.q),Math.round(it.c*x.q),Math.round(it.f*x.q)]); })); });
     Object.keys(ps.log||{}).sort().forEach(d=>{ const L=ps.log[d]; let h=''; if(L.bed&&L.wake){ h=+((((toMin(L.wake)-toMin(L.bed))+1440)%1440)/60).toFixed(1); } ck.push([d,name,(L.water||0)*250,L.steps?+L.steps:'',L.bed||'',L.wake||'',h]); });
-    (ps.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1).forEach(w=>wt.push([w.d,name,w.w])); });
-  S.who=me; return {food,ck,wt}; }
+    (ps.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1).forEach(w=>wt.push([w.d,name,w.w]));
+    Object.keys(ps.wlog||{}).sort().forEach(d=>Object.keys(ps.wlog[d]).forEach(ex=>{ const v=ps.wlog[d][ex]; wl.push([d,name,ex,v.w,v.r,v.s]); })); });
+  S.who=me; return {food,ck,wt,wl}; }
 function dl(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000); }
 const stamp=()=>ymd(new Date());
-document.getElementById('xlsExport').onclick=()=>{ const r=exportRows(); dl(xlsx([{name:'Food log',rows:r.food},{name:'Check-in',rows:r.ck},{name:'Weight',rows:r.wt}]),`meal-planner-${stamp()}.xlsx`); bkMsg('Excel file downloaded.',true); };
-document.getElementById('csvExport').onclick=()=>{ const r=exportRows(); const csv=(rows)=>rows.map(row=>row.map(v=>{ v=String(v??''); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(',')).join('\n'); dl(new Blob(['﻿'+csv(r.food)+'\n\nCHECK-IN\n'+csv(r.ck)+'\n\nWEIGHT\n'+csv(r.wt)],{type:'text/csv'}),`meal-planner-${stamp()}.csv`); bkMsg('CSV downloaded.',true); };
+document.getElementById('xlsExport').onclick=()=>{ const r=exportRows(); dl(xlsx([{name:'Food log',rows:r.food},{name:'Check-in',rows:r.ck},{name:'Weight',rows:r.wt},{name:'Workouts',rows:r.wl}]),`meal-planner-${stamp()}.xlsx`); bkMsg('Excel file downloaded.',true); };
+document.getElementById('csvExport').onclick=()=>{ const r=exportRows(); const csv=(rows)=>rows.map(row=>row.map(v=>{ v=String(v??''); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(',')).join('\n'); dl(new Blob(['﻿'+csv(r.food)+'\n\nCHECK-IN\n'+csv(r.ck)+'\n\nWEIGHT\n'+csv(r.wt)+'\n\nWORKOUTS\n'+csv(r.wl)],{type:'text/csv'}),`meal-planner-${stamp()}.csv`); bkMsg('CSV downloaded.',true); };
 // ---- Sheets: swipe down or tap outside to close ----
 function closeAny(ov){ ov.classList.remove('show'); }
 document.querySelectorAll('.ov').forEach(ov=>{ const sh=ov.querySelector('.sheet'); if(!sh) return; let y0=null, drag=false;
@@ -1239,11 +1307,14 @@ document.querySelectorAll('.ov').forEach(ov=>{ const sh=ov.querySelector('.sheet
   sh.addEventListener('touchmove',e=>{ if(y0===null) return; const dy=e.touches[0].clientY-y0; if(dy>0&&sh.scrollTop<=0){ sh.style.transform=`translateY(${dy}px)`; } else { y0=null; sh.style.transform=''; } },{passive:true});
   sh.addEventListener('touchend',e=>{ if(y0===null) return; const dy=e.changedTouches[0].clientY-y0; sh.style.transition=''; sh.style.transform=''; y0=null; if(dy>90&&ov.id!=='ovKey') closeAny(ov); },{passive:true}); });
 document.getElementById('syncNow').onclick=()=>{ if(!CLOUD.on) return; if(!CLOUD.key) askKey(); else { Object.keys(S.people).forEach(w=>{ if(CLOUD.dirty[w]) cloudPush(w); }); cloudPull(); } };
-document.getElementById('syncOut').onclick=()=>{ CLOUD.key=''; try{ localStorage.removeItem('kl-key'); }catch(e){} setStatus('Not signed in','warn'); document.getElementById('ovSet').classList.remove('show'); askKey(); };
-document.getElementById('openSettings').addEventListener('click',()=>{ document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Saving to your hosting (data folder on the server). Status: '+CLOUD.status+'. Both phones and any browser see the same data once signed in.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus')||{}; let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
+document.getElementById('syncOut').onclick=()=>{ CLOUD.key=''; CLOUD.user=''; try{ localStorage.removeItem('kl-key'); localStorage.removeItem('kl-user'); }catch(e){} setStatus('Not signed in','warn'); document.getElementById('ovSet').classList.remove('show'); askKey(); };
+document.getElementById('openSettings').addEventListener('click',()=>{ document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Signed in as '+(PEOPLE[CLOUD.user]?PEOPLE[CLOUD.user].name:'Person 1')+'. Saving to your hosting (data folder on the server). Status: '+CLOUD.status+'. Both phones and any browser see the same data once signed in.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus')||{}; let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
 document.getElementById('wtAdd').onclick=()=>{ const d=document.getElementById('wtDate').value, w=parseFloat(document.getElementById('wtVal').value); if(!d||!w) return; const ps=PS(); ps.weights=ps.weights.filter(x=>x.d!==d); ps.weights.push({d,w}); document.getElementById('wtVal').value=''; save(); render(); };
-document.getElementById('keyGo').onclick=async()=>{ CLOUD.key=document.getElementById('keyIn').value.trim(); try{ localStorage.setItem('kl-key',CLOUD.key); }catch(e){} try{ const p=await api('ping'); if(!p.auth){ document.getElementById('keyMsg').textContent='Wrong password.'; return; } }catch(e){ document.getElementById('keyMsg').textContent= e.message==='locked' ? 'Too many wrong attempts. Wait 15 minutes.' : 'Cannot reach the server.'; return; } document.getElementById('ovKey').classList.remove('show'); cloudPull(); };
+document.getElementById('keyGo').onclick=async()=>{ CLOUD.key=document.getElementById('keyIn').value.trim(); CLOUD.user=(document.querySelector('#keyWho button.on')||{}).dataset?.u||'p1'; S.who=CLOUD.user; try{ localStorage.setItem('kl-key',CLOUD.key); localStorage.setItem('kl-user',CLOUD.user); }catch(e){} try{ const p=await api('ping'); if(!p.auth){ document.getElementById('keyMsg').textContent='Wrong password.'; return; } }catch(e){ document.getElementById('keyMsg').textContent= e.message==='locked' ? 'Too many wrong attempts. Wait 15 minutes.' : 'Cannot reach the server.'; return; } document.getElementById('ovKey').classList.remove('show'); cloudPull(); };
 document.getElementById('keySkip').onclick=()=>{ document.getElementById('ovKey').classList.remove('show'); setStatus('This device only','warn'); };
 document.getElementById('keyIn').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('keyGo').click(); });
 render();
 cloudInit();
+
+// Offline: register the service worker (shell cache; api.php stays live)
+if('serviceWorker' in navigator && /^https:/.test(location.protocol)){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }

@@ -566,3 +566,54 @@ details summary{font-size:15px}
 .wo.closed{padding:10px 16px}
 .wo.open .wohd{margin-bottom:6px}
 .wo.today .wol b{color:var(--acc)}
+
+/* ---------- Weight chart ---------- */
+.card.chart{background:var(--card);border-radius:var(--rl);box-shadow:var(--sh1);padding:14px 16px 12px;margin-bottom:14px}
+.chhd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+.chhd b{font-size:16px;font-weight:600}.chhd span{font-size:12.5px;color:var(--muted);font-weight:500}
+.chempty{font-size:13.5px;color:var(--muted);line-height:1.5}
+.wchart{width:100%;height:auto;display:block}
+.wchart .g{stroke:var(--line);stroke-width:1}
+.wchart .gl{font-size:10px;fill:var(--muted);font-weight:500}
+.wchart .goal{stroke:var(--green);stroke-width:1;stroke-dasharray:3 3}
+.wchart .goaltxt{font-size:10px;fill:var(--greenT);font-weight:600}
+.wchart .raw{fill:none;stroke:var(--purple);stroke-width:1.5;opacity:.55}
+.wchart .avg{fill:none;stroke:var(--acc);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.wchart .dot{fill:var(--card);stroke:var(--purple);stroke-width:1.5}
+.chleg{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px}
+.chleg span{display:flex;align-items:center;gap:6px}
+.chleg i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.chleg i.raw{background:var(--purple);opacity:.55}.chleg i.avg{background:var(--acc)}.chleg i.goal{background:var(--green)}
+
+/* ---------- Weekly scorecard ---------- */
+.scard{background:var(--card);border-radius:var(--rl);box-shadow:var(--sh1);padding:14px 16px;margin-bottom:12px}
+.schd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.schd b{font-size:16px;font-weight:600}
+.grade{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--card2);color:var(--muted)}
+.grade.on{background:var(--green3);color:var(--greenT)}.grade.getting{background:var(--orange3);color:var(--orangeT)}.grade.off{background:var(--red3);color:var(--redT)}
+.stiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.st{background:var(--card2);border-radius:14px;padding:10px 12px;min-width:0}
+.st .k{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.st .v{font-size:20px;font-weight:700;letter-spacing:-.02em;margin-top:2px;white-space:nowrap}
+.st .v small{font-size:12px;color:var(--muted);font-weight:600}
+.st .t{font-size:11px;color:var(--dim);margin-top:1px;line-height:1.3}
+.st.good .v{color:var(--greenT)}
+@media (max-width:400px){ .stiles{grid-template-columns:repeat(2,1fr)} }
+@media (min-width:900px){ .stiles{grid-template-columns:repeat(4,1fr)} }
+
+/* ---------- Workout log ---------- */
+.wlog{margin-top:10px;background:var(--card2);border-radius:12px;padding:8px 10px}
+.wlin{display:flex;align-items:flex-end;gap:8px}
+.wlin label{display:flex;flex-direction:column;gap:3px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex:1;min-width:0}
+.wlin input{width:100%;padding:9px 8px;border:0;border-radius:10px;background:var(--card);color:var(--text);font-size:16px;font-weight:600;text-align:center;-moz-appearance:textfield}
+.wlin input::-webkit-inner-spin-button,.wlin input::-webkit-outer-spin-button{-webkit-appearance:none}
+.ldone{width:28px;height:28px;border-radius:50%;background:var(--card);color:transparent;display:grid;place-items:center;font-size:14px;font-weight:800;flex-shrink:0;margin-bottom:4px}
+.ldone.on{background:var(--green);color:#fff}
+.wlhint{font-size:12px;color:var(--muted);margin-top:6px}
+.wlhint b{color:var(--text)}
+.wlhint .up{font-style:normal;color:var(--greenT);font-weight:600}
+.addrow{display:flex;gap:8px;margin-top:10px}
+.addrow .btn.add{margin-top:0;flex:1}
+.addrow .btn.yd{border-style:solid;border-color:var(--line);background:var(--card2);color:var(--text)}
+.dimtd{color:var(--dim);font-weight:500}
+.tdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--acc);margin-left:5px;vertical-align:middle}

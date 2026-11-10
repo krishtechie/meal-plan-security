@@ -2,7 +2,7 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/wbqoqaid/meal.krishdesigns.com
-    - /bin/cp index.html app.js app.css api.php .htaccess manifest.json icon-192.png icon-512.png apple-touch-icon.png $DEPLOYPATH/
+    - /bin/cp index.html app.js app.css sw.js api.php .htaccess manifest.json icon-192.png icon-512.png apple-touch-icon.png $DEPLOYPATH/
     - /bin/mkdir -p $DEPLOYPATH/fonts $DEPLOYPATH/data
     - /bin/cp fonts/*.woff2 $DEPLOYPATH/fonts/
     - /bin/cp data/.htaccess $DEPLOYPATH/data/
