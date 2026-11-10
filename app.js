@@ -527,7 +527,54 @@ const MUSCLES = {
  'Plank':['abs','obliques','lowerback'],'Side plank (obliques, love handles)':['obliques','abs'],'Cable woodchop or band chop':['obliques','abs'],'Dead bug':['abs'],'Hanging knee raise or lying leg raise':['abs'],'Russian twist (obliques)':['obliques','abs'],'Bicycle crunch':['abs','obliques'],'Suitcase carry (obliques, anti-lean)':['obliques','forearms','traps'],
  'Brisk walk or hike':['quads','calves','glutes'],'Walk + stretching':['quads','calves','hamstrings'],
 };
-const demoLink=(name)=>`https://www.youtube.com/results?search_query=${encodeURIComponent(name.replace(/\(.*?\)/g,'').trim()+' proper form')}`;
+// Form guides: every exercise maps to a verified Fitbod page (video + step-by-step + common mistakes)
+const DEMO = {
+  'Barbell or dumbbell bench press':['barbell-bench-press','Barbell bench press'],
+  'Incline dumbbell press':['dumbbell-incline-bench-press','Dumbbell incline bench press'],
+  'Chest-supported machine fly or cable fly':['machine-fly','Machine fly'],
+  'Push-ups (Person 2: incline on a bench)':['push-up','Push up'],
+  'Rope triceps pushdown':['cable-rope-tricep-extension','Cable rope tricep extension'],
+  'Lat pulldown (wide grip)':['lat-pulldown','Lat pulldown'],
+  'Seated cable row':['cable-row','Cable row'],
+  'One-arm dumbbell row':['dumbbell-row','Dumbbell row'],
+  'Face pulls':['cable-face-pull','Cable face pull'],
+  'Dumbbell bicep curl':['dumbbell-bicep-curl','Dumbbell bicep curl'],
+  'Hammer curl':['hammer-curls','Hammer curls'],
+  'Barbell back squat or leg press':['back-squat','Back squat'],
+  'Walking lunges':['walking-lunge','Walking lunge'],
+  'Leg extension':['leg-extension','Leg extension'],
+  'Standing calf raise':['calf-raise','Calf raise'],
+  'Seated dumbbell shoulder press':['dumbbell-shoulder-press','Dumbbell shoulder press'],
+  'Dumbbell lateral raise':['dumbbell-lateral-raise','Dumbbell lateral raise'],
+  'Rear delt fly (machine or bent over)':['machine-reverse-fly','Machine reverse fly'],
+  'EZ bar or dumbbell curl':['ez-bar-curl','EZ-bar curl'],
+  'Overhead triceps extension':['seated-tricep-press','Seated tricep press (dumbbell)'],
+  'Cable or dumbbell shrug':['dumbbell-shrug','Dumbbell shrug'],
+  'Romanian deadlift (barbell or dumbbell)':['romanian-deadlift','Romanian deadlift'],
+  'Hip thrust or glute bridge':['barbell-hip-thrust','Barbell hip thrust'],
+  'Lying or seated leg curl':['seated-leg-curl','Seated leg curl'],
+  'Bulgarian split squat':['bulgarian-split-squat','Bulgarian split squat'],
+  'Plank':['plank','Plank'],
+  'Side plank (obliques, love handles)':['side-bridge','Side bridge (side plank)'],
+  'Cable woodchop or band chop':['cable-wood-chop','Cable wood chop'],
+  'Dead bug':['dead-bug','Dead bug'],
+  'Hanging knee raise or lying leg raise':['hanging-knee-raise','Hanging knee raise'],
+  'Russian twist (obliques)':['russian-twist','Russian twist'],
+  'Bicycle crunch':['bicycle-crunch','Bicycle crunch'],
+  'Suitcase carry (obliques, anti-lean)':['single-arm-farmer-walk','Single arm farmer walk'],
+};
+// Alternates shown as a second link where the main lift has an "or"
+const DEMO2 = {
+  'Barbell or dumbbell bench press':['dumbbell-bench-press','Dumbbell version'],
+  'Chest-supported machine fly or cable fly':['cable-crossover','Cable fly'],
+  'Barbell back squat or leg press':['leg-press','Leg press'],
+  'Rear delt fly (machine or bent over)':['dumbbell-rear-delt-raise','Bent-over dumbbell'],
+  'Overhead triceps extension':['ez-bar-overhead-tricep-extension','EZ-bar version'],
+  'Hanging knee raise or lying leg raise':['leg-raise','Lying leg raise'],
+};
+const FITBOD='https://fitbod.me/exercises/';
+const demoHtml=(name)=>{ const d=DEMO[name]; if(!d) return ''; const a=DEMO2[name];
+  return `<div class="demos"><a class="demo" href="${FITBOD}${d[0]}" target="_blank" rel="noopener">▶ Form guide</a>${a?`<a class="demo alt" href="${FITBOD}${a[0]}" target="_blank" rel="noopener">${a[1]}</a>`:''}<small class="dsrc">Fitbod · ${d[1]}</small></div>`; };
 
 // ================= WORKOUTS =================
 // [exercise, cue, Person 1 sets x reps, Person 2 sets x reps]
@@ -589,11 +636,11 @@ function renderWorkout(){
   document.getElementById('woTitle').textContent=P().name+' · weekly split';
   document.getElementById('woSub').textContent = k ? 'Goal: build muscle while cutting. Heavy compound lifts, 6 to 10 reps, add weight every week you hit the top of the range. 60 min, 5 days.' : 'Goal: strong and toned. Same lifts, 10 to 15 reps, lighter weight, glutes and back as priority. 60 min, 5 days. If a week feels flat, drop one set from each exercise, do not skip the day.';
   const w=document.getElementById('woDays'); w.innerHTML='';
-  const lg=document.createElement('div'); lg.className='legend'; lg.innerHTML=`<span class="lgsw"></span> Muscles worked (front and back figure). Tap "Watch demo" for a video of the movement before your first session with it.`; w.appendChild(lg);
+  const lg=document.createElement('div'); lg.className='legend'; lg.innerHTML=`<span class="lgsw"></span> Muscles worked (front and back figure). Tap "Form guide" for the Fitbod video, step-by-step cues and common mistakes before your first session with a lift.`; w.appendChild(lg);
   WORKOUTS.forEach(d=>{ const box=document.createElement('div'); box.className='wo'+(d.day===S.day?' today':'');
     let h=`<div class="hd"><b>${DAYS[d.day]} · ${d.name}</b><span>${d.sub}</span></div>`;
-    d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div><a class="demo" href="${demoLink(e[0])}" target="_blank" rel="noopener">▶ Watch demo</a></div>${sr?`<div class="sr">${sr}</div>`:''}</div>`; });
-    if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div><a class="demo" href="${demoLink(e[0])}" target="_blank" rel="noopener">▶ Watch demo</a></div><div class="sr">${sr}</div></div>`; }); }
+    d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div>${demoHtml(e[0])}</div>${sr?`<div class="sr">${sr}</div>`:''}</div>`; });
+    if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div>${demoHtml(e[0])}</div><div class="sr">${sr}</div></div>`; }); }
     h+=`<div class="foot">${d.foot}</div>`; box.innerHTML=h; w.appendChild(box); });
   const gen=document.createElement('div'); gen.className='rules'; gen.innerHTML=`<h3>Rules for the gym</h3><ul>
     <li><b>Core every gym day, 8 min at the end.</b> Finisher A on Mon, Wed, Fri, finisher B on Tue, Thu. Side planks, chops, twists and carries are the oblique (love handle) work. Be clear on this: core training builds the muscle underneath, the calorie deficit is what removes the fat on top. Both together is what makes the waist change. No amount of crunches works without the deficit.</li>
@@ -769,7 +816,7 @@ function renderWarnings(plan,T,tk,tp){
     if(fat) fixes.push({t:`Biggest fat source is ${fat.it.n} <span data-s="s15">(${Math.round(fat.fv)} g fat). Swap it for a leaner option.</span>`, label:'Swap', run:()=>openSheet(fat.mi,fat.ii)}); }
   const w=document.getElementById('warn');
   if(!out.length){ w.style.display='block'; w.className='warn ok'; w.innerHTML=`<b>On target.</b> ${T.k} kcal, ${T.p} g protein, ${maintDeficit(T.k)} kcal deficit. This is the day that gets you lean. Repeat it.`; return; }
-  w.style.display='block'; w.className='warn'; w.innerHTML=out.map(o=>`<div class="wi ${o.l}"><span class="dot"></span><span>${o.t}</span></div>`).join('')
+  w.style.display='block'; w.className='warn'; w.innerHTML=out.map(o=>`<div class="wi ${o.l}"><span class="dot" aria-hidden="true">${o.l==="red"?"!":"•"}</span><span class="wt">${o.t}</span></div>`).join('')
     + (fixes.length?`<div class="fixhd">Quick fixes</div>`+fixes.map((f,i)=>`<div class="fix"><span>${f.t}</span><button class="btn sw" data-fix="${i}">${f.label}</button></div>`).join(''):'');
   w.querySelectorAll('button[data-fix]').forEach(b=>b.onclick=()=>fixes[+b.dataset.fix].run());
 }
