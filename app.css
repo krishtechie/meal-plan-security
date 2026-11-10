@@ -617,3 +617,4 @@ details summary{font-size:15px}
 .addrow .btn.yd{border-style:solid;border-color:var(--line);background:var(--card2);color:var(--text)}
 .dimtd{color:var(--dim);font-weight:500}
 .tdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--acc);margin-left:5px;vertical-align:middle}
+.hiddenbtn{width:100%;margin:0 0 10px;color:var(--acc);background:var(--acc3)}

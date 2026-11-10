@@ -438,6 +438,8 @@ const ICON = {
 };
 const ic=(cat)=>`<span class="ico ${cat}">${ICON[cat]||ICON.mine}</span>`;
 const ALIAS = {
+ c_tandoori:'tandoori chicken tikka grilled',c_grillbreast:'grilled chicken breast grill plain',c_breastcurry:'chicken breast curry kodi kura',c_thighcurry:'chicken thigh curry boneless',c_legs2:'chicken legs drumsticks leg piece',c_wings6:'chicken wings baked air fryer',c_wingsfried:'chicken wings fried restaurant',c_chk65:'chicken 65 pakoda pakora',c_keema:'chicken keema minced peas',c_pesarapappudal:'pesara pappu dal moong plain pesalu',c_pesarapappufry:'pesara pappu fry podi dry moong',
+ n_brazil:'brazil nut',n_chia:'chia seeds',n_sunflower:'sunflower seeds',n_pumpkin:'pumpkin seeds gummadi ginjalu',n_flax:'flax seeds avise alsi',n_sesame:'sesame til nuvvulu',n_anjeer:'anjeer dried fig figs',n_dates2:'dates khajur kharjuram',n_raisins:'raisins kismis endu draksha',n_almonds10:'almonds badam',n_mixseeds:'mixed seeds',n_trail30:'trail mix nuts mix',
  h_chikkudutomato:'chikkudu tomato chikkudukaya broad beans valor papdi',h_chikkudufry:'chikkudu fry chikkudukaya vepudu broad beans',h_munagatomato:'munagakaya tomato drumstick mulakkada',h_thotakura:'thotakura fry thota kura amaranth leafy',h_capsicumaloo:'capsicum aloo curry potato capsicum bell pepper',h_alookurma:'aloo kurma potato kurma korma',h_eggtomato:'egg tomato curry guddu tamata',
  h_khichdi:'khichdi kichidi kichdi rice moong pongal',h_pohaplain:'poha atukulu upma flattened rice',h_pulihora:'pulihora tamarind rice chitrannam',h_jeerarice:'jeera rice cumin rice',h_curdrice:'curd rice daddojanam perugu annam',
  h_eggbhurji:'egg bhurji scrambled eggs guddu',h_paneerbhurji:'paneer bhurji paneer scramble',h_tofu:'tofu plain pan fried',h_tofucurry:'tofu curry tofu gravy',
@@ -567,6 +569,33 @@ const EXTRA = {
     ['h_paneerbhurji','Paneer bhurji (100 g paneer, onion, tomato, 1 tsp oil)','150 g',300,18,8,21,'v'],
     ['h_tofu','Tofu, pan-fried plain (1 tsp oil)','150 g',210,20,4,13,'v'],
     ['h_tofucurry','Tofu curry with tadka gravy','200 g',250,20,10,15,'v'],
+  ],
+  hyd_prot3:[
+    ['c_tandoori','Tandoori chicken, home or restaurant, skin off','2 pieces (200 g)',300,42,4,13,'n'],
+    ['c_grillbreast','Grilled chicken breast, plain','150 g',245,46,0,6,'n'],
+    ['c_breastcurry','Chicken breast curry, home (kodi kura)','150 g',240,38,5,8,'n'],
+    ['c_thighcurry','Chicken thigh (boneless) curry, home','150 g',290,30,5,17,'n'],
+    ['c_legs2','Chicken legs / drumsticks, skinless, 2 pieces','2 (about 180 g with bone)',230,30,2,11,'n'],
+    ['c_wings6','Chicken wings, baked or air-fried, 6 pieces','6 wings (about 200 g)',430,36,2,30,'n'],
+    ['c_wingsfried','Chicken wings, restaurant fried, 6 pieces','6 wings',600,34,18,42,'tn'],
+    ['c_chk65','Chicken 65 / chicken pakoda, restaurant','150 g',380,28,16,23,'tn'],
+    ['c_keema','Chicken keema with peas','150 g',250,28,6,12,'n'],
+    ['c_pesarapappudal','Pesara pappu (moong dal) plain, no tadka','150 g',150,10,24,2,'v'],
+    ['c_pesarapappufry','Pesara pappu podi / dry moong dal fry','100 g',170,11,22,5,'v'],
+  ],
+  hyd_snack2:[
+    ['n_brazil','Brazil nuts (2 a day max, selenium)','2 nuts (10 g)',66,1.5,1,7,'v'],
+    ['n_chia','Chia seeds, dry','10 g',49,2,4,3,'v'],
+    ['n_sunflower','Sunflower seeds','20 g',116,4,4,10,'v'],
+    ['n_pumpkin','Pumpkin seeds','20 g',112,6,2,10,'v'],
+    ['n_flax','Flax seeds, ground','10 g',53,2,3,4,'v'],
+    ['n_sesame','Sesame seeds / til','10 g',57,2,2,5,'v'],
+    ['n_anjeer','Anjeer (dried fig)','2 figs (about 20 g)',50,1,13,0,'v'],
+    ['n_dates2','Dates / khajur','2 (about 15 g)',45,0,12,0,'v'],
+    ['n_raisins','Raisins / kismis','20 g',60,1,16,0,'v'],
+    ['n_almonds10','Almonds','10 (12 g)',70,3,2,6,'v'],
+    ['n_mixseeds','Mixed seeds (chia, pumpkin, sunflower, flax)','20 g',110,5,4,9,'v'],
+    ['n_trail30','Trail mix: almonds, cashews, raisins, pumpkin seeds','30 g',150,4,13,10,'v'],
   ],
 };
 for(const c0 in EXTRA){ const c=c0.replace('hyd_','').replace(/\d$/,''); EXTRA[c0].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; if(RAW[c]) RAW[c].push(r); }); }
@@ -1011,6 +1040,22 @@ function copyDayTo(other){
 
 // Yesterday's items for the same meal slot (by date, for this person)
 function yesterdayMeal(mi){ const ps=PS(); const d=weekDate(S.day); d.setDate(d.getDate()-1); const key=ymd(d); const k=Object.keys(ps.days).find(x=>x.startsWith(key)); if(!k) return null; const plan=ps.days[k]; const name=dayPlan()[mi].name; const m=plan.find(mm=>mm.name===name)||plan[mi]; return m&&m.items.length?m.items.filter(x=>F[x.id]):null; }
+
+// Food family for variety (soya, paneer, chicken, dal, eggs, whey, yogurt, fish, prawn, tofu, chana...)
+function family(n){ n=n.toLowerCase(); const fams=['soya','paneer','chicken','tofu','whey','yogurt','skyr','curd','egg','fish','prawn','shrimp','chana','rajma','dal','pappu','sprout','cottage','cheese','peanut','nuts','bar','milk','mutton','tuna','salmon','moong','lentil','quinoa']; return fams.find(f=>n.includes(f))||n.split(/[ ,(]/)[0]; }
+function hashStr(t){ let h=0; for(let i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))>>>0; return h; }
+// What this person ate recently: families from yesterday, families in the last 7 days (count), and every item id ever logged
+function recentFamilies(){ const ps=PS(); const y=new Set(), w=new Map(), ever=new Set(); const today=ymd(weekDate(S.day)); const yd=new Date(weekDate(S.day)); yd.setDate(yd.getDate()-1); const ydk=ymd(yd); const wk=new Date(weekDate(S.day)); wk.setDate(wk.getDate()-7); const wkk=ymd(wk);
+  Object.keys(ps.days).forEach(k=>{ const d=k.slice(0,10); if(!/^\d{4}/.test(d)||d>=today) return; ps.days[k].forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; ever.add(x.id); const f=family(it.n); if(d===ydk) y.add(f); if(d>=wkk) w.set(f,(w.get(f)||0)+1); })); });
+  return {y,w,ever}; }
+
+// Top picks for a meal slot given what is still missing today (protein gap first, then calories), varied by history
+function suggestFor(mi){ const plan=dayPlan(); const p=P(); const all=[]; plan.forEach(m=>all.push(...m.items)); const T=tot(all); const pGap=p.target.p-T.p, kGap=p.target.k-T.k; const used=new Set(all.map(x=>x.id)); const recent=recentFamilies(); const name=plan[mi].name.toLowerCase();
+  const snackSlot=/mid-morning|pre-gym|evening|snack|waking/.test(name);
+  const cands=Object.values(F).filter(it=>allowed(it)&&!used.has(it.id)&&it.cat!=='gym'&&(snackSlot?['snack','fruit','prot','drink','bf'].includes(it.cat):['prot','carb','veg','side','bf'].includes(it.cat)))
+    .map(it=>{ const fam=family(it.n); let sc=0; if(pGap>10) sc+=Math.abs(Math.min(it.p,pGap)-Math.min(35,pGap))*1.2 - (it.p>=15?8:0); else sc+=it.p*0.3; if(kGap<300) sc+=it.k/40; else sc+=Math.abs(it.k-Math.min(kGap,450))/60; sc+=(COST[it.id]||2)*3; if(recent.y.has(fam)) sc+=8; sc+=Math.min(8,(recent.w.get(fam)||0)*3); if(recent.ever.has(it.id)) sc-=5; if(REC.has(it.id)) sc-=3; sc+=hashStr(it.id+ymd(weekDate(S.day)))%5; return {it,fam,sc}; })
+    .sort((a,b)=>a.sc-b.sc).filter((c,i,arr)=>arr.findIndex(o=>o.fam===c.fam)===i).slice(0,4);
+  return new Set(cands.map(c=>c.it.id)); }
 function treatCount(items){ return items.filter(x=>F[x.id]&&F[x.id].cat==='treat').length; }
 function renderWarnings(plan,T,tk,tp){
   const p=P(); const out=[]; const red=(t)=>out.push({l:'red',t}), amb=(t)=>out.push({l:'amb',t});
@@ -1039,8 +1084,13 @@ function renderWarnings(plan,T,tk,tp){
     const cands=Object.values(F).filter(it=>(it.cat==='prot'||it.cat==='snack')&&it.p>=10&&allowed(it)&&!used.has(it.id)&&!usedNames.has(it.n.toLowerCase().split(',')[0]))
       .map(it=>{ const snacky=/whey|yogurt|skyr|curd|milk|cottage|cheese|chana|peanut|nuts|bar|sprout|whites|eggs/i.test(it.n); let target;
         if(mainsShort.length&&!snacky) target=mainsShort[0].mi; else if(snacky) target=(gap>25?mealIdx(/mid-morning/i):mealIdx(/pre-gym|evening/i)); else target=mealIdx(/dinner/i); if(target<0) target=mealIdx(/lunch/i);
-        const fit=Math.abs(it.p-gap); const score=(COST[it.id]||2)*10 + fit*0.6 + (it.k/it.p)*1.5 + (mainsShort.length&&snacky?15:0); return {it,target,score}; })
-      .sort((a,b)=>a.score-b.score).filter((c,i,arr)=>arr.findIndex(o=>o.it.n===c.it.n)===i).slice(0,4);
+        const fit=Math.abs(it.p-gap); const fam=family(it.n); const recent=recentFamilies(); const yday=recent.y.has(fam), week=recent.w.get(fam)||0, ever=recent.ever.has(it.id);
+        // cheapest first, then protein fit and efficiency; then variety: not what you ate yesterday, not the same family 3 days running; small bonus for foods you have logged before (you actually cook them); daily rotation so the list changes every day
+        // what you actually cook and eat comes first (logged before: big bonus), then cost, then protein fit; variety: not yesterday's family, not the same family 3 days running; daily rotation
+        const score=(COST[it.id]||2)*6 + fit*0.6 + (it.k/it.p)*1.5 + (mainsShort.length&&snacky?15:0) + (yday?10:0) + Math.min(10,week*4) - (ever?18:0) + ((hashStr(it.id+ymd(weekDate(S.day)))%7)); return {it,target,score,fam}; })
+      .sort((a,b)=>a.score-b.score).filter((c,i,arr)=>arr.findIndex(o=>o.fam===c.fam)===i).slice(0,4);
+    // yesterday's main protein, if it is not on today's plate yet (same food two days running is fine, it is what you have in the fridge)
+    (()=>{ const ps=PS(); const yd=new Date(weekDate(S.day)); yd.setDate(yd.getDate()-1); const k=Object.keys(ps.days).find(x=>x.startsWith(ymd(yd))); if(!k) return; let best=null,bestMi=-1; ps.days[k].forEach((m,mi)=>m.items.forEach(x=>{ const it=F[x.id]; if(it&&it.cat==='prot'&&it.p>=15&&!used.has(it.id)&&allowed(it)&&(!best||it.p>best.p)){ best=it; bestMi=plan.findIndex(pm=>pm.name===m.name); } })); if(!best) return; if(bestMi<0) bestMi=mealIdx(/dinner/i); fixes.unshift({t:`Yesterday's ${best.n} <span data-s="s15">(+${best.p} g protein, ${best.k} kcal, leftover?)</span>`, label:'Add to '+plan[bestMi].name.replace(/ \(.*\)/,''), run:()=>{ plan[bestMi].items.push({id:best.id,q:1}); save(); render(); }}); })();
     cands.forEach(c=>fixes.push({t:`${c.it.n} <span data-s="s15">(+${c.it.p} g protein, ${c.it.k} kcal${costTxt(c.it.id)?', '+costTxt(c.it.id):''})</span>`, label:'Add to '+plan[c.target].name.replace(/ \(.*\)/,''), run:()=>{ plan[c.target].items.push({id:c.it.id,q:1}); save(); render(); }}));
   }
   if(T.p<tp-10||T.p<p.pMin){ let weak=null; plan.forEach((m,mi)=>{ const sh=mealShare(m.name); if(!sh) return; const mt=tot(m.items); const def=Math.round(tp*sh)-mt.p; if(def>5){ let best=null; m.items.forEach((x,ii)=>{ const it=F[x.id]; if(it&&it.p>=12&&x.q<3&&(!best||it.p>F[best.id].p)) best={...x,ii}; }); if(best&&(!weak||def>weak.def)) weak={mi,ii:best.ii,def,it:F[best.id],q:best.q}; } });
@@ -1166,17 +1216,19 @@ function renderSheet(){
   if(sheet.cat==='custom'){ renderCustomForm(); return; }
   const foodSearch=(q)=>{ const words=q.split(/\s+/).filter(Boolean); const esc=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); return Object.values(F).filter(x=>x.cat!=='gym').map(x=>{ const name=x.n.toLowerCase(), al=(ALIAS[x.id]||'').toLowerCase(); let sc=0; for(const w of words){ const ww=new RegExp('(^|[^a-z])'+esc(w)+'([^a-z]|$)'); if(ww.test(name)) sc+=8; else if(name.split(/[\s,/()+·-]+/).some(t=>t.startsWith(w))) sc+=5; else if(ww.test(al)) sc+=4; else if(al.split(/\s+/).some(t=>t.startsWith(w))) sc+=3; else if((name+' '+al).includes(w)) sc+=1; else return null; } return {x,sc}; }).filter(Boolean).sort((a,b)=>b.sc-a.sc||(REC.has(b.x.id)?1:0)-(REC.has(a.x.id)?1:0)||a.x.n.length-b.x.n.length).map(o=>o.x); };
   let list = q ? foodSearch(q) : (sheet.cat==='all' ? Object.values(F).filter(x=>x.cat!=='gym') : sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]));
-  list=list.filter(allowed);
+  const hiddenN=list.filter(it=>!allowed(it)).length; if(!sheet.showAll) list=list.filter(allowed);
   if(cur) list.sort((a,b)=>Math.abs(a.p-cur.p)-Math.abs(b.p-cur.p));
   if(!q) list.sort((a,b)=>(REC.has(b.id)?1:0)-(REC.has(a.id)?1:0));
   const o=document.getElementById('opts'); o.innerHTML='';
   if(!list.length) o.innerHTML='<div class="note">Nothing in this group fits today (veg day). Try Protein or Snacks.</div>';
+  if(hiddenN&&!q){ const t=document.createElement('button'); t.type='button'; t.className='btn q hiddenbtn'; t.textContent=sheet.showAll?`Hide the ${hiddenN} non-veg / egg items again`:`${hiddenN} non-veg / egg items hidden on this veg day · show anyway`; t.onclick=()=>{ sheet.showAll=!sheet.showAll; renderSheet(); }; o.appendChild(t); }
   const recentIds=(()=>{ const ps=PS(); const m=new Map(); const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-14); Object.keys(ps.days).sort().reverse().forEach(k=>{ if(!/^\d{4}/.test(k)||new Date(k.slice(0,10)+'T12:00')<cutoff) return; ps.days[k].forEach(mm=>mm.items.forEach(x=>{ if(!m.has(x.id)) m.set(x.id,1); })); }); return m; })();
   const hd=(t)=>{ const h=document.createElement('div'); h.className='chd'; h.textContent=t; o.appendChild(h); };
   const mealName=plan[sheet.mi].name.toLowerCase(); const fitCats = /breakfast/.test(mealName)?['bf','prot','fruit']:/waking/.test(mealName)?['drink','fruit']:/mid-morning|pre-gym|evening|snack/.test(mealName)?['snack','fruit','prot','drink']:['prot','carb','veg','side'];
   const recFor=(it)=>REC.has(it.id)&&fitCats.includes(it.cat);
-  let lastGrp=null; const grpOf=(it)=>!q&&!cur&&sheet.cat==='all' ? (recFor(it)?'Recommended for '+plan[sheet.mi].name.replace(/ \(.*\)/,'').toLowerCase():recentIds.has(it.id)?'Eaten recently':'All foods') : null;
-  if(!q&&!cur&&sheet.cat==='all') list.sort((a,b)=>{ const ga=recFor(a)?0:recentIds.has(a.id)?1:2, gb=recFor(b)?0:recentIds.has(b.id)?1:2; return ga-gb; });
+  const sugg=(!q&&!cur&&sheet.cat==='all')?suggestFor(sheet.mi):new Set();
+  let lastGrp=null; const grpOf=(it)=>!q&&!cur&&sheet.cat==='all' ? (sugg.has(it.id)?'Suggested now · fills today\'s gap':recFor(it)?'Recommended for '+plan[sheet.mi].name.replace(/ \(.*\)/,'').toLowerCase():recentIds.has(it.id)?'Eaten recently':'All foods') : null;
+  if(!q&&!cur&&sheet.cat==='all') list.sort((a,b)=>{ const ga=sugg.has(a.id)?0:recFor(a)?1:recentIds.has(a.id)?2:3, gb=sugg.has(b.id)?0:recFor(b)?1:recentIds.has(b.id)?2:3; return ga-gb; });
   list.forEach(it=>{ const g=grpOf(it); if(g&&g!==lastGrp){ hd(g); lastGrp=g; } const d=document.createElement('div'); d.className='opt'+(cur&&it.id===cur.id?' cur':'');
     const diff=cur?it.p-cur.p:null; const lbl=cur?(it.id===cur.id?'current':(diff>=0?'+':'')+diff+' g protein'):(it.custom?'my food':it.t==='v'?'veg':it.t==='e'||it.t==='te'?'egg':it.t==='n'||it.t==='tn'?'non-veg':'treat');
     d.innerHTML=`<div><div class="n">${REC.has(it.id)?'<span data-s="s16">★</span> ':''}${it.n}${it.g?' · '+it.g:''}</div><div class="m">${it.k} kcal · ${it.p} g protein · ${it.c} c · ${it.f} f${costTxt(it.id)?' · <span data-s="s16">'+costTxt(it.id)+'</span>':''}</div></div><span class="pill ${pill(it.t)}">${lbl}</span>`;
