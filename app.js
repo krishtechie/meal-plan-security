@@ -409,6 +409,15 @@ const REC = new Set(['b_eggs2','b_eggs2oats','b_eggs2bread','b_idlieggs','b_dosa
  's_rasam','s_pappu','s_curd100','k_gy','k_whey','k_eggs2','k_cheesestick','k_bar','k_curdcuc','k_fruitnuts','k_pumpkin','d_limewater','f_apple','f_banana','f_clementine','f_papaya','f_pear','t_chkbir','t_panbir','t_eggbir','t_pizza']);
 // Ingredients for custom entries: [name, kcal, protein, carbs, fat] per 100 g (or 100 ml); pc = grams per piece when counted in pieces
 const ING = [
+ ['Dark chocolate 80% (square)',590,9,38,46,5,'lindt square piece'],['Dark chocolate 70% (square)',580,8,45,42,10,'square piece'],
+ ['Omelette, 1 egg, 1/2 tsp oil',190,13,1,15,60,'omlette omelet'],['Omelette, 2 eggs, 1 tsp oil',175,12.5,1,14,110,'omlette omelet 2 eggs'],['Omelette, 3 eggs, 1 tsp oil',170,12.5,1,13,160,'omlette omelet 3 eggs'],
+ ['Egg, boiled whole (piece)',145,12.5,1,10,50,'boiled egg guddu'],['Egg white, boiled (piece)',52,11,0.7,0,33,'white'],['Egg, fried, 1/2 tsp oil (piece)',180,12.5,1,14,55,'fried egg'],
+ ['Bread, white (slice)',265,8,50,3,30,'white bread slice'],['Bread, multigrain (slice)',250,10,43,4,35,'multigrain slice'],['Toast with 1 tsp butter (slice)',320,9,40,10,40,'butter toast'],
+ ['Cheese slice (processed)',310,18,5,25,20,'cheese slice'],['Paneer cube (piece)',290,18,4,22,15,'paneer cube'],['Chapati / roti with 1/2 tsp ghee (piece)',270,8,45,6,35,'chapati ghee'],
+ ['Banana, small (piece)',89,1.1,23,0.3,90,'small banana'],['Orange, medium (piece)',47,0.9,12,0.1,130,'orange'],['Kiwi (piece)',61,1.1,15,0.5,75,'kiwi'],['Guava (piece)',68,2.6,14,1,120,'guava jama'],
+ ['Almond (piece)',580,21,22,50,1.2,'almond badam'],['Cashew (piece)',555,18,30,44,1.5,'cashew kaju'],['Walnut half (piece)',650,15,14,65,4,'walnut akhrot'],['Pistachio, shelled (piece)',560,20,28,45,0.7,'pista'],['Brazil nut (piece)',660,14,12,67,5,'brazil'],['Date, medjool (piece)',280,2,75,0.4,15,'khajoor'],['Dried fig / anjeer (piece)',250,3,64,1,8,'anjeer'],
+ ['Idli, small (piece)',150,4,30,0.5,35,'idli'],['Vada, medu (piece)',280,7,30,15,40,'medu vada garelu'],['Samosa (piece)',260,5,30,14,50,'samosa'],['Biscuit, marie (piece)',430,7,75,12,6,'marie biscuit'],['Ladoo (piece)',420,6,60,18,30,'laddu'],
+ ['Whey protein (half scoop)',400,80,10,3,15,'half scoop'],['Protein shake with 3% milk, 1 scoop + 250 ml',110,13,6,3,280,'whey milk shake'],
  ['Milk 6%',85,3.5,5,6,0,'milk'],['Milk 3% organic',60,3.3,5,3,0,'milk'],['Milk 1%',42,3.4,5,1],['Curd / dahi',60,4,5,2,0,'yogurt perugu'],['Greek yogurt 0%',60,10,4,0],['Skyr',63,11,4,0.2],['Cottage cheese',98,11,3,4],['Paneer',290,18,4,22,0,'cottage cheese indian'],['Cheese (mozzarella / cheddar / mix)',330,24,2,25],['Cheese stick',330,24,2,25,21],
  ['Whey protein (scoop)',400,80,10,3,30,'protein powder shake'],['Egg, whole',145,12.5,1,10,50,'eggs'],['Egg white',52,11,0.7,0,33,'whites'],
  ['Chicken breast, cooked',165,31,0,3.6],['Chicken thigh / legs, cooked, skinless',180,25,0,9],['Mutton, cooked, lean',215,27,0,11],['Tofu, firm',120,14,3,7],['Soya chunks, dry',340,52,33,0.5],['Dal, cooked thick',115,7,16,2.5,0,'pappu lentils toor moong'],['Chana / rajma, cooked',160,8,27,2.5,0,'chickpeas kidney beans senagalu'],['Peas',80,5,14,0.4],['Mushrooms',22,3,3,0],['Falafel (piece)',280,8,30,14,25],
@@ -438,6 +447,7 @@ const ICON = {
 };
 const ic=(cat)=>`<span class="ico ${cat}">${ICON[cat]||ICON.mine}</span>`;
 const ALIAS = {
+ pc_egg1:'boiled egg 1 whole egg guddu',pc_white1:'egg white 1',pc_om1:'omelette 1 egg omlette',pc_om2:'omelette 2 eggs omlette',pc_om3:'omelette 3 eggs omlette',pc_bread1:'bread slice 1 brown bread',pc_toast1:'toast butter slice',pc_choc80:'dark chocolate square 80',pc_choc70:'dark chocolate square 70',pc_roti1:'roti 1 phulka chapati',pc_cheese1:'cheese slice',pc_almond10:'almonds 10 badam',pc_date1:'date khajoor',
  c_tandoori:'tandoori chicken tikka grilled',c_grillbreast:'grilled chicken breast grill plain',c_breastcurry:'chicken breast curry kodi kura',c_thighcurry:'chicken thigh curry boneless',c_legs2:'chicken legs drumsticks leg piece',c_wings6:'chicken wings baked air fryer',c_wingsfried:'chicken wings fried restaurant',c_chk65:'chicken 65 pakoda pakora',c_keema:'chicken keema minced peas',c_pesarapappudal:'pesara pappu dal moong plain pesalu',c_pesarapappufry:'pesara pappu fry podi dry moong',
  n_brazil:'brazil nut',n_chia:'chia seeds',n_sunflower:'sunflower seeds',n_pumpkin:'pumpkin seeds gummadi ginjalu',n_flax:'flax seeds avise alsi',n_sesame:'sesame til nuvvulu',n_anjeer:'anjeer dried fig figs',n_dates2:'dates khajur kharjuram',n_raisins:'raisins kismis endu draksha',n_almonds10:'almonds badam',n_mixseeds:'mixed seeds',n_trail30:'trail mix nuts mix',
  h_chikkudutomato:'chikkudu tomato chikkudukaya broad beans valor papdi',h_chikkudufry:'chikkudu fry chikkudukaya vepudu broad beans',h_munagatomato:'munagakaya tomato drumstick mulakkada',h_thotakura:'thotakura fry thota kura amaranth leafy',h_capsicumaloo:'capsicum aloo curry potato capsicum bell pepper',h_alookurma:'aloo kurma potato kurma korma',h_eggtomato:'egg tomato curry guddu tamata',
@@ -564,6 +574,21 @@ const EXTRA = {
     ['h_jeerarice','Jeera rice, 1 tsp ghee','150 g',225,4,42,4,'v'],
     ['h_curdrice','Curd rice (daddojanam) with 3% curd','200 g',230,8,36,5,'v'],
   ],
+  pieces:[
+    ['pc_egg1','Boiled egg, 1 whole','1 (50 g)',72,6,1,5,'e'],
+    ['pc_white1','Egg white, 1','1 (33 g)',17,4,0,0,'e'],
+    ['pc_om1','Omelette, 1 egg, 1/2 tsp oil','1 egg',115,8,1,9,'e'],
+    ['pc_om2','Omelette, 2 eggs, 1 tsp oil','2 eggs',190,14,1,15,'e'],
+    ['pc_om3','Omelette, 3 eggs, 1 tsp oil','3 eggs',270,20,2,21,'e'],
+    ['pc_bread1','Bread, whole wheat, 1 slice','1 slice (35 g)',80,4,14,1,'v'],
+    ['pc_toast1','Toast with 1 tsp butter, 1 slice','1 slice',115,4,14,5,'v'],
+    ['pc_choc80','Dark chocolate 80%, 1 square','1 square (5 g)',30,0,2,2,'v'],
+    ['pc_choc70','Dark chocolate 70%, 1 square','1 square (10 g)',58,1,5,4,'v'],
+    ['pc_roti1','Roti / phulka, 1','1 (30 g)',70,2,14,1,'v'],
+    ['pc_cheese1','Cheese slice, 1','1 (20 g)',62,4,1,5,'v'],
+    ['pc_almond10','Almonds, 10','10 (12 g)',70,3,3,6,'v'],
+    ['pc_date1','Date, 1','1 (7 g)',20,0,5,0,'v'],
+  ],
   hyd_prot2:[
     ['h_eggbhurji','Egg bhurji (2 whole eggs, onion, tomato, 1 tsp oil)','2 eggs',210,13,4,15,'e'],
     ['h_paneerbhurji','Paneer bhurji (100 g paneer, onion, tomato, 1 tsp oil)','150 g',300,18,8,21,'v'],
@@ -598,7 +623,7 @@ const EXTRA = {
     ['n_trail30','Trail mix: almonds, cashews, raisins, pumpkin seeds','30 g',150,4,13,10,'v'],
   ],
 };
-for(const c0 in EXTRA){ const c=c0.replace('hyd_','').replace(/\d$/,''); EXTRA[c0].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; if(RAW[c]) RAW[c].push(r); }); }
+for(const c0 in EXTRA){ const c=c0==='pieces'?'snack':c0.replace('hyd_','').replace(/\d$/,''); EXTRA[c0].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; if(RAW[c]) RAW[c].push(r); }); }
 // Every dish in the library is also searchable as an ingredient in the custom builder, converted to per 100 g (or per piece)
 (function(){ const have=new Set(ING.map(x=>x[0].toLowerCase()));
   Object.values(F).forEach(it=>{ if(it.cat==='gym'||it.cat==='drink'&&it.k===0) return; const b=(function(){ if(!it.g) return null; let m=it.g.match(/(\d+(?:\.\d+)?)\s*(g|ml)\b/); if(m) return {n:+m[1],unit:m[2]}; m=it.g.match(/^(\d+(?:\.\d+)?)\b/); if(m) return {n:+m[1],unit:'pcs'}; return null; })(); if(!b||!b.n) return;
@@ -1272,12 +1297,12 @@ function buildRow(r,i){
     <div class="camtrow"><input type="number" inputmode="decimal" class="camt" value="${r.amt}" min="0" step="1" aria-label="Amount"><div class="useg"><button type="button" data-u="g" class="${r.unit==='g'?'on':''}">g / ml</button><button type="button" data-u="pcs" class="${r.unit==='pcs'?'on':''}">pcs</button></div><button class="btn x crm" type="button" aria-label="Remove ingredient">×</button></div>
     <div class="cmac"></div>`;
   const ing=d.querySelector('.cing'), res=d.querySelector('.cres'), amt=d.querySelector('.camt'), mac=d.querySelector('.cmac'), field=d.querySelector('.cfield'), picked=d.querySelector('.cpicked'), pcsBtn=d.querySelector('[data-u=pcs]');
-  const upd=()=>{ const x=ING[r.ing]; pcsBtn.disabled=!(x&&x[5]); if(!x){ mac.textContent='Pick an ingredient from the list'; mac.style.color='var(--orange)'; updTot(); return; } if(!x[5]&&r.unit==='pcs'){ r.unit='g'; } d.querySelectorAll('.useg button').forEach(b=>b.classList.toggle('on',b.dataset.u===r.unit)); const m=rowMac(r); mac.style.color=''; mac.textContent=`${Math.round(m.k)} kcal · ${m.p.toFixed(1)} g protein · ${m.c.toFixed(0)} g carbs · ${m.f.toFixed(0)} g fat${r.unit==='pcs'?' · '+Math.round(m.g)+' g':''}`; updTot(); };
+  const upd=()=>{ const x=ING[r.ing]; pcsBtn.disabled=!(x&&x[5]); if(!x){ mac.textContent='Pick an ingredient from the list'; mac.style.color='var(--orange)'; updTot(); return; } if(!x[5]&&r.unit==='pcs'){ r.unit='g'; } d.querySelectorAll('.useg button').forEach(b=>b.classList.toggle('on',b.dataset.u===r.unit)); const m=rowMac(r); mac.style.color=''; mac.textContent=`${Math.round(m.k)} kcal · ${m.p.toFixed(1)} g protein · ${m.c.toFixed(0)} g carbs · ${m.f.toFixed(0)} g fat${r.unit==='pcs'?' · '+r.amt+' × '+x[5]+' g = '+Math.round(m.g)+' g':''}`; updTot(); };
   const showPicked=()=>{ const x=ING[r.ing]; d.querySelector('.cpn').textContent=x[0]; d.querySelector('.cps').textContent=`${x[1]} kcal · ${x[2]} g protein per 100 g${x[5]?' · '+x[5]+' g each':''}`; field.classList.add('hid'); picked.classList.remove('hid'); res.hidden=true; };
   const showRes=()=>{ const q=ing.value.trim(); const ids=q?ingSearch(q):recentIng().concat(ingSearch('')).filter((v,i,a)=>a.indexOf(v)===i).slice(0,10);
     res.hidden=false; if(!ids.length){ res.innerHTML='<div class="cnone">No match. Try one word (mushroom, bhendi, curd) or the Telugu name, or type the macros below.</div>'; return; }
     res.innerHTML=(q?'':'<div class="chd">Recent and common</div>')+ids.map(k=>`<button type="button" class="copt" data-k="${k}"><span>${ING[k][0]}</span><small>${ING[k][1]} kcal · ${ING[k][2]} g protein per 100 g${ING[k][5]?' · '+ING[k][5]+' g each':''}</small></button>`).join('');
-    res.querySelectorAll('.copt').forEach(el=>el.onclick=()=>{ r.ing=+el.dataset.k; r.txt=ING[r.ing][0]; ing.value=r.txt; showPicked(); upd(); setTimeout(()=>{ amt.focus(); amt.select(); },50); }); };
+    res.querySelectorAll('.copt').forEach(el=>el.onclick=()=>{ r.ing=+el.dataset.k; r.txt=ING[r.ing][0]; ing.value=r.txt; const x=ING[r.ing]; if(x[5]&&/egg|slice|roti|phulka|idli|dosa|piece|square|bar|stick|banana|apple|pear|clementine|orange|puri|falafel|date|fig|scoop|tsp|tbsp|chapati|vada|cutlet|samosa|ladoo|chikki|biscuit|cookie/i.test(x[0])){ r.unit='pcs'; r.amt=1; amt.value=1; } showPicked(); upd(); setTimeout(()=>{ amt.focus(); amt.select(); },50); }); };
   ing.onfocus=()=>{ showRes(); setTimeout(()=>{ try{ d.scrollIntoView({block:'start',behavior:'smooth'}); }catch(e){} },250); };
   ing.oninput=()=>{ r.txt=ing.value; r.ing=-1; showRes(); upd(); };
   d.querySelector('.cchg').onclick=()=>{ picked.classList.add('hid'); field.classList.remove('hid'); r.ing=-1; ing.value=''; ing.focus(); upd(); };
