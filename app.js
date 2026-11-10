@@ -812,12 +812,23 @@ async function cloudPull(){
   }catch(e){ if(e.message==='auth'){ askKey('Wrong password. Try again.'); } else if(e.message==='locked'){ askKey('Too many wrong attempts. Wait 15 minutes.'); } else setStatus('Offline, saved on this device','warn'); }
 }
 function schedulePush(who,delay=700){ if(!CLOUD.on||!CLOUD.key) return; CLOUD.dirty[who]=true; clearTimeout(CLOUD.timer[who]); CLOUD.timer[who]=setTimeout(()=>cloudPush(who),delay); }
+// Merge a server copy into the local one. Local wins on the same key; everything else is kept from both sides.
+function mergeDoc(local,server){ if(!server) return local; const out=Object.assign({},server,local);
+  ['days','log','wlog','manual'].forEach(k=>{ out[k]=Object.assign({},server[k]||{},local[k]||{}); });
+  const byD={}; (server.weights||[]).forEach(w=>byD[w.d]=w); (local.weights||[]).forEach(w=>byD[w.d]=w); out.weights=Object.values(byD).sort((a,b)=>a.d<b.d?-1:1);
+  const byId={}; (server.customs||[]).forEach(c=>byId[c.id]=c); (local.customs||[]).forEach(c=>byId[c.id]=c); out.customs=Object.values(byId);
+  return out; }
 async function cloudPush(who){ if(CLOUD.busy[who]){ schedulePush(who,500); return; } CLOUD.busy[who]=true; setStatus('Saving…');
-  try{ const r=await api('put',who,{data:S.people[who]}); CLOUD.rev[who]=r.rev; CLOUD.dirty[who]=false; setStatus('Synced','ok'); }
+  try{ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ const r=await api('get',who); if(r.data){ S.people[who]=mergeDoc(S.people[who],r.data); loadAllCustoms(); saveLocal(); render(); } }
+    const r=await api('put',who,{data:S.people[who]}); CLOUD.rev[who]=r.rev; CLOUD.dirty[who]=false; setStatus('Synced','ok'); }
   catch(e){ if(e.message==='auth') askKey('Wrong password. Try again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes.'); else if(/^rejected/.test(e.message)){ setStatus('Not saved: server rejected the data','warn'); console.warn(e.message); } else { setStatus('Offline, will retry','warn'); setTimeout(()=>schedulePush(who,0),15000); } }
   finally{ CLOUD.busy[who]=false; } }
 // refresh from the server when the app comes back to the foreground (other phone may have changed things)
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&CLOUD.on&&CLOUD.key&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
+window.addEventListener('focus',()=>{ if(CLOUD.on&&CLOUD.key&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
+// Live: every 20 s while the page is visible, ask the server for the revision numbers and pull only if the other phone changed something
+setInterval(async()=>{ if(document.visibilityState!=='visible'||!CLOUD.on||!CLOUD.key||Object.values(CLOUD.dirty).some(Boolean)||Object.values(CLOUD.busy).some(Boolean)) return;
+  try{ for(const who of ['p1','p2']){ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ await cloudPull(); break; } } }catch(e){} },20000);
 function saveLocal(){ try{ localStorage.setItem('kl-meal-v2',JSON.stringify({people:S.people,who:S.who,savedAt:new Date().toISOString()})); storeOK=true; }catch(e){ storeOK=false; } }
 function save(){ saveLocal(); schedulePush(S.who); }
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}

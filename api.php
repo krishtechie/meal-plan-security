@@ -23,7 +23,7 @@ $user = strtolower($_SERVER['HTTP_X_APP_USER'] ?? '');
 if ($user === '' && $key !== '') { $user = 'p1'; }   // older client: shared password, treat as first account
 
 // Fix 5: strict input validation. Only known actions and known accounts.
-if (!in_array($a, ['ping', 'get', 'put'], true)) { $a = 'unknown'; }
+if (!in_array($a, ['ping', 'get', 'put', 'rev'], true)) { $a = 'unknown'; }
 if ($who !== '' && !array_key_exists($who, $USERS)) { $who = 'invalid'; }
 if ($user !== '' && !array_key_exists($user, $USERS)) { $user = 'invalid'; }
 if (strlen($key) > 200) { $key = ''; }
@@ -64,6 +64,10 @@ if ($a === 'unknown') { fail(404, 'unknown_action', 'unknown action'); }
 if ($who === '' || $who === 'invalid') { fail(400, 'bad_request', 'who required'); }
 $file = DATA_DIR . "/$who.json";
 
+if ($a === 'rev') {
+  $obj = file_exists($file) ? json_decode(file_get_contents($file), true) : null;
+  echo json_encode(['ok' => true, 'rev' => $obj['rev'] ?? 0, 'updated' => $obj['updated'] ?? null]); exit;
+}
 if ($a === 'get') {
   if (!file_exists($file)) { audit('ok', ['rev' => 0]); echo json_encode(['ok' => true, 'rev' => 0, 'data' => null]); exit; }
   $obj = json_decode(file_get_contents($file), true);
@@ -89,7 +93,7 @@ function validateDoc($d, int $depth = 0): ?string {
 }
 function validateShape(array $d): ?string {
   $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','m3','m4','m5','m6','name','savedAt'];
-  foreach (array_keys($d) as $k) { if (!in_array($k, $allowed, true)) return "unknown field $k"; }
+  foreach (array_keys($d) as $k) { if (!in_array($k, $allowed, true) && !preg_match('/^m\d{1,2}$/', (string)$k)) return "unknown field $k"; }
   foreach (($d['weights'] ?? []) as $w) {
     if (!is_array($w) || !isset($w['d'], $w['w'])) return 'bad weight entry';
     if (!preg_match('/^\d{4}-\d\d-\d\d$/', (string)$w['d'])) return 'bad weight date';
