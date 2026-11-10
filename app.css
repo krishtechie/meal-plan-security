@@ -473,3 +473,17 @@ html[data-theme=dark] .chip.p{background:rgba(255,55,95,.22);color:#ff9bb0}html[
 /* glyphs: absolutely centred inside tiles, immune to flex/grid quirks */
 .ico,.tile,.mwrap .tile{position:relative;line-height:0}
 .ico>svg,.tile>svg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);margin:0}
+/* mobile header: keep greeting readable while syncing */
+@media (max-width:560px){ .sync{max-width:0;padding:0;overflow:hidden;font-size:0;width:8px;height:8px;border-radius:50%;background:var(--dim)} .sync.ok{background:var(--green)} .sync.warn{background:var(--orange)} .sync:empty{display:none} }
+/* desktop: roomier week card */
+@media (min-width:900px){
+  .weekcard{padding:10px 12px 10px}
+  .weeknav{padding:2px 6px 8px}
+  .wklbl{font-size:15px;padding:6px 14px}
+  .wkbtn{width:36px;height:36px;font-size:22px}
+  .dayc{padding:8px 0 10px;gap:6px}
+  .dayc small{font-size:12px}
+  .dayc b{width:48px;height:48px;border-radius:14px;font-size:20px}
+  .dayc i{width:24px;height:4px}
+}
+@media (min-width:900px){ #vPlan .weekcard{grid-area:strip} #vPlan .weekcard .strip{grid-area:auto} }

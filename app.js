@@ -733,13 +733,17 @@ const SEA=/fish|prawn|shrimp|basa|sardine|seafood/i;
 function allowed(it, d=S.day){ if(SEA.test(it.n)&&!PS().seafood) return false; if(!isVeg(d)) return true; const t=it.t; if(t==='n'||t==='tn') return false; if(t==='e'||t==='te') return PS().eggsVeg; return true; }
 function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1})}; }); }
 // A day starts empty (it is a log). Today starts from the plan template so there is something to follow.
-function fresh(d){ const isToday=weekDate(d).toISOString().slice(0,10)===new Date().toISOString().slice(0,10); return isToday ? template(d) : P().meals.map(m=>({name:m.name,time:m.time,items:[]})); }
+function fresh(d){ const isToday=ymd(weekDate(d))===ymd(new Date()); return isToday ? template(d) : P().meals.map(m=>({name:m.name,time:m.time,items:[]})); }
 function fillTemplate(d=S.day){ const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); save(); render(); }
-function dayKeyFor(d){ return weekDate(d).toISOString().slice(0,10); }
+function dayKeyFor(d){ return ymd(weekDate(d)); }
 function sameAsTemplate(plan,d){ const t=template(d); return JSON.stringify(plan.map(m=>m.items))===JSON.stringify(t.map(m=>m.items)); }
-function pruneUntouched(ps){ if(ps.m4) return; const today=new Date().toISOString().slice(0,10);
+function pruneUntouched(ps){ if(ps.m4) return; const today=ymd(new Date());
   Object.keys(ps.days).forEach(k=>{ const date=k.slice(0,10); if(date===today||!/^\d{4}-\d\d-\d\d$/.test(date)) return; const idx=(new Date(date+'T12:00').getDay()+6)%7; try{ if(sameAsTemplate(ps.days[k],idx)) delete ps.days[k]; }catch(e){} }); ps.m4=1; }
-function migrateDays(ps){ if(ps.m3){ pruneUntouched(ps); return; } const todayIdx=(new Date().getDay()+6)%7; Object.keys(ps.days).forEach(k=>{ const m=k.match(/^([0-6])([vn])([ex])$/); if(m){ const nk=dayKeyFor(+m[1])+m[2]+m[3]; if(!ps.days[nk]) ps.days[nk]=ps.days[k]; delete ps.days[k]; } }); ps.m3=1; pruneUntouched(ps); }
+function fixUtcKeys(ps){ if(ps.m5) return; const vd=ps.vegDays||[]; const vegOf=(date)=>{ const i=(new Date(date+'T12:00').getDay()+6)%7; return ps.allVeg || (!ps.allNonVeg && vd.includes(i)); };
+  if(!ps.allVeg&&!ps.allNonVeg&&vd.length&&vd.length<7){ Object.keys(ps.days).sort().forEach(k=>{ const m=k.match(/^(\d{4}-\d\d-\d\d)([vn])([ex])$/); if(!m) return; const flagVeg=m[2]==='v'; const d=new Date(m[1]+'T12:00'); const prev=new Date(d); prev.setDate(d.getDate()-1); const pk=ymd(prev)+m[2]+m[3];
+      if(vegOf(m[1])!==flagVeg && vegOf(ymd(prev))===flagVeg && !ps.days[pk]){ ps.days[pk]=ps.days[k]; delete ps.days[k]; } }); }
+  Object.keys(ps.log||{}).forEach(k=>{}); ps.m5=1; }
+function migrateDays(ps){ if(ps.m3){ pruneUntouched(ps); fixUtcKeys(ps); return; } const todayIdx=(new Date().getDay()+6)%7; Object.keys(ps.days).forEach(k=>{ const m=k.match(/^([0-6])([vn])([ex])$/); if(m){ const nk=dayKeyFor(+m[1])+m[2]+m[3]; if(!ps.days[nk]) ps.days[nk]=ps.days[k]; delete ps.days[k]; } }); ps.m3=1; pruneUntouched(ps); fixUtcKeys(ps); }
 function dayPlan(d=S.day){ const ps=PS(); migrateDays(ps); const key=dayKeyFor(d)+(isVeg(d)?'v':'n')+(PS().eggsVeg?'e':'x'); if(!ps.days[key]) ps.days[key]=fresh(d); return ps.days[key]; }
 const MEAL_SHARE=[['breakfast',.18],['mid-morning',.12],['lunch',.28],['pre-gym',.15],['dinner',.27]];
 function mealShare(name){ const n=name.toLowerCase(); const f=MEAL_SHARE.find(x=>n.includes(x[0])); return f?f[1]:0; }
@@ -752,6 +756,8 @@ function fmtG(it,q){ if(!it.g) return q===1?'':q+' x'; if(q===1) return it.g; if
 // ================= RENDER =================
 let _lastView=null,_lastDay=null;
 // Date of weekday i (0=Mon) in the current week
+// Local calendar date as YYYY-MM-DD (never UTC: evenings in Eastern time are already tomorrow in UTC)
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 S.week=S.week||0; // 0 = this week, -1 = last week, +1 = next week
 function weekDate(i){ const t=new Date(); const dow=(t.getDay()+6)%7; const d=new Date(t); d.setDate(t.getDate()-dow+i+7*S.week); return d; }
 function renderWeekNav(){ const a=weekDate(0), b=weekDate(6); const f=(d,o)=>d.toLocaleDateString(undefined,o); const same=a.getMonth()===b.getMonth();
@@ -841,7 +847,7 @@ function renderPlan(){
 }
 
 // ---- Daily check-in: water, steps, sleep. Keyed by real date, per person ----
-function dkey(){ return weekDate(S.day).toISOString().slice(0,10); }
+function dkey(){ return ymd(weekDate(S.day)); }
 function dlog(){ const ps=PS(); if(!ps.log) ps.log={}; const k=dkey(); if(!ps.log[k]) ps.log[k]={water:0,steps:'',bed:'',wake:''}; return ps.log[k]; }
 function toMin(t){ if(!t) return null; const [h,m]=t.split(':').map(Number); return h*60+m; }
 function fmtT(min){ min=((min%1440)+1440)%1440; const h=Math.floor(min/60), m=min%60; const ap=h>=12?'pm':'am'; const hh=h%12||12; return `${hh}:${String(m).padStart(2,'0')} ${ap}`; }
@@ -954,8 +960,8 @@ function renderWeek(){
 }
 function renderWeight(){
   const ps=PS(); document.getElementById('wtTitle').textContent=P().name+' · weight log';
-  if(!document.getElementById('wtDate').value) document.getElementById('wtDate').value=new Date().toISOString().slice(0,10);
-  const _wd=document.getElementById('wtDate'); const _wl=document.getElementById('wtDateLbl'); const _fmtD=(v)=>{ const d=new Date(v+'T12:00'); const t=new Date(); return v===t.toISOString().slice(0,10)?'Today':d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'}); }; _wl.textContent=_fmtD(_wd.value); _wd.oninput=()=>{ _wl.textContent=_fmtD(_wd.value); };
+  if(!document.getElementById('wtDate').value) document.getElementById('wtDate').value=ymd(new Date());
+  const _wd=document.getElementById('wtDate'); const _wl=document.getElementById('wtDateLbl'); const _fmtD=(v)=>{ const d=new Date(v+'T12:00'); const t=new Date(); return v===ymd(t)?'Today':d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'}); }; _wl.textContent=_fmtD(_wd.value); _wd.oninput=()=>{ _wl.textContent=_fmtD(_wd.value); };
   const ws=[...ps.weights].sort((a,b)=>a.d<b.d?-1:1);
   const avg7=(idx)=>{ const sl=ws.slice(Math.max(0,idx-6),idx+1); return (sl.reduce((s,x)=>s+x.w,0)/sl.length).toFixed(1); };
   const b=document.getElementById('wtBody'); b.innerHTML='';
@@ -1118,7 +1124,7 @@ function exportRows(){ const me=S.who; const food=[['Date','Day','Person','Veg d
     (ps.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1).forEach(w=>wt.push([w.d,name,w.w])); });
   S.who=me; return {food,ck,wt}; }
 function dl(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000); }
-const stamp=()=>new Date().toISOString().slice(0,10);
+const stamp=()=>ymd(new Date());
 document.getElementById('xlsExport').onclick=()=>{ const r=exportRows(); dl(xlsx([{name:'Food log',rows:r.food},{name:'Check-in',rows:r.ck},{name:'Weight',rows:r.wt}]),`meal-planner-${stamp()}.xlsx`); bkMsg('Excel file downloaded.',true); };
 document.getElementById('csvExport').onclick=()=>{ const r=exportRows(); const csv=(rows)=>rows.map(row=>row.map(v=>{ v=String(v??''); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(',')).join('\n'); dl(new Blob(['﻿'+csv(r.food)+'\n\nCHECK-IN\n'+csv(r.ck)+'\n\nWEIGHT\n'+csv(r.wt)],{type:'text/csv'}),`meal-planner-${stamp()}.csv`); bkMsg('CSV downloaded.',true); };
 // ---- Sheets: swipe down or tap outside to close ----
