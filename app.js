@@ -1022,7 +1022,7 @@ function renderCheckin(){
   el.querySelector('#ckSteps').onchange=e=>{ L.steps=e.target.value; save(); renderCheckin(); };
   [['ckBed','bed'],['ckWake','wake']].forEach(([id,k])=>{ const row=el.querySelector('#'+id); const cell=el.querySelector('#'+id+'Cell'); const tv=cell.querySelector('.tv');
     const commit=()=>{ const h=+row.querySelector('.th').value, m=+row.querySelector('.tm').value, ap=row.querySelector('.tap').value; const H=(h%12)+(ap==='PM'?12:0); L[k]=String(H).padStart(2,'0')+':'+String(m).padStart(2,'0'); tv.textContent=fmtT(toMin(L[k])); tv.classList.remove('dim'); save(); };
-    cell.onclick=()=>{ const open=row.hidden; el.querySelectorAll('.timepick').forEach(r=>r.hidden=true); el.querySelectorAll('.cell[aria-expanded]').forEach(c=>c.setAttribute('aria-expanded','false')); row.hidden=!open; cell.setAttribute('aria-expanded',String(open)); if(open&&!L[k]) commit(); };
+    cell.onclick=()=>{ const open=row.hidden; el.querySelectorAll('.timepick').forEach(r=>r.hidden=true); el.querySelectorAll('.cell[aria-expanded]').forEach(c=>c.setAttribute('aria-expanded','false')); row.hidden=!open; cell.setAttribute('aria-expanded',String(open)); };
     row.querySelectorAll('select').forEach(sel=>sel.onchange=commit);
     row.querySelector('.tdone').onclick=()=>{ commit(); renderCheckin(); }; });
   el.querySelectorAll('.bartrack i').forEach(i=>{ i.style.width=i.dataset.w+'%'; });

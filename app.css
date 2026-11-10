@@ -625,3 +625,6 @@ body.lock{position:fixed;left:0;right:0;overflow:hidden;width:100%}
 @supports (height:100dvh){ @media (max-width:899px){ .sheet{max-height:calc(100dvh - 20px)} } }
 .timepick{grid-template-columns:1fr 1fr 1fr auto;align-items:end}
 .timepick .tdone{padding:11px 16px;border-radius:12px;font-size:15px}
+/* home-screen app feel: no long-press callouts or text selection on controls */
+button,.nav,.dayc,.cup,.ico,.tile,.chip,.opt,.copt,.fix,.wohd{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+@media (display-mode:standalone){ .hdr{padding-top:calc(10px + env(safe-area-inset-top))} .nav{bottom:calc(10px + env(safe-area-inset-bottom))} }
