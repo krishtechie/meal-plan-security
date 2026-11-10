@@ -636,7 +636,7 @@ for(const c0 in EXTRA){ const c=c0==='pieces'?'snack':c0.replace('hyd_','').repl
 // ================= PEOPLE & TEMPLATES =================
 // template meal: {name,time,nv:[ids],v:[ids]}
 const PEOPLE = {
-  p1:{ name:'Person 1', target:{k:1900,p:165}, floor:1700, fatMax:75, carbMax:230, maint:2550, pMin:150, restCut:100, eggsVegDefault:false, kg:88,
+  p1:{ name:'Person 1', sex:'m', goal:80, steps:9000, target:{k:1900,p:165}, floor:1700, fatMax:75, carbMax:230, maint:2550, pMin:150, restCut:100, eggsVegDefault:false, kg:88,
     meals:[
       {name:'On waking', time:'7:00 am', nv:['d_limewater'], v:['d_limewater']},
       {name:'Breakfast', time:'8:00 am', nv:['b_eggs2','b_oatsmilkchia'], v:['b_eggs2','b_oatswheychia'], vNoEgg:['b_oatswheychia']},
@@ -647,9 +647,9 @@ const PEOPLE = {
       {name:'Dinner (post-gym)', time:'7:00 pm', nv:['c_rice100','p_chkmush'], v:['c_rice100',['p_tofuveg',1.5]]},
     ],
     notes:null },
-  p2:{ name:'Person 2', target:{k:1550,p:130}, floor:1350, fatMax:60, carbMax:170, maint:2200, pMin:115, restCut:80, eggsVegDefault:false, kg:85,
+  p2:{ name:'Person 2', sex:'f', goal:75, steps:8000, target:{k:1550,p:130}, floor:1350, fatMax:60, carbMax:170, maint:2200, pMin:115, restCut:80, eggsVegDefault:false, kg:85,
     meals:[
-      {name:'On waking', time:'7:00 am', nv:['d_tablet'], v:['d_tablet']},
+      {name:'On waking (tablet)', time:'7:00 am', nv:['d_tablet'], v:['d_tablet']},
       {name:'Breakfast', time:'8:00 am', nv:['b_eggs2',['b_oatsmilkchia',0.5]], v:['b_oatswheychia'], vNoEgg:['b_oatswheychia']},
       {name:'Mid-morning', time:'11:00 am', nv:['k_gychia'], v:['k_gychia']},
       {name:'Lunch', time:'1:00 pm', nv:['c_rice100','p_chkveg120'], v:['c_rice100','p_soyaveg']},
@@ -657,7 +657,7 @@ const PEOPLE = {
       {name:'Gym', time:'5:00 to 6:00 pm', nv:['g_gym'], v:['g_gym']},
       {name:'Dinner (post-gym)', time:'7:00 pm', nv:['c_rice100','p_chkmush'], v:['p_tofuveg','v_bigsalad']},
     ],
-    notes:'' }
+    notes:null }
 };
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], FULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const VEG_DAYS=new Set([1,4,5]); // Tue, Fri, Sat
@@ -689,7 +689,7 @@ const BODY = `<svg viewBox="0 0 120 150" class="bodymap" aria-hidden="true">
 </g></svg>`;
 function muscleMap(list){ const set=new Set(list); return BODY.replace(/data-m="([a-z]+)"/g,(m,k)=>set.has(k)?`data-m="${k}" class="m on"`:m).replace(/class="m" data-m="([a-z]+)" class="m on"/g,'class="m on" data-m="$1"'); }
 const MUSCLES = {
- 'Barbell or dumbbell bench press':['chest','triceps','shoulders'],'Incline dumbbell press':['chest','shoulders','triceps'],'Chest-supported machine fly or cable fly':['chest'],'Push-ups (Person 2: incline on a bench)':['chest','triceps','abs'],'Rope triceps pushdown':['triceps'],
+ 'Barbell or dumbbell bench press':['chest','triceps','shoulders'],'Incline dumbbell press':['chest','shoulders','triceps'],'Chest-supported machine fly or cable fly':['chest'],'Push-ups ({p2}: incline on a bench)':['chest','triceps','abs'],'Rope triceps pushdown':['triceps'],
  'Lat pulldown (wide grip)':['back','biceps'],'Seated cable row':['back','traps','biceps'],'One-arm dumbbell row':['back','biceps','obliques'],'Face pulls':['shoulders','traps','back'],'Dumbbell bicep curl':['biceps'],'Hammer curl':['biceps','forearms'],
  'Barbell back squat or leg press':['quads','glutes','hamstrings','abs'],'Walking lunges':['quads','glutes','hamstrings'],'Leg extension':['quads'],'Standing calf raise':['calves'],
  'Seated dumbbell shoulder press':['shoulders','triceps'],'Dumbbell lateral raise':['shoulders'],'Rear delt fly (machine or bent over)':['shoulders','back'],'EZ bar or dumbbell curl':['biceps'],'Overhead triceps extension':['triceps'],'Cable or dumbbell shrug':['traps'],
@@ -702,7 +702,7 @@ const DEMO = {
   'Barbell or dumbbell bench press':['barbell-bench-press','Barbell bench press'],
   'Incline dumbbell press':['dumbbell-incline-bench-press','Dumbbell incline bench press'],
   'Chest-supported machine fly or cable fly':['machine-fly','Machine fly'],
-  'Push-ups (Person 2: incline on a bench)':['push-up','Push up'],
+  'Push-ups ({p2}: incline on a bench)':['push-up','Push up'],
   'Rope triceps pushdown':['cable-rope-tricep-extension','Cable rope tricep extension'],
   'Lat pulldown (wide grip)':['lat-pulldown','Lat pulldown'],
   'Seated cable row':['cable-row','Cable row'],
@@ -747,13 +747,13 @@ const demoHtml=(name)=>{ const d=DEMO[name]; if(!d) return ''; const a=DEMO2[nam
   return `<div class="demos"><a class="demo" href="${FITBOD}${d[0]}" target="_blank" rel="noopener">▶ Form guide</a>${a?`<a class="demo alt" href="${FITBOD}${a[0]}" target="_blank" rel="noopener">${a[1]}</a>`:''}<small class="dsrc">Fitbod · ${d[1]}</small></div>`; };
 
 // ================= WORKOUTS =================
-// [exercise, cue, Person 1 sets x reps, Person 2 sets x reps]
+// [exercise, cue, person 1 sets x reps, person 2 sets x reps]
 const WORKOUTS = [
  {day:0, name:'Chest', sub:'+ 10 min incline walk', ex:[
    ['Barbell or dumbbell bench press','Shoulder blades pinched, bar to lower chest, 2 sec down','4 x 6-8','3 x 10-12'],
    ['Incline dumbbell press','30 degree bench, upper chest, stop 1 inch above chest','3 x 8-10','3 x 10-12'],
    ['Chest-supported machine fly or cable fly','Squeeze 1 sec at the middle, do not bang the handles','3 x 12-15','3 x 12-15'],
-   ['Push-ups (Person 2: incline on a bench)','Body straight, to failure on last set','2 x max','2 x max'],
+   ['Push-ups ({p2}: incline on a bench)','Body straight, to failure on last set','2 x max','2 x max'],
    ['Rope triceps pushdown','Elbows pinned, full lockout','3 x 12','3 x 12'],
  ], foot:'Rest 90 sec between sets on press, 60 sec on the rest. Add 2.5 kg when you hit the top of the rep range on every set.'},
  {day:1, name:'Back', sub:'+ biceps', ex:[
@@ -780,7 +780,7 @@ const WORKOUTS = [
  ], foot:'Lateral raises are what make the waist look smaller by comparison. Light weight, perfect form, every rep.'},
  {day:4, name:'Lower (hamstrings, glutes)', sub:'+ 10 min incline walk', ex:[
    ['Romanian deadlift (barbell or dumbbell)','Hips back, bar brushes the thighs, flat back, feel the hamstrings','4 x 8','3 x 10-12'],
-   ['Hip thrust or glute bridge','Chin tucked, squeeze 2 sec at the top','3 x 10-12','4 x 12 (Person 2 priority)'],
+   ['Hip thrust or glute bridge','Chin tucked, squeeze 2 sec at the top','3 x 10-12','4 x 12 ({p2} priority)'],
    ['Lying or seated leg curl','2 sec down','3 x 12','3 x 12-15'],
    ['Bulgarian split squat','Rear foot on bench, torso slightly forward','3 x 8 each','2 x 10 each'],
  ], foot:'Posterior chain day. This plus Tuesday back is what fixes the back-fat and love-handle area, together with the deficit.'},
@@ -796,7 +796,7 @@ const CORE = {
   ]},
   B:{name:'Core finisher B (Tue, Thu)', ex:[
     ['Hanging knee raise or lying leg raise','Slow down, no swinging','3 x 12','3 x 10'],
-    ['Russian twist (obliques)','Feet down for Person 2, feet up for Person 1, touch the floor each side','3 x 15 each','3 x 12 each'],
+    ['Russian twist (obliques)','Feet down for {p2}, feet up for {p1}, touch the floor each side','3 x 15 each','3 x 12 each'],
     ['Bicycle crunch','Elbow to opposite knee, slow, exhale on the twist','3 x 15 each','3 x 12 each'],
     ['Suitcase carry (obliques, anti-lean)','Heavy dumbbell in one hand, walk tall 20 m, switch','3 x 20 m each','3 x 20 m each'],
   ]},
@@ -808,6 +808,7 @@ function wlogHtml(name){ const ps=PS(); const cur=((ps.wlog||{})[ymd(new Date())
   const hint=prev?`Last ${new Date(prev.d+'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}: <b>${prev.w} kg × ${prev.r}</b>${prev.s?' × '+prev.s:''}${prev.w&&cur.w&&cur.w>prev.w?' · <em class="up">+'+(cur.w-prev.w).toFixed(1)+' kg</em>':''}`:'First time: pick a weight you can do for the top of the range with 2 reps left';
   return `<div class="wlog" data-ex="${name.replace(/"/g,'&quot;')}"><div class="wlin"><label><span>kg</span><input class="lw" type="number" inputmode="decimal" step="0.5" min="0" value="${cur.w||''}" placeholder="0" autocomplete="off" name="log-kg"></label><label><span>reps</span><input class="lr" type="number" inputmode="numeric" min="0" value="${cur.r||''}" placeholder="0" autocomplete="off" name="log-reps"></label><label><span>sets</span><input class="ls" type="number" inputmode="numeric" min="0" value="${cur.s||''}" placeholder="0" autocomplete="off" name="log-sets"></label><span class="ldone${cur.w&&cur.r?' on':''}" aria-hidden="true">✓</span></div><div class="wlhint">${hint}</div></div>`; }
 function wlogLast(name){ const prev=wlogPrev(name); return prev?`<div class="wlhint">Last: <b>${prev.w} kg × ${prev.r}</b>${prev.s?' × '+prev.s:''} on ${new Date(prev.d+'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}</div>`:''; }
+const nm=(t)=>String(t).replace(/\{p1\}/g,PEOPLE.p1.name).replace(/\{p2\}/g,PEOPLE.p2.name);
 function renderWorkout(){
   const k=S.who==='p1';
   document.getElementById('woTitle').textContent=P().name+' · weekly split';
@@ -819,8 +820,8 @@ function renderWorkout(){
   sorted.forEach(d=>{ const open=!!S.woOpen[d.day]; const box=document.createElement('div'); box.className='wo'+(d.day===todayIdx?' today':'')+(open?' open':' closed');
     const n=d.ex.length+(d.day<=4?4:0);
     let h=`<button type="button" class="hd wohd" aria-expanded="${open}"><span class="wol"><b>${d.day===todayIdx?'Today · ':''}${DAYS[d.day]} · ${d.name}</b><span>${d.sub||(n+' exercises')}</span></span><span class="chev" aria-hidden="true">›</span></button><div class="wobody">`;
-    d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div>${demoHtml(e[0])}${d.day===todayIdx&&S.week===0?wlogHtml(e[0]):wlogLast(e[0])}</div>${sr?`<div class="sr">${sr}</div>`:''}</div>`; });
-    if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div>${demoHtml(e[0])}</div><div class="sr">${sr}</div></div>`; }); }
+    d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${nm(e[0])}</div><div class="cue">${nm(e[1])}</div>${demoHtml(e[0])}${d.day===todayIdx&&S.week===0?wlogHtml(e[0]):wlogLast(e[0])}</div>${sr?`<div class="sr">${nm(sr)}</div>`:''}</div>`; });
+    if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${nm(e[0])}</div><div class="cue">${nm(e[1])}</div>${demoHtml(e[0])}</div><div class="sr">${sr}</div></div>`; }); }
     h+=`<div class="foot">${d.foot}</div></div>`; box.innerHTML=h; box.querySelector('.wohd').onclick=()=>{ S.woOpen[d.day]=!S.woOpen[d.day]; renderWorkout(); };
     box.querySelectorAll('.wlog').forEach(row=>{ const name=row.dataset.ex; const inW=row.querySelector('.lw'), inR=row.querySelector('.lr'), inS=row.querySelector('.ls'); const upd=()=>{ const ps=PS(); ps.wlog=ps.wlog||{}; const key=ymd(new Date()); ps.wlog[key]=ps.wlog[key]||{}; const v={w:+inW.value||0,r:+inR.value||0,s:+inS.value||0}; if(!v.w&&!v.r&&!v.s) delete ps.wlog[key][name]; else ps.wlog[key][name]=v; save(); row.querySelector('.ldone').classList.toggle('on',!!(v.w&&v.r)); }; [inW,inR,inS].forEach(i=>i.onchange=upd); });
     w.appendChild(box); });
@@ -840,6 +841,8 @@ function renderWorkout(){
 // ================= STATE =================
 let S={who:'p1', day:(new Date().getDay()+6)%7, view:'plan', people:{}};
 try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'null'); if(o&&o.people){ S.people=o.people; S.who=o.who||'p1'; } }catch(e){}
+// Older builds keyed people by first name; move them to p1/p2 (first legacy key becomes p1, second p2)
+(()=>{ const legacy=Object.keys(S.people).filter(k=>!/^p[12]$/.test(k)); legacy.forEach((k,i)=>{ const nk='p'+(i+1); if(!S.people[nk]) S.people[nk]=S.people[k]; delete S.people[k]; }); if(!/^p[12]$/.test(S.who)) S.who='p'+Math.max(1,legacy.indexOf(S.who)+1); try{ const u=localStorage.getItem('kl-user'); if(u&&!/^p[12]$/.test(u)) localStorage.setItem('kl-user','p'+Math.max(1,legacy.indexOf(u)+1)); }catch(e){} })();
 loadAllCustoms();
 let storeOK=true;
 // ---------- CLOUD SYNC (api.php on your own hosting) ----------
@@ -854,10 +857,16 @@ async function cloudInit(){
   let ping; try{ ping=await api('ping'); }catch(e){ return; }   // no api.php here -> stay local (e.g. the claude.ai copy)
   CLOUD.on=true;
   if(!ping.auth){ askKey(); return; }
+  applyProfiles(ping);
+  if(ping.shared&&!CLOUD.user){ askKey(''); document.getElementById('keyGo').click(); return; }
   await cloudPull();
 }
-function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.add('show'); document.getElementById('keyMsg').textContent=msg||''; setStatus('Not signed in','warn'); const u=CLOUD.user||S.who; document.querySelectorAll('#keyWho button').forEach(b=>b.classList.toggle('on',b.dataset.u===u)); }
-document.querySelectorAll('#keyWho button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('#keyWho button').forEach(x=>x.classList.toggle('on',x===b)); });
+
+// Names and personal targets live in config.php on the server, never in this repo. Applied after a successful sign-in.
+function applyProfiles(ping){ if(!ping||!ping.profiles) return; for(const k of ['p1','p2']){ const pr=ping.profiles[k]; if(!pr) continue; const P=PEOPLE[k]; if(pr.name) P.name=pr.name; ['goal','steps','kg','floor','fatMax','carbMax','maint','pMin'].forEach(f=>{ if(pr[f]!=null) P[f]=+pr[f]; }); if(pr.kcal) P.target.k=+pr.kcal; if(pr.protein) P.target.p=+pr.protein; if(Array.isArray(pr.notes)&&pr.notes.length) P.notes=`<h3>${pr.notesTitle||pr.name}</h3><ul>${pr.notes.map(n=>'<li>'+n+'</li>').join('')}</ul>`; }
+  if(ping.user&&PEOPLE[ping.user]) CLOUD.user=ping.user; renderNames(); }
+function renderNames(){ document.querySelectorAll('.seg .who').forEach(b=>{ const k=b.dataset.who; const P=PEOPLE[k]; if(!P) return; b.querySelector('.av').textContent=P.name.slice(0,1).toUpperCase(); const n=b.querySelector('.nm'); if(n) n.textContent=P.name; }); document.title=(PEOPLE.p1.name!=='Person 1'?PEOPLE.p1.name+' & '+PEOPLE.p2.name+' ':'')+'Meal Planner'; }
+function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.add('show'); document.getElementById('keyMsg').textContent=msg||''; setStatus('Not signed in','warn'); }
 async function cloudPull(){
   setStatus('Syncing…');
   try{
@@ -954,7 +963,7 @@ function renderPlan(){
   const other=S.who==='p1'?'p2':'p1'; const cb=document.getElementById('copyDay'); cb.textContent='Copy to '+PEOPLE[other].name; cb.title='Give '+PEOPLE[other].name+' the same meals, scaled to their portions';
   cb.onclick=()=>{ if(!confirm(`Replace ${PEOPLE[other].name}'s ${FULL[S.day]} with what ${P().name} ate, portions scaled to ${PEOPLE[other].name}'s target? Non-veg and eggs are dropped on ${PEOPLE[other].name}'s veg days.`)) return; const n=copyDayTo(other); schedulePush(other); alert(`${n} items copied to ${PEOPLE[other].name}. Tap ${PEOPLE[other].name} at the top to review.`); };
   const sw=document.getElementById('daySwitch'); sw.className='daysw'+(isVeg()?' veg':''); sw.textContent = isVeg() ? 'Veg day · tap for non-veg' : 'Non-veg day · tap for veg'; sw.onclick=()=>toggleVegDay(S.day);
-  document.getElementById('subtitle').textContent = isVeg() ? (ps.allVeg?'Veg month is on. ':'Veg day. ')+'Protein from paneer, pappu, Greek yogurt, soya, tofu and whey'+(ps.eggsVeg?' (eggs allowed).':' (no eggs).') : (ps.allNonVeg?'Non-veg every day is on. ':'Non-veg day. ')+'Chicken at lunch and dinner, same dishes as Person 2, bigger portions.';
+  document.getElementById('subtitle').textContent = isVeg() ? (ps.allVeg?'Veg month is on. ':'Veg day. ')+'Protein from paneer, pappu, Greek yogurt, soya, tofu and whey'+(ps.eggsVeg?' (eggs allowed).':' (no eggs).') : (ps.allNonVeg?'Non-veg every day is on. ':'Non-veg day. ')+'Chicken at lunch and dinner, same dishes for both, portions scaled to each target.';
   const n=document.getElementById('pnotes'); n.innerHTML=P().notes||''; n.style.display=P().notes?'block':'none';
   const wrap=document.getElementById('meals'); wrap.innerHTML=''; const all=[];
   const dayP=plan.reduce((n,m)=>n+tot(m.items).p,0); const dayOK=dayP>=P().target.p-10;
@@ -1023,7 +1032,7 @@ function timeCell(id,label,val){ const has=!!val; const mins=has?toMin(val):null
   <div class="timepick" id="${id}" hidden><label><span>Hour</span><select class="th" aria-label="${label} hour">${opt([12,1,2,3,4,5,6,7,8,9,10,11],h12)}</select></label><label><span>Min</span><select class="tm" aria-label="${label} minutes">${opt([0,5,10,15,20,25,30,35,40,45,50,55],m,v=>String(v).padStart(2,'0'))}</select></label><label><span>&nbsp;</span><select class="tap" aria-label="${label} AM or PM">${opt(['AM','PM'],ap)}</select></label><button type="button" class="btn pri tdone">Done</button></div>`; }
 function renderCheckin(){
   const el=document.getElementById('checkin'); if(!el) return; const L=dlog(); const cups=8;
-  const stepsT=P().name==='Person 1'?9000:8000; const st=parseInt(L.steps)||0; const sPc=Math.min(100,Math.round(st/stepsT*100));
+  const stepsT=P().steps||8000; const st=parseInt(L.steps)||0; const sPc=Math.min(100,Math.round(st/stepsT*100));
   let slp=null, bedSug='';
   const wake=toMin(L.wake||'06:30'); if(L.bed&&L.wake){ const b=toMin(L.bed); slp=((wake-b)+1440)%1440/60; }
   bedSug=fmtT(wake-7.5*60);
@@ -1147,7 +1156,7 @@ function renderScore(){
   const steps=logs.reduce((a,L)=>a+(parseInt(L.steps)||0),0); const water=logs.reduce((a,L)=>a+(L.water||0),0)*250;
   const sl=logs.filter(L=>L.bed&&L.wake).map(L=>(((toMin(L.wake)-toMin(L.bed))+1440)%1440)/60); const avgS=sl.length?(sl.reduce((a,b)=>a+b,0)/sl.length):null;
   const ws=[...ps.weights].sort((a,b)=>a.d<b.d?-1:1); const wkStart=ymd(weekDate(0)); const before=ws.filter(x=>x.d<wkStart), during=ws.filter(x=>x.d>=wkStart); const wchg=(before.length&&during.length)?during[during.length-1].w-before[before.length-1].w:null;
-  const maint=p.maint||(S.who==='p1'?2550:2200); const deficit=n?Math.round((maint-avgK)*n):0;
+  const maint=p.maint||2300; const deficit=n?Math.round((maint-avgK)*n):0;
   const tile=(k,v,t,cls='')=>`<div class="st ${cls}"><div class="k">${k}</div><div class="v">${v}</div><div class="t">${t}</div></div>`;
   const grade = !n?'':(onT/n>=0.8&&pOK/n>=0.8)?'On track':(onT/n>=0.5)?'Getting there':'Off plan';
   el.innerHTML=`<div class="scard"><div class="schd"><b>${S.week===0?'This week so far':'Week summary'}</b><span class="grade ${grade.replace(/ .*/,'').toLowerCase()}">${grade}</span></div>
@@ -1177,7 +1186,7 @@ function renderWeek(){
 function renderWeightChart(ws){
   const el=document.getElementById('wtChart'); if(!el) return;
   if(ws.length<2){ el.innerHTML=`<div class="chhd"><b>Trend</b><span>Add two or more weigh-ins to see the line</span></div><div class="chempty">Weigh in each morning. The 7-day average line is the one to watch, daily numbers bounce 1 kg with water and salt.</div>`; return; }
-  const goal=S.who==='p1'?80:75; const days=30; const end=new Date(); const startD=new Date(); startD.setDate(end.getDate()-days+1);
+  const goal=P().goal||80; const days=30; const end=new Date(); const startD=new Date(); startD.setDate(end.getDate()-days+1);
   const pts=ws.filter(x=>new Date(x.d+'T12:00')>=startD); const all=ws;
   const avgAt=(i)=>{ const sl=all.slice(Math.max(0,i-6),i+1); return sl.reduce((a,x)=>a+x.w,0)/sl.length; };
   const avg=all.map((x,i)=>({d:x.d,w:avgAt(i)})).filter(x=>new Date(x.d+'T12:00')>=startD);
@@ -1210,7 +1219,7 @@ function renderWeight(){
   ws.slice().reverse().forEach((x,ri)=>{ const idx=ws.length-1-ri; const tr=document.createElement('tr'); tr.innerHTML=`<td>${x.d}</td><td><b>${x.w}</b></td><td>${avg7(idx)}</td><td><button class="btn x" data-d="${x.d}">×</button></td>`; b.appendChild(tr); });
   b.querySelectorAll('button[data-d]').forEach(bt=>bt.onclick=()=>{ ps.weights=ps.weights.filter(x=>x.d!==bt.dataset.d); save(); render(); });
   renderWeightChart(ws);
-  const st=document.getElementById('wtStats'); const start=S.who==='p1'?88:85;
+  const st=document.getElementById('wtStats'); const start=P().kg;
   if(ws.length){ const last=ws[ws.length-1].w; const first=ws[0].w; st.innerHTML=`<div class="kpi"><div class="k">Latest</div><div class="v">${last}</div><div class="t">${ws[ws.length-1].d}</div></div><div class="kpi"><div class="k">7-day avg</div><div class="v">${avg7(ws.length-1)}</div><div class="t">judge by this</div></div><div class="kpi"><div class="k">Change</div><div class="v">${(last-first)>0?'+':''}${(last-first).toFixed(1)}</div><div class="t">since ${ws[0].d}</div></div>`; }
   else st.innerHTML=`<div class="kpi"><div class="k">Start</div><div class="v">${start}</div><div class="t">kg, Nov 2026</div></div><div class="kpi"><div class="k">Goal</div><div class="v">${S.who==='p1'?80:75}</div><div class="t">first milestone</div></div><div class="kpi"><div class="k">Pace</div><div class="v">0.5</div><div class="t">kg per week</div></div>`;
 }
@@ -1399,9 +1408,14 @@ document.querySelectorAll('.ov').forEach(ov=>{ const sh=ov.querySelector('.sheet
   sh.addEventListener('touchend',e=>{ if(y0===null) return; const dy=e.changedTouches[0].clientY-y0; sh.style.transition=''; sh.style.transform=''; y0=null; if(dy>90&&ov.id!=='ovKey') closeAny(ov); },{passive:true}); });
 document.getElementById('syncNow').onclick=()=>{ if(!CLOUD.on) return; if(!CLOUD.key) askKey(); else { Object.keys(S.people).forEach(w=>{ if(CLOUD.dirty[w]) cloudPush(w); }); cloudPull(); } };
 document.getElementById('syncOut').onclick=()=>{ CLOUD.key=''; CLOUD.user=''; try{ localStorage.removeItem('kl-key'); localStorage.removeItem('kl-user'); }catch(e){} setStatus('Not signed in','warn'); document.getElementById('ovSet').classList.remove('show'); askKey(); };
-document.getElementById('openSettings').addEventListener('click',()=>{ document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Signed in as '+(PEOPLE[CLOUD.user]?PEOPLE[CLOUD.user].name:'Person 1')+'. Saving to your hosting (data folder on the server). Status: '+CLOUD.status+'. Both phones and any browser see the same data once signed in.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus')||{}; let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
+document.getElementById('openSettings').addEventListener('click',()=>{ document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Signed in as '+(PEOPLE[CLOUD.user]?PEOPLE[CLOUD.user].name:PEOPLE.p1.name)+'. Saving to your hosting (data folder on the server). Status: '+CLOUD.status+'. Both phones and any browser see the same data once signed in.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus')||{}; let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
 document.getElementById('wtAdd').onclick=()=>{ const d=document.getElementById('wtDate').value, w=parseFloat(document.getElementById('wtVal').value); if(!d||!w) return; const ps=PS(); ps.weights=ps.weights.filter(x=>x.d!==d); ps.weights.push({d,w}); document.getElementById('wtVal').value=''; save(); render(); };
-document.getElementById('keyGo').onclick=async()=>{ CLOUD.key=document.getElementById('keyIn').value.trim(); CLOUD.user=(document.querySelector('#keyWho button.on')||{}).dataset?.u||'p1'; S.who=CLOUD.user; try{ localStorage.setItem('kl-key',CLOUD.key); localStorage.setItem('kl-user',CLOUD.user); }catch(e){} try{ const p=await api('ping'); if(!p.auth){ document.getElementById('keyMsg').textContent='Wrong password.'; return; } }catch(e){ document.getElementById('keyMsg').textContent= e.message==='locked' ? 'Too many wrong attempts. Wait 15 minutes.' : 'Cannot reach the server.'; return; } document.getElementById('ovKey').classList.remove('show'); cloudPull(); };
+document.getElementById('keyGo').onclick=async()=>{ CLOUD.key=document.getElementById('keyIn').value.trim(); CLOUD.user=''; try{ localStorage.setItem('kl-key',CLOUD.key); }catch(e){} try{ const p=await api('ping'); if(!p.auth){ document.getElementById('keyMsg').textContent='Wrong password.'; return; } applyProfiles(p);
+    if(p.shared){ // shared password: ask which person this phone belongs to, with the real names now that we are signed in
+      const wrap=document.getElementById('keyWhoWrap'); wrap.hidden=false; document.getElementById('keyIn').hidden=true; document.getElementById('keyGo').hidden=true; document.getElementById('keyMsg').textContent='';
+      document.querySelectorAll('#keyWho button').forEach(b=>{ b.textContent=PEOPLE[b.dataset.u].name; b.onclick=()=>{ CLOUD.user=b.dataset.u; S.who=b.dataset.u; try{ localStorage.setItem('kl-user',CLOUD.user); }catch(e){} wrap.hidden=true; document.getElementById('keyIn').hidden=false; document.getElementById('keyGo').hidden=false; document.getElementById('ovKey').classList.remove('show'); cloudPull(); }; });
+      return; }
+    if(p.user){ CLOUD.user=p.user; S.who=p.user; try{ localStorage.setItem('kl-user',p.user); }catch(e){} } }catch(e){ document.getElementById('keyMsg').textContent= e.message==='locked' ? 'Too many wrong attempts. Wait 15 minutes.' : 'Cannot reach the server.'; return; } document.getElementById('ovKey').classList.remove('show'); cloudPull(); };
 document.getElementById('keySkip').onclick=()=>{ document.getElementById('ovKey').classList.remove('show'); setStatus('This device only','warn'); };
 document.getElementById('keyIn').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('keyGo').click(); });
 render();

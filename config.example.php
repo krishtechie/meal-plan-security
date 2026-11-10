@@ -1,10 +1,19 @@
 <?php
-// Copy of the structure of config.php. Your real config.php on the server holds the real hashes. DO NOT overwrite it.
-// One password per person (fix 7). Make each hash with gen.php once, then delete gen.php.
+// Structure of config.php. The real file lives only on the server and is never committed.
+// Accounts are p1 and p2. Two different passwords: the password identifies the person.
+// One shared password for both: leave APP_USERS out and set APP_PASSWORD_HASH only; the app then asks who is signing in.
 define('APP_USERS', [
   'p1' => '$2y$10$REPLACE_WITH_P1_HASH',
   'p2' => '$2y$10$REPLACE_WITH_P2_HASH',
 ]);
-// Older single shared password. Still honoured if APP_USERS is not defined.
+// Names and personal targets, sent to the app only after a successful sign-in. Everything optional except name.
+define('APP_PROFILES', [
+  'p1' => ['name' => 'Person 1', 'kcal' => 1900, 'protein' => 165, 'floor' => 1700, 'fatMax' => 75, 'carbMax' => 230, 'maint' => 2550, 'pMin' => 150, 'kg' => 88, 'goal' => 80, 'steps' => 9000],
+  'p2' => ['name' => 'Person 2', 'kcal' => 1550, 'protein' => 130, 'floor' => 1350, 'fatMax' => 60, 'carbMax' => 170, 'maint' => 2200, 'pMin' => 115, 'kg' => 85, 'goal' => 75, 'steps' => 8000,
+           'notesTitle' => 'Personal notes', 'notes' => ['Shown as a card under the plan. One string per bullet. Keep medical details here, not in the code.']],
+]);
+// If your data folder still has files from an older build named after the person, map them here once; they are renamed on first request.
+// define('APP_LEGACY_FILES', ['p1' => 'oldname1', 'p2' => 'oldname2']);
+// Old single shared password; still honoured if APP_USERS is not defined.
 define('APP_PASSWORD_HASH', '$2y$10$REPLACE_WITH_OUTPUT_OF_password_hash');
 define('DATA_DIR', __DIR__ . '/data');

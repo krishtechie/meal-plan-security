@@ -1,18 +1,22 @@
 <?php
-// Person 1 & Person 2 Meal Planner – tiny JSON store. No database needed.
+// Meal Planner – tiny JSON store. No database needed.
 // GET  api.php?a=ping                -> {ok:true, auth:bool, user:string}
-// GET  api.php?a=get&who=p1       -> stored JSON for that person
-// POST api.php?a=put&who=p1       -> body = {data:{...}}; returns {ok:true, rev:N}
-// Every request needs headers  X-App-User: p1|p2   X-App-Key: <that person's password>
+// GET  api.php?a=get&who=p1          -> stored JSON for that person
+// POST api.php?a=put&who=p1          -> body = {data:{...}}; returns {ok:true, rev:N}
+// Every request needs header X-App-Key: <that person's password> (optionally X-App-User: p1|p2)
 require __DIR__ . '/config.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
 if (!is_dir(DATA_DIR)) { mkdir(DATA_DIR, 0755, true); }
 
-// Fix 7: one password per person. APP_USERS wins; APP_PASSWORD_HASH alone keeps the old shared password working.
+// Fix 7: one password per person. Accounts are p1 and p2; names and targets live in config.php (APP_PROFILES), never in this repo.
 $USERS = defined('APP_USERS') && is_array(APP_USERS) ? APP_USERS
        : ['p1' => APP_PASSWORD_HASH, 'p2' => APP_PASSWORD_HASH];
+// Data files from older builds were named after the person; move them once (mapping is private, in config.php).
+if (defined('APP_LEGACY_FILES') && is_array(APP_LEGACY_FILES)) {
+  foreach (APP_LEGACY_FILES as $acct => $old) { $o = DATA_DIR . "/$old.json"; $n = DATA_DIR . "/$acct.json"; if (file_exists($o) && !file_exists($n)) { @rename($o, $n); } }
+}
 
 $ip   = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $ua   = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 80);
@@ -20,7 +24,8 @@ $a    = $_GET['a'] ?? '';
 $who  = strtolower($_GET['who'] ?? '');
 $key  = $_SERVER['HTTP_X_APP_KEY'] ?? '';
 $user = strtolower($_SERVER['HTTP_X_APP_USER'] ?? '');
-if ($user === '' && $key !== '') { $user = 'p1'; }   // older client: shared password, treat as first account
+// No user header: the password itself identifies the person (each account has its own hash).
+if ($user === '' && $key !== '') { foreach ($USERS as $acct => $hash) { if (password_verify($key, $hash)) { $user = $acct; break; } } if ($user === '') { $user = 'invalid'; } }
 
 // Fix 5: strict input validation. Only known actions and known accounts.
 if (!in_array($a, ['ping', 'get', 'put', 'rev'], true)) { $a = 'unknown'; }
@@ -58,7 +63,13 @@ if ($key !== '') {
   else { $rl[$ipKey] = ['n' => $ipFails + 1, 't' => $now]; if ($user !== '') { $rl[$acKey] = ['n' => $acFails + 1, 't' => $now]; } }
   file_put_contents($rlFile, json_encode($rl), LOCK_EX);
 }
-if ($a === 'ping') { audit($authed ? 'ok' : ($key === '' ? 'no_key' : 'bad_password')); echo json_encode(['ok' => true, 'auth' => $authed, 'user' => $authed ? $user : null, 'users' => array_keys($USERS)]); exit; }
+if ($a === 'ping') {
+  audit($authed ? 'ok' : ($key === '' ? 'no_key' : 'bad_password'));
+  $shared = count(array_unique(array_values($USERS))) === 1;   // one password for both: the app asks who is signing in
+  $out = ['ok' => true, 'auth' => $authed, 'user' => $authed ? $user : null, 'shared' => $shared];
+  if ($authed && defined('APP_PROFILES') && is_array(APP_PROFILES)) { $out['profiles'] = APP_PROFILES; }   // names only after sign-in
+  echo json_encode($out); exit;
+}
 if (!$authed) { fail(401, $key === '' ? 'no_key' : 'bad_password', 'bad password'); }
 if ($a === 'unknown') { fail(404, 'unknown_action', 'unknown action'); }
 if ($who === '' || $who === 'invalid') { fail(400, 'bad_request', 'who required'); }
