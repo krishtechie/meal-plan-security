@@ -849,14 +849,16 @@ let storeOK=true;
 const CLOUD={on:false, key:'', user:'', status:'local', rev:{}, timer:{}, busy:{}, dirty:{}};
 function setStatus(t,c){ CLOUD.status=t; const el=document.getElementById('sync'); if(!el) return; el.textContent=t; el.className='sync '+(c||''); }
 function apiUrl(){ return 'api.php'; }
-async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who='+who:''),{method:body?'POST':'GET',headers:{'X-App-Key':CLOUD.key,'X-App-User':CLOUD.user||'p1','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'}); if(r.status===401) throw new Error('auth'); if(r.status===422){ let j={}; try{ j=await r.json(); }catch(e){} throw new Error('rejected: '+(j.error||'')); } if(r.status===429) throw new Error('locked'); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
+async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who='+who:''),{method:body?'POST':'GET',headers:{'X-App-Key':CLOUD.key,'X-App-User':CLOUD.user||'p1','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'}); if(r.status===401){ forgetKey(); throw new Error('auth'); } if(r.status===429){ CLOUD.lockedUntil=Date.now()+15*60*1000; throw new Error('locked'); } if(r.status===422){ let j={}; try{ j=await r.json(); }catch(e){} throw new Error('rejected: '+(j.error||'')); } if(r.status===429) throw new Error('locked'); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
+function forgetKey(){ CLOUD.key=''; try{ localStorage.removeItem('kl-key'); }catch(e){} }
+function isLocked(){ return (CLOUD.lockedUntil||0)>Date.now(); }
 async function cloudInit(){
   if(!/^https?:/.test(location.protocol)) return;
   try{ CLOUD.key=localStorage.getItem('kl-key')||''; CLOUD.user=localStorage.getItem('kl-user')||''; }catch(e){}
   if(CLOUD.user&&S.people[CLOUD.user]) S.who=CLOUD.user;
-  let ping; try{ ping=await api('ping'); }catch(e){ return; }   // no api.php here -> stay local (e.g. the claude.ai copy)
+  let ping; try{ ping=await api('ping'); }catch(e){ if(e.message==='auth'){ CLOUD.on=true; askKey('Password changed. Sign in again.'); } else if(e.message==='locked'){ CLOUD.on=true; askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } return; }   // other errors: no api.php here -> stay local
   CLOUD.on=true;
-  if(!ping.auth){ askKey(); return; }
+  if(!ping.auth){ forgetKey(); askKey(CLOUD.key?'':''); return; }
   applyProfiles(ping);
   if(ping.shared&&!CLOUD.user){ askKey(''); document.getElementById('keyGo').click(); return; }
   await cloudPull();
@@ -874,7 +876,7 @@ async function cloudPull(){
     loadAllCustoms(); saveLocal(); render(); setStatus('Synced','ok');
   }catch(e){ if(e.message==='auth'){ askKey('Wrong password. Try again.'); } else if(e.message==='locked'){ askKey('Too many wrong attempts. Wait 15 minutes.'); } else setStatus('Offline, saved on this device','warn'); }
 }
-function schedulePush(who,delay=700){ if(!CLOUD.on||!CLOUD.key) return; CLOUD.dirty[who]=true; clearTimeout(CLOUD.timer[who]); CLOUD.timer[who]=setTimeout(()=>cloudPush(who),delay); }
+function schedulePush(who,delay=700){ if(!CLOUD.on||!CLOUD.key||isLocked()) return; CLOUD.dirty[who]=true; clearTimeout(CLOUD.timer[who]); CLOUD.timer[who]=setTimeout(()=>cloudPush(who),delay); }
 // Merge a server copy into the local one. Local wins on the same key; everything else is kept from both sides.
 function mergeDoc(local,server){ if(!server) return local; const out=Object.assign({},server,local);
   ['days','log','wlog','manual'].forEach(k=>{ out[k]=Object.assign({},server[k]||{},local[k]||{}); });
@@ -887,11 +889,11 @@ async function cloudPush(who){ if(CLOUD.busy[who]){ schedulePush(who,500); retur
   catch(e){ if(e.message==='auth') askKey('Wrong password. Try again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes.'); else if(/^rejected/.test(e.message)){ setStatus('Not saved: server rejected the data','warn'); console.warn(e.message); } else { setStatus('Offline, will retry','warn'); setTimeout(()=>schedulePush(who,0),15000); } }
   finally{ CLOUD.busy[who]=false; } }
 // refresh from the server when the app comes back to the foreground (other phone may have changed things)
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&CLOUD.on&&CLOUD.key&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
-window.addEventListener('focus',()=>{ if(CLOUD.on&&CLOUD.key&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&CLOUD.on&&CLOUD.key&&!isLocked()&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
+window.addEventListener('focus',()=>{ if(CLOUD.on&&CLOUD.key&&!isLocked()&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
 // Live: every 20 s while the page is visible, ask the server for the revision numbers and pull only if the other phone changed something
-setInterval(async()=>{ if(document.visibilityState!=='visible'||!CLOUD.on||!CLOUD.key||Object.values(CLOUD.dirty).some(Boolean)||Object.values(CLOUD.busy).some(Boolean)) return;
-  try{ for(const who of ['p1','p2']){ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ await cloudPull(); break; } } }catch(e){} },20000);
+setInterval(async()=>{ if(document.visibilityState!=='visible'||!CLOUD.on||!CLOUD.key||isLocked()||Object.values(CLOUD.dirty).some(Boolean)||Object.values(CLOUD.busy).some(Boolean)) return;
+  try{ for(const who of ['p1','p2']){ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ await cloudPull(); break; } } }catch(e){ if(e.message==='auth') askKey('Password changed. Sign in again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } },20000);
 function saveLocal(){ try{ localStorage.setItem('kl-meal-v2',JSON.stringify({people:S.people,who:S.who,savedAt:new Date().toISOString()})); storeOK=true; }catch(e){ storeOK=false; } }
 function save(){ saveLocal(); schedulePush(S.who); }
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
@@ -1410,7 +1412,7 @@ document.getElementById('syncNow').onclick=()=>{ if(!CLOUD.on) return; if(!CLOUD
 document.getElementById('syncOut').onclick=()=>{ CLOUD.key=''; CLOUD.user=''; try{ localStorage.removeItem('kl-key'); localStorage.removeItem('kl-user'); }catch(e){} setStatus('Not signed in','warn'); document.getElementById('ovSet').classList.remove('show'); askKey(); };
 document.getElementById('openSettings').addEventListener('click',()=>{ document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Signed in as '+(PEOPLE[CLOUD.user]?PEOPLE[CLOUD.user].name:PEOPLE.p1.name)+'. Saving to your hosting (data folder on the server). Status: '+CLOUD.status+'. Both phones and any browser see the same data once signed in.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus')||{}; let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
 document.getElementById('wtAdd').onclick=()=>{ const d=document.getElementById('wtDate').value, w=parseFloat(document.getElementById('wtVal').value); if(!d||!w) return; const ps=PS(); ps.weights=ps.weights.filter(x=>x.d!==d); ps.weights.push({d,w}); document.getElementById('wtVal').value=''; save(); render(); };
-document.getElementById('keyGo').onclick=async()=>{ CLOUD.key=document.getElementById('keyIn').value.trim(); CLOUD.user=''; try{ localStorage.setItem('kl-key',CLOUD.key); }catch(e){} try{ const p=await api('ping'); if(!p.auth){ document.getElementById('keyMsg').textContent='Wrong password.'; return; } applyProfiles(p);
+document.getElementById('keyGo').onclick=async()=>{ CLOUD.key=document.getElementById('keyIn').value.trim(); CLOUD.user=''; try{ localStorage.setItem('kl-key',CLOUD.key); }catch(e){} try{ const p=await api('ping'); if(!p.auth){ forgetKey(); document.getElementById('keyMsg').textContent='Wrong password.'; return; } applyProfiles(p);
     if(p.shared){ // shared password: ask which person this phone belongs to, with the real names now that we are signed in
       const wrap=document.getElementById('keyWhoWrap'); wrap.hidden=false; document.getElementById('keyIn').hidden=true; document.getElementById('keyGo').hidden=true; document.getElementById('keyMsg').textContent='';
       document.querySelectorAll('#keyWho button').forEach(b=>{ b.textContent=PEOPLE[b.dataset.u].name; b.onclick=()=>{ CLOUD.user=b.dataset.u; S.who=b.dataset.u; try{ localStorage.setItem('kl-user',CLOUD.user); }catch(e){} wrap.hidden=true; document.getElementById('keyIn').hidden=false; document.getElementById('keyGo').hidden=false; document.getElementById('ovKey').classList.remove('show'); cloudPull(); }; });
