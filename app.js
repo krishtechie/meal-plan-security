@@ -734,16 +734,16 @@ function allowed(it, d=S.day){ if(SEA.test(it.n)&&!PS().seafood) return false; i
 function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1})}; }); }
 // A day starts empty (it is a log). Today starts from the plan template so there is something to follow.
 function fresh(d){ const isToday=ymd(weekDate(d))===ymd(new Date()); return isToday ? template(d) : P().meals.map(m=>({name:m.name,time:m.time,items:[]})); }
-function fillTemplate(d=S.day){ const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); save(); render(); }
+function fillTemplate(d=S.day){ const ps=PS(); const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); ps.manual=ps.manual||{}; ps.manual[dayKeyFor(d)+(isVeg(d)?'v':'n')+(ps.eggsVeg?'e':'x')]=1; save(); render(); }
 function dayKeyFor(d){ return ymd(weekDate(d)); }
 function sameAsTemplate(plan,d){ const t=template(d); return JSON.stringify(plan.map(m=>m.items))===JSON.stringify(t.map(m=>m.items)); }
-function pruneUntouched(ps){ if(ps.m4) return; const today=ymd(new Date());
-  Object.keys(ps.days).forEach(k=>{ const date=k.slice(0,10); if(date===today||!/^\d{4}-\d\d-\d\d$/.test(date)) return; const idx=(new Date(date+'T12:00').getDay()+6)%7; try{ if(sameAsTemplate(ps.days[k],idx)) delete ps.days[k]; }catch(e){} }); ps.m4=1; }
+function pruneUntouched(ps){ if(ps.m6) return; const today=ymd(new Date()); const keep=ps.manual||{};
+  Object.keys(ps.days).forEach(k=>{ const date=k.slice(0,10); if(date===today||!/^\d{4}-\d\d-\d\d$/.test(date)) return; const idx=(new Date(date+'T12:00').getDay()+6)%7; if(keep[k]) return; try{ if(sameAsTemplate(ps.days[k],idx)) delete ps.days[k]; }catch(e){} }); ps.m4=1; ps.m6=1; }
 function fixUtcKeys(ps){ if(ps.m5) return; const vd=ps.vegDays||[]; const vegOf=(date)=>{ const i=(new Date(date+'T12:00').getDay()+6)%7; return ps.allVeg || (!ps.allNonVeg && vd.includes(i)); };
   if(!ps.allVeg&&!ps.allNonVeg&&vd.length&&vd.length<7){ Object.keys(ps.days).sort().forEach(k=>{ const m=k.match(/^(\d{4}-\d\d-\d\d)([vn])([ex])$/); if(!m) return; const flagVeg=m[2]==='v'; const d=new Date(m[1]+'T12:00'); const prev=new Date(d); prev.setDate(d.getDate()-1); const pk=ymd(prev)+m[2]+m[3];
       if(vegOf(m[1])!==flagVeg && vegOf(ymd(prev))===flagVeg && !ps.days[pk]){ ps.days[pk]=ps.days[k]; delete ps.days[k]; } }); }
   Object.keys(ps.log||{}).forEach(k=>{}); ps.m5=1; }
-function migrateDays(ps){ if(ps.m3){ pruneUntouched(ps); fixUtcKeys(ps); return; } const todayIdx=(new Date().getDay()+6)%7; Object.keys(ps.days).forEach(k=>{ const m=k.match(/^([0-6])([vn])([ex])$/); if(m){ const nk=dayKeyFor(+m[1])+m[2]+m[3]; if(!ps.days[nk]) ps.days[nk]=ps.days[k]; delete ps.days[k]; } }); ps.m3=1; pruneUntouched(ps); fixUtcKeys(ps); }
+function migrateDays(ps){ if(ps.m3){ fixUtcKeys(ps); pruneUntouched(ps); return; } const todayIdx=(new Date().getDay()+6)%7; Object.keys(ps.days).forEach(k=>{ const m=k.match(/^([0-6])([vn])([ex])$/); if(m){ const nk=dayKeyFor(+m[1])+m[2]+m[3]; if(!ps.days[nk]) ps.days[nk]=ps.days[k]; delete ps.days[k]; } }); ps.m3=1; fixUtcKeys(ps); pruneUntouched(ps); }
 function dayPlan(d=S.day){ const ps=PS(); migrateDays(ps); const key=dayKeyFor(d)+(isVeg(d)?'v':'n')+(PS().eggsVeg?'e':'x'); if(!ps.days[key]) ps.days[key]=fresh(d); return ps.days[key]; }
 const MEAL_SHARE=[['breakfast',.18],['mid-morning',.12],['lunch',.28],['pre-gym',.15],['dinner',.27]];
 function mealShare(name){ const n=name.toLowerCase(); const f=MEAL_SHARE.find(x=>n.includes(x[0])); return f?f[1]:0; }
