@@ -752,7 +752,11 @@ function fmtG(it,q){ if(!it.g) return q===1?'':q+' x'; if(q===1) return it.g; if
 // ================= RENDER =================
 let _lastView=null,_lastDay=null;
 // Date of weekday i (0=Mon) in the current week
-function weekDate(i){ const t=new Date(); const dow=(t.getDay()+6)%7; const d=new Date(t); d.setDate(t.getDate()-dow+i); return d; }
+S.week=S.week||0; // 0 = this week, -1 = last week, +1 = next week
+function weekDate(i){ const t=new Date(); const dow=(t.getDay()+6)%7; const d=new Date(t); d.setDate(t.getDate()-dow+i+7*S.week); return d; }
+function renderWeekNav(){ const a=weekDate(0), b=weekDate(6); const f=(d,o)=>d.toLocaleDateString(undefined,o); const same=a.getMonth()===b.getMonth();
+  const lbl=document.getElementById('wkLbl'); lbl.textContent=(S.week===0?'This week · ':S.week===-1?'Last week · ':S.week===1?'Next week · ':'')+f(a,{day:'numeric',month:'short'})+' – '+f(b,same?{day:'numeric'}:{day:'numeric',month:'short'});
+  document.getElementById('wkPrev').onclick=()=>{ S.week--; render(); }; document.getElementById('wkNext').onclick=()=>{ S.week++; render(); }; lbl.onclick=()=>{ S.week=0; S.day=(new Date().getDay()+6)%7; render(); }; }
 function render(){
   const same=(_lastView===S.view&&_lastDay===S.day); const _sy=same?window.scrollY:0; _lastView=S.view; _lastDay=S.day;
   const ps=PS();
@@ -763,8 +767,8 @@ function render(){
   const dEl=document.getElementById('today'); if(dEl){ dEl.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'}); }
   document.getElementById('allVeg').checked=ps.allVeg; document.getElementById('allNonVeg').checked=!!ps.allNonVeg; document.getElementById('eggsVeg').checked=ps.eggsVeg; document.getElementById('seafood').checked=!!ps.seafood;
   const vd=document.getElementById('vegDays'); vd.innerHTML=''; DAYS.forEach((n,i)=>{ const b=document.createElement('button'); const v=isVeg(i); b.className='vd'+(v?' veg':''); b.innerHTML=`${n}<small>${v?'VEG':'NON'}</small>`; b.onclick=()=>toggleVegDay(i); vd.appendChild(b); });
-  const d=document.getElementById('days'); d.innerHTML='';
-  DAYS.forEach((n,i)=>{ const b=document.createElement('div'); const todayIdx=(new Date().getDay()+6)%7; b.className='dayc'+(i===S.day?' on':'')+(i<todayIdx?' past':'')+(i===todayIdx?' today':''); const v=isVeg(i);
+  renderWeekNav(); const d=document.getElementById('days'); d.innerHTML='';
+  DAYS.forEach((n,i)=>{ const b=document.createElement('div'); const todayIdx=(new Date().getDay()+6)%7; b.className='dayc'+(i===S.day?' on':'')+((S.week<0||(S.week===0&&i<todayIdx))?' past':'')+((S.week===0&&i===todayIdx)?' today':''); const v=isVeg(i);
     const dt=weekDate(i); b.innerHTML=`<small>${n}</small><b>${dt.getDate()}</b><i class="${v?'veg':''}" title="${v?'Veg day':'Non-veg day'}"></i>`; b.onclick=()=>{S.day=i;S.view='plan';render();}; d.appendChild(b); });
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.view===S.view));
   document.getElementById('vPlan').hidden=S.view!=='plan';
@@ -841,6 +845,12 @@ function dkey(){ return weekDate(S.day).toISOString().slice(0,10); }
 function dlog(){ const ps=PS(); if(!ps.log) ps.log={}; const k=dkey(); if(!ps.log[k]) ps.log[k]={water:0,steps:'',bed:'',wake:''}; return ps.log[k]; }
 function toMin(t){ if(!t) return null; const [h,m]=t.split(':').map(Number); return h*60+m; }
 function fmtT(min){ min=((min%1440)+1440)%1440; const h=Math.floor(min/60), m=min%60; const ap=h>=12?'pm':'am'; const hh=h%12||12; return `${hh}:${String(m).padStart(2,'0')} ${ap}`; }
+
+// Apple-style time cell: value row + inline hour / minute / AM-PM wheels (native selects, so iOS shows its own picker wheel)
+function timeCell(id,label,val){ const has=!!val; const mins=has?toMin(val):null; const h24=has?Math.floor(mins/60):22, m=has?mins%60:30; const ap=h24>=12?'PM':'AM'; const h12=(h24%12)||12;
+  const opt=(arr,cur,fmt)=>arr.map(v=>`<option value="${v}"${v===cur?' selected':''}>${fmt?fmt(v):v}</option>`).join('');
+  return `<button type="button" class="cell" id="${id}Cell" aria-expanded="false" aria-controls="${id}"><span class="cl">${label}</span><span class="cv"><b class="tv${has?'':' dim'}">${has?fmtT(mins):'Set'}</b></span></button>
+  <div class="timepick" id="${id}" hidden><label><span>Hour</span><select class="th" aria-label="${label} hour">${opt([12,1,2,3,4,5,6,7,8,9,10,11],h12)}</select></label><label><span>Min</span><select class="tm" aria-label="${label} minutes">${opt([0,5,10,15,20,25,30,35,40,45,50,55],m,v=>String(v).padStart(2,'0'))}</select></label><label><span>&nbsp;</span><select class="tap" aria-label="${label} AM or PM">${opt(['AM','PM'],ap)}</select></label></div>`; }
 function renderCheckin(){
   const el=document.getElementById('checkin'); if(!el) return; const L=dlog(); const cups=8;
   const stepsT=P().name==='Person 1'?9000:8000; const st=parseInt(L.steps)||0; const sPc=Math.min(100,Math.round(st/stepsT*100));
@@ -858,15 +868,15 @@ function renderCheckin(){
     <div class="ckbar"><div class="bartrack"><i data-w="${sPc}"></i></div></div>
     <div class="ckrow"><div class="ckl"><span class="ico snack tile">${ICON.sleep}</span><div><b>Sleep</b><span>${sleepTxt}</span></div></div></div>
     <div class="cells">
-      <label class="cell"><span class="cl">Bedtime</span><span class="cv picker"><b>${fmtClock(L.bed)}</b><input type="time" id="ckBed" value="${L.bed||''}" aria-label="Bedtime"></span></label>
-      <label class="cell"><span class="cl">Wake up</span><span class="cv picker"><b>${fmtClock(L.wake)}</b><input type="time" id="ckWake" value="${L.wake||''}" aria-label="Wake up time"></span></label>
+      ${timeCell('ckBed','Bedtime',L.bed)}
+      ${timeCell('ckWake','Wake up',L.wake)}
     </div>
     <div class="cknote">Evening routine: gym 5 to 6, dinner by 7:30, 10 min walk, screens off 30 min before bed. Weigh in the morning after the bathroom, before water.</div>
   </div>`;
   el.querySelectorAll('.cup').forEach(b=>b.onclick=()=>{ const n=+b.dataset.cup; L.water = (L.water===n)? n-1 : n; save(); renderCheckin(); });
   el.querySelector('#ckSteps').onchange=e=>{ L.steps=e.target.value; save(); renderCheckin(); };
-  el.querySelector('#ckBed').onchange=e=>{ L.bed=e.target.value; save(); renderCheckin(); };
-  el.querySelector('#ckWake').onchange=e=>{ L.wake=e.target.value; save(); renderCheckin(); };
+  [['ckBed','bed'],['ckWake','wake']].forEach(([id,k])=>{ const row=el.querySelector('#'+id); const cell=el.querySelector('#'+id+'Cell'); cell.onclick=()=>{ const open=row.hidden; el.querySelectorAll('.timepick').forEach(r=>r.hidden=true); row.hidden=!open; cell.setAttribute('aria-expanded',String(open)); };
+    row.querySelectorAll('select').forEach(sel=>sel.onchange=()=>{ const h=+row.querySelector('.th').value, m=+row.querySelector('.tm').value, ap=row.querySelector('.tap').value; const H=(h%12)+(ap==='PM'?12:0); L[k]=String(H).padStart(2,'0')+':'+String(m).padStart(2,'0'); save(); renderCheckin(); el.querySelector('#'+id).hidden=false; }); });
   el.querySelectorAll('.bartrack i').forEach(i=>{ i.style.width=i.dataset.w+'%'; });
 }
 

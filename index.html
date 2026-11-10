@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=15">
+<link rel="stylesheet" href="app.css?v=16">
 </head>
 <body>
 <div class="app">
@@ -29,7 +29,10 @@
   </div></nav>
 
   <section id="vPlan">
-    <div class="strip" id="days"></div>
+    <div class="weekcard">
+      <div class="weeknav"><button class="wkbtn" id="wkPrev" aria-label="Previous week">‹</button><button class="wklbl" id="wkLbl" title="Back to this week"></button><button class="wkbtn" id="wkNext" aria-label="Next week">›</button></div>
+      <div class="strip" id="days"></div>
+    </div>
     <div class="sum" id="totals"></div>
     <div class="warn" id="warn"></div>
     <div class="title"><h2 id="title"></h2><div class="tbtns"><button class="daysw" id="daySwitch"></button><button class="daysw copy" id="copyDay"></button></div></div>
@@ -165,6 +168,6 @@
   </div>
 </div>
 
-<script src="app.js?v=15" defer></script>
+<script src="app.js?v=16" defer></script>
 </body>
 </html>
