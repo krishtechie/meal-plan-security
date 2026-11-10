@@ -1005,7 +1005,13 @@ function renderSheet(){
   if(!q) list.sort((a,b)=>(REC.has(b.id)?1:0)-(REC.has(a.id)?1:0));
   const o=document.getElementById('opts'); o.innerHTML='';
   if(!list.length) o.innerHTML='<div class="note">Nothing in this group fits today (veg day). Try Protein or Snacks.</div>';
-  list.forEach(it=>{ const d=document.createElement('div'); d.className='opt'+(cur&&it.id===cur.id?' cur':'');
+  const recentIds=(()=>{ const ps=PS(); const m=new Map(); const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-14); Object.keys(ps.days).sort().reverse().forEach(k=>{ if(!/^\d{4}/.test(k)||new Date(k.slice(0,10)+'T12:00')<cutoff) return; ps.days[k].forEach(mm=>mm.items.forEach(x=>{ if(!m.has(x.id)) m.set(x.id,1); })); }); return m; })();
+  const hd=(t)=>{ const h=document.createElement('div'); h.className='chd'; h.textContent=t; o.appendChild(h); };
+  const mealName=plan[sheet.mi].name.toLowerCase(); const fitCats = /breakfast/.test(mealName)?['bf','prot','fruit']:/waking/.test(mealName)?['drink','fruit']:/mid-morning|pre-gym|evening|snack/.test(mealName)?['snack','fruit','prot','drink']:['prot','carb','veg','side'];
+  const recFor=(it)=>REC.has(it.id)&&fitCats.includes(it.cat);
+  let lastGrp=null; const grpOf=(it)=>!q&&!cur&&sheet.cat==='all' ? (recFor(it)?'Recommended for '+plan[sheet.mi].name.replace(/ \(.*\)/,'').toLowerCase():recentIds.has(it.id)?'Eaten recently':'All foods') : null;
+  if(!q&&!cur&&sheet.cat==='all') list.sort((a,b)=>{ const ga=recFor(a)?0:recentIds.has(a.id)?1:2, gb=recFor(b)?0:recentIds.has(b.id)?1:2; return ga-gb; });
+  list.forEach(it=>{ const g=grpOf(it); if(g&&g!==lastGrp){ hd(g); lastGrp=g; } const d=document.createElement('div'); d.className='opt'+(cur&&it.id===cur.id?' cur':'');
     const diff=cur?it.p-cur.p:null; const lbl=cur?(it.id===cur.id?'current':(diff>=0?'+':'')+diff+' g protein'):(it.custom?'my food':it.t==='v'?'veg':it.t==='e'||it.t==='te'?'egg':it.t==='n'||it.t==='tn'?'non-veg':'treat');
     d.innerHTML=`<div><div class="n">${REC.has(it.id)?'<span data-s="s16">★</span> ':''}${it.n}${it.g?' · '+it.g:''}</div><div class="m">${it.k} kcal · ${it.p} g protein · ${it.c} c · ${it.f} f${costTxt(it.id)?' · <span data-s="s16">'+costTxt(it.id)+'</span>':''}</div></div><span class="pill ${pill(it.t)}">${lbl}</span>`;
     d.onclick=()=>{ if(sheet.ii!==null) plan[sheet.mi].items[sheet.ii]={id:it.id,q:1}; else plan[sheet.mi].items.push({id:it.id,q:1}); save(); closeSheet(); render(); };
@@ -1033,21 +1039,31 @@ function renderCustomForm(){
 function ingSearch(q){ q=(q||'').trim().toLowerCase(); if(!q) return ING.map((x,i)=>i).slice(0,12); const words=q.split(/\s+/);
   const score=(x)=>{ const n=x[0].toLowerCase(), al=(x[6]||'').toLowerCase(); let sc=0; for(const w of words){ if(n.startsWith(w)) sc+=5; else if(n.split(/[\s,/()]+/).some(t=>t.startsWith(w))) sc+=4; else if(n.includes(w)) sc+=2; else if(al.split(/\s+/).some(t=>t.startsWith(w))) sc+=3; else return -1; } return sc; };
   return ING.map((x,i)=>({i,s:score(x)})).filter(o=>o.s>0).sort((a,b)=>b.s-a.s).slice(0,12).map(o=>o.i); }
+function recentIng(){ const ps=PS(); const seen=new Map(); (ps.customs||[]).slice().reverse().forEach(c=>{ (c.g||'').split(' + ').forEach(part=>{ const n=part.replace(/^[\d.]+ (g|pcs) /,'').trim(); const i=ING.findIndex(x=>x[0].replace(/ \(.*\)/,'')===n); if(i>=0&&!seen.has(i)) seen.set(i,1); }); }); return [...seen.keys()].slice(0,8); }
 function buildRow(r,i){
   const d=document.createElement('div'); d.className='crow';
-  d.innerHTML=`<div class="cingwrap"><input class="cing" placeholder="Search ingredient (e.g. milk, pista, atukulu)" value="${(r.txt||'').replace(/"/g,'&quot;')}" autocomplete="off" autocorrect="off" spellcheck="false"><div class="cdrop"></div></div><input type="number" inputmode="decimal" class="camt" value="${r.amt}" min="0" step="1"><select class="cunit"><option value="g">g / ml</option><option value="pcs">pcs</option></select><button class="btn x" type="button">×</button><div class="cmac"></div>`;
-  const ing=d.querySelector('.cing'), drop=d.querySelector('.cdrop'), amt=d.querySelector('.camt'), unit=d.querySelector('.cunit'), mac=d.querySelector('.cmac');
-  unit.value=r.unit;
-  const upd=()=>{ const x=ING[r.ing]; unit.querySelector('[value=pcs]').disabled=!(x&&x[5]); if(!x){ mac.textContent='Pick an ingredient from the list'; mac.style.color='var(--amber)'; updTot(); return; } if(!x[5]&&r.unit==='pcs'){ r.unit='g'; unit.value='g'; } const m=rowMac(r); mac.style.color=''; mac.textContent=`${Math.round(m.k)} kcal · ${m.p.toFixed(1)} g P · ${m.c.toFixed(0)} C · ${m.f.toFixed(0)} F${r.unit==='pcs'?' · '+Math.round(m.g)+' g':''}`; updTot(); };
-  const showDrop=()=>{ const ids=ingSearch(ing.value); if(!ids.length){ drop.innerHTML='<div class="cnone">No match. Try another word, or use "type the macros yourself" below.</div>'; drop.style.display='block'; return; }
-    drop.innerHTML=ids.map(k=>`<div class="copt" data-k="${k}"><span>${ING[k][0]}</span><small>${ING[k][1]} kcal · ${ING[k][2]} g P per 100 g${ING[k][5]?' · '+ING[k][5]+' g each':''}</small></div>`).join(''); drop.style.display='block';
-    drop.querySelectorAll('.copt').forEach(el=>el.onmousedown=e=>{ e.preventDefault(); r.ing=+el.dataset.k; r.txt=ING[r.ing][0]; ing.value=r.txt; if(ING[r.ing][5]&&/pcs|piece|each/.test('')){} drop.style.display='none'; amt.focus(); amt.select(); upd(); }); };
-  ing.onfocus=showDrop; ing.oninput=()=>{ r.txt=ing.value; const ids=ingSearch(ing.value); r.ing = ids.length && ING[ids[0]][0].toLowerCase()===ing.value.trim().toLowerCase() ? ids[0] : (ids.length===1?ids[0]:-1); showDrop(); upd(); };
-  ing.onblur=()=>{ setTimeout(()=>{ drop.style.display='none'; if(r.ing<0){ const ids=ingSearch(ing.value); if(ids.length&&ing.value.trim()){ r.ing=ids[0]; r.txt=ING[r.ing][0]; ing.value=r.txt; upd(); } } },150); };
+  const chosen=r.ing>=0;
+  d.innerHTML=`<div class="cingwrap">
+      <div class="cfield${chosen?' hid':''}"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="cing" placeholder="Search ingredient (milk, pista, atukulu…)" value="${(r.txt||'').replace(/"/g,'&quot;')}" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Ingredient"></div>
+      <div class="cres" hidden></div>
+      <div class="cpicked${chosen?'':' hid'}"><span class="ico veg tile">${ICON.veg}</span><div><b class="cpn"></b><small class="cps"></small></div><button type="button" class="btn q cchg">Change</button></div>
+    </div>
+    <div class="camtrow"><input type="number" inputmode="decimal" class="camt" value="${r.amt}" min="0" step="1" aria-label="Amount"><div class="useg"><button type="button" data-u="g" class="${r.unit==='g'?'on':''}">g / ml</button><button type="button" data-u="pcs" class="${r.unit==='pcs'?'on':''}">pcs</button></div><button class="btn x crm" type="button" aria-label="Remove ingredient">×</button></div>
+    <div class="cmac"></div>`;
+  const ing=d.querySelector('.cing'), res=d.querySelector('.cres'), amt=d.querySelector('.camt'), mac=d.querySelector('.cmac'), field=d.querySelector('.cfield'), picked=d.querySelector('.cpicked'), pcsBtn=d.querySelector('[data-u=pcs]');
+  const upd=()=>{ const x=ING[r.ing]; pcsBtn.disabled=!(x&&x[5]); if(!x){ mac.textContent='Pick an ingredient from the list'; mac.style.color='var(--orange)'; updTot(); return; } if(!x[5]&&r.unit==='pcs'){ r.unit='g'; } d.querySelectorAll('.useg button').forEach(b=>b.classList.toggle('on',b.dataset.u===r.unit)); const m=rowMac(r); mac.style.color=''; mac.textContent=`${Math.round(m.k)} kcal · ${m.p.toFixed(1)} g protein · ${m.c.toFixed(0)} g carbs · ${m.f.toFixed(0)} g fat${r.unit==='pcs'?' · '+Math.round(m.g)+' g':''}`; updTot(); };
+  const showPicked=()=>{ const x=ING[r.ing]; d.querySelector('.cpn').textContent=x[0]; d.querySelector('.cps').textContent=`${x[1]} kcal · ${x[2]} g protein per 100 g${x[5]?' · '+x[5]+' g each':''}`; field.classList.add('hid'); picked.classList.remove('hid'); res.hidden=true; };
+  const showRes=()=>{ const q=ing.value.trim(); const ids=q?ingSearch(q):recentIng().concat(ingSearch('')).filter((v,i,a)=>a.indexOf(v)===i).slice(0,10);
+    res.hidden=false; if(!ids.length){ res.innerHTML='<div class="cnone">No match. Try another word, or type the macros below.</div>'; return; }
+    res.innerHTML=(q?'':'<div class="chd">Recent and common</div>')+ids.map(k=>`<button type="button" class="copt" data-k="${k}"><span>${ING[k][0]}</span><small>${ING[k][1]} kcal · ${ING[k][2]} g protein per 100 g${ING[k][5]?' · '+ING[k][5]+' g each':''}</small></button>`).join('');
+    res.querySelectorAll('.copt').forEach(el=>el.onclick=()=>{ r.ing=+el.dataset.k; r.txt=ING[r.ing][0]; ing.value=r.txt; showPicked(); upd(); setTimeout(()=>{ amt.focus(); amt.select(); },50); }); };
+  ing.onfocus=()=>{ showRes(); setTimeout(()=>{ try{ d.scrollIntoView({block:'start',behavior:'smooth'}); }catch(e){} },250); };
+  ing.oninput=()=>{ r.txt=ing.value; r.ing=-1; showRes(); upd(); };
+  d.querySelector('.cchg').onclick=()=>{ picked.classList.add('hid'); field.classList.remove('hid'); r.ing=-1; ing.value=''; ing.focus(); upd(); };
   amt.oninput=()=>{ r.amt=+amt.value||0; upd(); };
-  unit.onchange=()=>{ r.unit=unit.value; upd(); };
-  d.querySelector('button').onclick=()=>{ const idx=cRows.indexOf(r); if(idx>=0) cRows.splice(idx,1); d.remove(); updTot(); };
-  upd(); return d;
+  d.querySelectorAll('.useg button').forEach(b=>b.onclick=()=>{ if(b.disabled) return; r.unit=b.dataset.u; upd(); });
+  d.querySelector('.crm').onclick=()=>{ const idx=cRows.indexOf(r); if(idx>=0) cRows.splice(idx,1); d.remove(); updTot(); };
+  if(chosen) showPicked(); upd(); return d;
 }
 function updTot(){ const t={k:0,p:0,c:0,f:0}; cRows.forEach(r=>{ const m=rowMac(r); t.k+=m.k;t.p+=m.p;t.c+=m.c;t.f+=m.f; }); const el=document.getElementById('ctot'); if(el) el.innerHTML=`Total: <b>${Math.round(t.k)} kcal · ${Math.round(t.p)} g protein</b> · ${Math.round(t.c)} g carbs · ${Math.round(t.f)} g fat`; return t; }
 function saveCustom(){

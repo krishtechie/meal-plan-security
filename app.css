@@ -350,15 +350,10 @@ input:focus,textarea:focus,select:focus{outline:none;box-shadow:0 0 0 2px var(--
 .theme button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 
 /* ---------- Custom builder ---------- */
-.crow{display:grid;grid-template-columns:1fr 72px 84px 38px;gap:6px;align-items:center;margin-bottom:8px}
-.crow .cingwrap{grid-column:1/5;position:relative}
 .crow .cing{width:100%}
-.crow .camt{grid-column:1/2}.crow .cunit{grid-column:2/4}.crow .btn.x{grid-column:4/5}
 .crow select,.crow input,.crow4 input{font-size:16px;padding:10px;border:0;border-radius:10px;background:var(--card2);color:var(--text);min-width:0;width:100%}
-.crow .cmac{grid-column:1/5;font-size:11.5px;color:var(--muted);margin-top:-4px}
 .crow4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
 .ctot{font-size:13.5px;margin:12px 0 4px;padding:12px 14px;background:var(--acc3);border-radius:12px;color:var(--acc)}
-.cdrop{display:none;position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--bg2);border-radius:12px;box-shadow:var(--sh2);max-height:240px;overflow:auto;margin-top:4px}
 .copt{padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}
 .copt:last-child{border-bottom:0}
 .copt:hover,.copt:active{background:var(--card2)}
@@ -487,3 +482,40 @@ html[data-theme=dark] .chip.p{background:rgba(255,55,95,.22);color:#ff9bb0}html[
   .dayc i{width:24px;height:4px}
 }
 @media (min-width:900px){ #vPlan .weekcard{grid-area:strip} #vPlan .weekcard .strip{grid-area:auto} }
+
+/* ---------- Custom food builder: clear fields, inline results ---------- */
+.crow{display:block;background:var(--card2);border-radius:16px;padding:10px;margin-bottom:10px}
+html[data-theme=dark] .crow{background:var(--card3)}
+@media (prefers-color-scheme:dark){ html:not([data-theme=light]) .crow{background:var(--card3)} }
+.cingwrap{position:static}
+.hid{display:none !important}
+.cfield{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:0 12px}
+.cfield svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round;flex-shrink:0}
+.cfield input{flex:1;border:0;background:transparent;padding:12px 0;font-size:16px;min-width:0}
+.cfield:focus-within{box-shadow:0 0 0 2px var(--acc);border-color:transparent}
+.cfield input:focus{box-shadow:none;outline:none}
+.cres{display:block;margin-top:8px;background:var(--card);border-radius:12px;max-height:240px;overflow:auto;box-shadow:var(--sh1)}
+.chd{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;padding:10px 12px 4px}
+#opts .chd{padding:14px 4px 6px}
+.copt{display:block;width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--line);padding:11px 12px;font:inherit}
+.copt:first-child{border-top:0}
+.copt:hover,.copt:active{background:var(--card2)}
+.copt span{display:block;font-size:15px;font-weight:600}
+.copt small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.cpicked{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:8px 10px}
+.cpicked>div{flex:1;min-width:0}
+.cpicked b{display:block;font-size:15px;font-weight:600}
+.cpicked small{display:block;font-size:12px;color:var(--muted)}
+.cpicked .tile{width:36px;height:36px;border-radius:10px}
+.camtrow{display:flex;align-items:center;gap:8px;margin-top:8px}
+.camtrow .camt{width:96px;flex:0 0 96px;background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:11px 12px;font-size:17px;font-weight:600;text-align:right}
+.useg{display:flex;flex:1;background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:3px}
+.useg button{flex:1;border:0;background:transparent;padding:9px 6px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted)}
+.useg button.on{background:var(--text);color:var(--bg)}
+.useg button:disabled{opacity:.35}
+.crm{width:44px;height:44px;border-radius:12px;padding:0;font-size:22px;line-height:1;display:grid;place-items:center;flex-shrink:0}
+.cmac{font-size:12.5px;color:var(--muted);margin-top:8px;padding:0 2px}
+.sheet .search{border:1px solid var(--line2);background:var(--card)}
+#cname{margin-bottom:10px}
+.crow4 input{background:var(--card);border:1px solid var(--line2)}
+@media (max-width:899px){ .sheet{height:94vh;max-height:94vh} }
