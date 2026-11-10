@@ -438,6 +438,15 @@ const ICON = {
 };
 const ic=(cat)=>`<span class="ico ${cat}">${ICON[cat]||ICON.mine}</span>`;
 const ALIAS = {
+ h_chikkudutomato:'chikkudu tomato chikkudukaya broad beans valor papdi',h_chikkudufry:'chikkudu fry chikkudukaya vepudu broad beans',h_munagatomato:'munagakaya tomato drumstick mulakkada',h_thotakura:'thotakura fry thota kura amaranth leafy',h_capsicumaloo:'capsicum aloo curry potato capsicum bell pepper',h_alookurma:'aloo kurma potato kurma korma',h_eggtomato:'egg tomato curry guddu tamata',
+ h_khichdi:'khichdi kichidi kichdi rice moong pongal',h_pohaplain:'poha atukulu upma flattened rice',h_pulihora:'pulihora tamarind rice chitrannam',h_jeerarice:'jeera rice cumin rice',h_curdrice:'curd rice daddojanam perugu annam',
+ h_eggbhurji:'egg bhurji scrambled eggs guddu',h_paneerbhurji:'paneer bhurji paneer scramble',h_tofu:'tofu plain pan fried',h_tofucurry:'tofu curry tofu gravy',
+ h_muddapappu:'mudda pappu plain dal kandi pappu toor',h_methipappu:'methi pappu menthikura dal fenugreek',h_pesarapappu:'pesara pappu moong dal pesalu',h_senagapappu:'beerakaya senaga pappu ridge gourd chana dal berakaya',h_dosakayapappu:'dosakaya pappu cucumber dal',
+ h_sambar:'sambar sambhar',h_chickencurry:'chicken curry kodi kura chicken gravy',h_chickencurry200:'chicken curry big kodi kura',h_chickenfry:'chicken fry kodi vepudu chicken 65 dry',h_mandi:'mandi chicken mandi arabic rice',h_mandihalf:'mandi half plate',
+ h_paneerbm:'paneer butter masala paneer gravy',h_eggfry:'egg fry guddu vepudu egg bhurji omelette',h_eggcurry:'egg curry guddu kura egg masala',
+ h_tomatocurry:'tomato curry tomato kura tamata',h_tomatorasam:'tomato rasam charu tamata rasam',h_dosakayatomato:'dosakaya tomato curry cucumber',h_beerakayatomato:'beerakaya tomato berakaya ridge gourd',h_sorakaya:'sorakaya curry bottle gourd anapakaya lauki',h_sorakayatomato:'sorakaya tomato bottle gourd',
+ h_bhendifry:'bhendi fry bendakaya vepudu okra bhindi',h_dondafry:'dondakaya fry ivy gourd tindora',h_potatofry:'potato fry bangaladumpa vepudu aloo fry',h_cabbagefry:'cabbage fry kosu vepudu',h_beansfry:'beans fry french beans vepudu',h_carrotfry:'carrot fry vepudu',h_vankaya:'gutti vankaya stuffed brinjal eggplant',h_bagara:'bagara baingan brinjal',h_pulusu:'pulusu tamarind gravy',
+ h_rotichutney:'roti chutney chilli garlic tamarind endu mirapakaya',h_peanutchutney:'peanut chutney palli chutney',h_allamchutney:'allam chutney ginger chutney',h_coconutchutney:'coconut chutney kobbari',h_tomatopachadi:'tomato pachadi',h_gongurapachadi:'gongura pachadi',h_avakaya:'avakaya mango pickle',h_podi:'podi kandi podi karam podi gunpowder',h_roti2:'roti phulka chapati',h_rotighee:'roti ghee chapati',
  s_tadka:'tadka curry base onion tomato ginger garlic popu talimpu oil masala base',s_tadka2:'tadka rich curry base 2 tsp oil',s_curd6:'curd perugu dahi yogurt 6% thick',s_curd3:'curd perugu dahi yogurt 3%',p_mushtom:'mushroom tomato curry puttagodugu kura',p_vegbirleft:'veg biryani leftover biriyani pulao',v_bhendi40:'bhendi fry okra bendakaya vepudu bhindi',v_sweetkalehalf:'sweet kale salad kit costco half bag shared',v_tomcurry:'tomato curry tomato kura',k_mixnuts:'mixed nuts pista walnut cashew trail',k_pista10:'pista pistachio',k_walnut10:'walnut akhrot',k_cashew10:'cashew kaju jeedipappu',k_choc80:'dark chocolate 80 lindt',k_peanut30:'peanuts palli groundnut verusenaga',
  v_carrotfry:'carrot fry carrot curry carrot poriyal gajar',v_carrot:'carrot fry carrot curry gajar',v_potatofry:'potato fry aloo fry bangaladumpa alu urulagadda',v_aloofry:'potato fry aloo fry',v_aloo:'potato curry aloo curry bangaladumpa',
  v_bhendifry:'bhendi fry okra fry bendakaya ladyfinger bhindi',v_bhendi:'bhendi fry okra bendakaya bhindi ladyfinger',v_dondafry:'dondakaya fry ivy gourd tindora tendli',v_dondakaya:'dondakaya ivy gourd tindora',
@@ -492,8 +501,82 @@ const EXTRA = {
     ['k_choc80','Dark chocolate 80%','10 g',58,1,4,4,'v'],
     ['k_peanut30','Peanuts, roasted (palli)','30 g',170,8,5,14,'v'],
   ],
+  hyd_prot:[
+    ['h_muddapappu','Mudda pappu (plain thick toor dal, no tadka)','150 g',165,11,25,2,'v'],
+    ['h_methipappu','Methi pappu (fenugreek leaves dal)','150 g',175,10,22,5,'v'],
+    ['h_pesarapappu','Pesara pappu (moong dal) with tadka','150 g',170,11,24,4,'v'],
+    ['h_senagapappu','Beerakaya senaga pappu (ridge gourd + chana dal)','150 g',185,10,24,6,'v'],
+    ['h_dosakayapappu','Dosakaya pappu (yellow cucumber dal)','150 g',165,9,22,5,'v'],
+    ['h_sambar','Sambar, home (dal + veg + tamarind)','200 ml',150,7,20,5,'v'],
+    ['h_chickencurry','Chicken curry, home (kodi kura, bone-in, 1 tsp oil)','150 g',220,24,5,11,'n'],
+    ['h_chickencurry200','Chicken curry, home (kodi kura), big serving','200 g',295,32,7,15,'n'],
+    ['h_chickenfry','Chicken fry (kodi vepudu), boneless','120 g',230,30,3,11,'n'],
+    ['h_mandi','Chicken mandi (rice + chicken), restaurant','1 plate (400 g)',720,38,80,26,'tn'],
+    ['h_mandihalf','Chicken mandi, half plate','200 g',360,19,40,13,'tn'],
+    ['h_paneerbm','Paneer butter masala, home (less cream)','150 g',260,12,10,19,'v'],
+    ['h_eggfry','Egg fry (2 eggs, onion, 1 tsp oil)','2 eggs',200,13,3,15,'e'],
+    ['h_eggcurry','Egg curry (2 eggs, tadka gravy)','2 eggs + 100 g gravy',260,14,8,19,'e'],
+  ],
+  hyd_veg:[
+    ['h_tomatocurry','Tomato curry (tomato kura) with tadka','150 g',95,2,10,6,'v'],
+    ['h_tomatorasam','Tomato rasam','200 ml',60,2,9,2,'v'],
+    ['h_dosakayatomato','Dosakaya tomato curry','150 g',90,2,10,5,'v'],
+    ['h_beerakayatomato','Beerakaya (ridge gourd) tomato curry','150 g',85,2,9,5,'v'],
+    ['h_sorakaya','Sorakaya (bottle gourd) curry','150 g',75,2,8,4,'v'],
+    ['h_sorakayatomato','Sorakaya tomato curry','150 g',85,2,9,5,'v'],
+    ['h_bhendifry','Bhendi fry (bendakaya vepudu), 1 tsp oil','100 g',95,2,8,6,'v'],
+    ['h_dondafry','Dondakaya fry (ivy gourd vepudu), 1 tsp oil','100 g',100,2,9,6,'v'],
+    ['h_potatofry','Potato fry (bangaladumpa vepudu), 1 tsp oil','100 g',150,2,22,6,'v'],
+    ['h_cabbagefry','Cabbage fry (kosu vepudu) with chana dal','100 g',90,3,9,4,'v'],
+    ['h_beansfry','Beans fry (french beans vepudu)','100 g',80,2,8,4,'v'],
+    ['h_carrotfry','Carrot fry (carrot vepudu)','100 g',85,1,11,4,'v'],
+    ['h_vankaya','Gutti vankaya (stuffed brinjal) curry','150 g',190,4,12,14,'v'],
+    ['h_bagara','Bagara baingan','150 g',210,4,12,16,'v'],
+    ['h_pulusu','Pulusu (tamarind gravy, any veg)','150 g',110,2,16,4,'v'],
+  ],
+  hyd_side:[
+    ['h_rotichutney','Roti chutney (dry chilli, garlic, tamarind) for roti','2 tbsp (30 g)',45,1,5,2,'v'],
+    ['h_peanutchutney','Peanut chutney (palli chutney)','2 tbsp (30 g)',80,3,4,6,'v'],
+    ['h_allamchutney','Allam (ginger) chutney','1 tbsp (15 g)',40,0,6,2,'v'],
+    ['h_coconutchutney','Coconut chutney','2 tbsp (30 g)',70,1,3,6,'v'],
+    ['h_tomatopachadi','Tomato pachadi','2 tbsp (30 g)',45,1,4,3,'v'],
+    ['h_gongurapachadi','Gongura pachadi','1 tbsp (15 g)',35,1,3,2,'v'],
+    ['h_avakaya','Avakaya (mango pickle)','1 tsp (10 g)',30,0,2,2,'v'],
+    ['h_podi','Kandi podi / karam podi with 1 tsp ghee','1 tbsp + 1 tsp ghee',95,3,6,6,'v'],
+    ['h_roti2','Roti (phulka), home, no ghee','2',160,5,32,2,'v'],
+    ['h_rotighee','Roti with 1/2 tsp ghee','1',100,3,16,3,'v'],
+  ],
+  hyd_veg2:[
+    ['h_chikkudutomato','Chikkudukaya (broad beans) tomato curry','150 g',110,4,14,4,'v'],
+    ['h_chikkudufry','Chikkudukaya fry (broad beans vepudu), 1 tsp oil','100 g',95,3,10,5,'v'],
+    ['h_munagatomato','Munagakaya (drumstick) tomato curry','150 g',95,3,11,4,'v'],
+    ['h_thotakura','Thotakura fry (amaranth leaves vepudu) with dal','100 g',85,4,7,4,'v'],
+    ['h_capsicumaloo','Capsicum aloo curry (1 tsp oil)','150 g',150,3,20,6,'v'],
+    ['h_alookurma','Aloo kurma (potato in coconut-peanut gravy)','150 g',190,4,22,10,'v'],
+    ['h_eggtomato','Egg tomato curry (2 eggs in tomato gravy)','2 eggs + 100 g gravy',245,14,8,17,'e'],
+  ],
+  hyd_carb:[
+    ['h_khichdi','Rice moong khichdi (kichidi), home, 1 tsp ghee','200 g',260,9,42,6,'v'],
+    ['h_pohaplain','Poha (atukulu upma) with peanuts, 1 tsp oil','150 g cooked (40 g dry)',210,5,34,6,'v'],
+    ['h_pulihora','Pulihora (tamarind rice) with peanuts','200 g',330,7,54,10,'v'],
+    ['h_jeerarice','Jeera rice, 1 tsp ghee','150 g',225,4,42,4,'v'],
+    ['h_curdrice','Curd rice (daddojanam) with 3% curd','200 g',230,8,36,5,'v'],
+  ],
+  hyd_prot2:[
+    ['h_eggbhurji','Egg bhurji (2 whole eggs, onion, tomato, 1 tsp oil)','2 eggs',210,13,4,15,'e'],
+    ['h_paneerbhurji','Paneer bhurji (100 g paneer, onion, tomato, 1 tsp oil)','150 g',300,18,8,21,'v'],
+    ['h_tofu','Tofu, pan-fried plain (1 tsp oil)','150 g',210,20,4,13,'v'],
+    ['h_tofucurry','Tofu curry with tadka gravy','200 g',250,20,10,15,'v'],
+  ],
 };
-for(const c in EXTRA) EXTRA[c].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; if(RAW[c]) RAW[c].push(r); });
+for(const c0 in EXTRA){ const c=c0.replace('hyd_','').replace(/\d$/,''); EXTRA[c0].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; if(RAW[c]) RAW[c].push(r); }); }
+// Every dish in the library is also searchable as an ingredient in the custom builder, converted to per 100 g (or per piece)
+(function(){ const have=new Set(ING.map(x=>x[0].toLowerCase()));
+  Object.values(F).forEach(it=>{ if(it.cat==='gym'||it.cat==='drink'&&it.k===0) return; const b=(function(){ if(!it.g) return null; let m=it.g.match(/(\d+(?:\.\d+)?)\s*(g|ml)\b/); if(m) return {n:+m[1],unit:m[2]}; m=it.g.match(/^(\d+(?:\.\d+)?)\b/); if(m) return {n:+m[1],unit:'pcs'}; return null; })(); if(!b||!b.n) return;
+    const name=it.n.replace(/\s*\(.*?\)/g,'').trim(); if(have.has(name.toLowerCase())) return; have.add(name.toLowerCase());
+    if(b.unit==='pcs'){ const gm=(it.g.match(/about (\d+) g/)||[])[1]; const pc=gm?+gm/b.n:100; const per=100/pc; ING.push([name,Math.round(it.k/b.n*per),+(it.p/b.n*per).toFixed(1),+(it.c/b.n*per).toFixed(1),+(it.f/b.n*per).toFixed(1),pc,(ALIAS[it.id]||'')+' dish']); }
+    else { const f=100/b.n; ING.push([name,Math.round(it.k*f),+(it.p*f).toFixed(1),+(it.c*f).toFixed(1),+(it.f*f).toFixed(1),null,(ALIAS[it.id]||'')+' dish']); } }); })();
+
 
 
 // ================= PEOPLE & TEMPLATES =================
@@ -670,11 +753,14 @@ function renderWorkout(){
   document.getElementById('woSub').textContent = k ? 'Goal: build muscle while cutting. Heavy compound lifts, 6 to 10 reps, add weight every week you hit the top of the range. 60 min, 5 days.' : 'Goal: strong and toned. Same lifts, 10 to 15 reps, lighter weight, glutes and back as priority. 60 min, 5 days. If a week feels flat, drop one set from each exercise, do not skip the day.';
   const w=document.getElementById('woDays'); w.innerHTML='';
   const lg=document.createElement('div'); lg.className='legend'; lg.innerHTML=`<span class="lgsw"></span> Muscles worked (front and back figure). Tap "Form guide" for the Fitbod video, step-by-step cues and common mistakes before your first session with a lift.`; w.appendChild(lg);
-  WORKOUTS.forEach(d=>{ const box=document.createElement('div'); box.className='wo'+(d.day===S.day?' today':'');
-    let h=`<div class="hd"><b>${DAYS[d.day]} · ${d.name}</b><span>${d.sub}</span></div>`;
+  const todayIdx=(new Date().getDay()+6)%7; S.woOpen=S.woOpen||{}; if(S.woOpen._init!==1){ S.woOpen={_init:1,[todayIdx]:true}; }
+  const sorted=WORKOUTS.slice().sort((a,b)=>(a.day===todayIdx?-1:b.day===todayIdx?1:a.day-b.day));
+  sorted.forEach(d=>{ const open=!!S.woOpen[d.day]; const box=document.createElement('div'); box.className='wo'+(d.day===todayIdx?' today':'')+(open?' open':' closed');
+    const n=d.ex.length+(d.day<=4?4:0);
+    let h=`<button type="button" class="hd wohd" aria-expanded="${open}"><span class="wol"><b>${d.day===todayIdx?'Today · ':''}${DAYS[d.day]} · ${d.name}</b><span>${d.sub||(n+' exercises')}</span></span><span class="chev" aria-hidden="true">›</span></button><div class="wobody">`;
     d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div>${demoHtml(e[0])}</div>${sr?`<div class="sr">${sr}</div>`:''}</div>`; });
     if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${e[0]}</div><div class="cue">${e[1]}</div>${demoHtml(e[0])}</div><div class="sr">${sr}</div></div>`; }); }
-    h+=`<div class="foot">${d.foot}</div>`; box.innerHTML=h; w.appendChild(box); });
+    h+=`<div class="foot">${d.foot}</div></div>`; box.innerHTML=h; box.querySelector('.wohd').onclick=()=>{ S.woOpen[d.day]=!S.woOpen[d.day]; renderWorkout(); }; w.appendChild(box); });
   const gen=document.createElement('div'); gen.className='rules'; gen.innerHTML=`<h3>Rules for the gym</h3><ul>
     <li><b>Core every gym day, 8 min at the end.</b> Finisher A on Mon, Wed, Fri, finisher B on Tue, Thu. Side planks, chops, twists and carries are the oblique (love handle) work. Be clear on this: core training builds the muscle underneath, the calorie deficit is what removes the fat on top. Both together is what makes the waist change. No amount of crunches works without the deficit.</li>
     <li><b>Warm up 5 min</b> on the bike or incline walk, then 2 light sets of the first exercise before your working sets.</li>
@@ -764,7 +850,9 @@ function renderWeekNav(){ const a=weekDate(0), b=weekDate(6); const f=(d,o)=>d.t
   const lbl=document.getElementById('wkLbl'); lbl.textContent=(S.week===0?'This week · ':S.week===-1?'Last week · ':S.week===1?'Next week · ':'')+f(a,{day:'numeric',month:'short'})+' – '+f(b,same?{day:'numeric'}:{day:'numeric',month:'short'});
   document.getElementById('wkPrev').onclick=()=>{ S.week--; render(); }; document.getElementById('wkNext').onclick=()=>{ S.week++; render(); }; lbl.onclick=()=>{ S.week=0; S.day=(new Date().getDay()+6)%7; render(); }; }
 function render(){
-  const same=(_lastView===S.view&&_lastDay===S.day); const _sy=same?window.scrollY:0; _lastView=S.view; _lastDay=S.day;
+  // Tabs remember their own scroll position (like iOS). Re-render in place keeps it; switching restores the tab's last spot.
+  S.scroll=S.scroll||{}; if(_lastView) S.scroll[_lastView+(_lastView==='plan'?S.day:'')]=window.scrollY;
+  const same=(_lastView===S.view&&_lastDay===S.day); const _sy=same?window.scrollY:(S.scroll[S.view+(S.view==='plan'?S.day:'')]||0); _lastView=S.view; _lastDay=S.day;
   const ps=PS();
   document.querySelectorAll('.who').forEach(b=>b.classList.toggle('on',b.dataset.who===S.who));
   document.getElementById('whoName').textContent=P().name;
@@ -1023,7 +1111,7 @@ function rowMac(r){ const x=ING[r.ing]; if(!x) return {k:0,p:0,c:0,f:0,g:0}; con
 function renderCustomForm(){
   const o=document.getElementById('opts'); if(!cRows.length) cRows=[{ing:-1,amt:100,unit:'g',txt:''}];
   o.innerHTML=`<div class="note" data-s="s17">Log exactly what you ate. Type to search an ingredient, enter grams, ml or pieces. Saved under "My foods" to reuse.</div>
-    <input class="search" id="cname" placeholder="Name it, e.g. Granola with 6% milk and blueberries" value="${(sheet.cname||'').replace(/"/g,'&quot;')}">
+    <input class="search" id="cname" type="search" name="dish-title" autocomplete="off" autocorrect="off" enterkeyhint="done" placeholder="Name it, e.g. Granola with 6% milk and blueberries" value="${(sheet.cname||'').replace(/"/g,'&quot;')}">
         <div id="crows"></div>
     <button class="btn add" id="caddrow">+ Add ingredient</button>
     <div class="ctot" id="ctot"></div>
@@ -1044,7 +1132,7 @@ function buildRow(r,i){
   const d=document.createElement('div'); d.className='crow';
   const chosen=r.ing>=0;
   d.innerHTML=`<div class="cingwrap">
-      <div class="cfield${chosen?' hid':''}"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="cing" placeholder="Search ingredient (milk, pista, atukulu…)" value="${(r.txt||'').replace(/"/g,'&quot;')}" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Ingredient"></div>
+      <div class="cfield${chosen?' hid':''}"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="cing" type="search" name="food-search" placeholder="Search ingredient or dish (milk, potato fry, curry…)" value="${(r.txt||'').replace(/"/g,'&quot;')}" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" aria-label="Ingredient or dish"></div>
       <div class="cres" hidden></div>
       <div class="cpicked${chosen?'':' hid'}"><span class="ico veg tile">${ICON.veg}</span><div><b class="cpn"></b><small class="cps"></small></div><button type="button" class="btn q cchg">Change</button></div>
     </div>
@@ -1054,7 +1142,7 @@ function buildRow(r,i){
   const upd=()=>{ const x=ING[r.ing]; pcsBtn.disabled=!(x&&x[5]); if(!x){ mac.textContent='Pick an ingredient from the list'; mac.style.color='var(--orange)'; updTot(); return; } if(!x[5]&&r.unit==='pcs'){ r.unit='g'; } d.querySelectorAll('.useg button').forEach(b=>b.classList.toggle('on',b.dataset.u===r.unit)); const m=rowMac(r); mac.style.color=''; mac.textContent=`${Math.round(m.k)} kcal · ${m.p.toFixed(1)} g protein · ${m.c.toFixed(0)} g carbs · ${m.f.toFixed(0)} g fat${r.unit==='pcs'?' · '+Math.round(m.g)+' g':''}`; updTot(); };
   const showPicked=()=>{ const x=ING[r.ing]; d.querySelector('.cpn').textContent=x[0]; d.querySelector('.cps').textContent=`${x[1]} kcal · ${x[2]} g protein per 100 g${x[5]?' · '+x[5]+' g each':''}`; field.classList.add('hid'); picked.classList.remove('hid'); res.hidden=true; };
   const showRes=()=>{ const q=ing.value.trim(); const ids=q?ingSearch(q):recentIng().concat(ingSearch('')).filter((v,i,a)=>a.indexOf(v)===i).slice(0,10);
-    res.hidden=false; if(!ids.length){ res.innerHTML='<div class="cnone">No match. Try another word, or type the macros below.</div>'; return; }
+    res.hidden=false; if(!ids.length){ res.innerHTML='<div class="cnone">No match. Try one word (mushroom, bhendi, curd) or the Telugu name, or type the macros below.</div>'; return; }
     res.innerHTML=(q?'':'<div class="chd">Recent and common</div>')+ids.map(k=>`<button type="button" class="copt" data-k="${k}"><span>${ING[k][0]}</span><small>${ING[k][1]} kcal · ${ING[k][2]} g protein per 100 g${ING[k][5]?' · '+ING[k][5]+' g each':''}</small></button>`).join('');
     res.querySelectorAll('.copt').forEach(el=>el.onclick=()=>{ r.ing=+el.dataset.k; r.txt=ING[r.ing][0]; ing.value=r.txt; showPicked(); upd(); setTimeout(()=>{ amt.focus(); amt.select(); },50); }); };
   ing.onfocus=()=>{ showRes(); setTimeout(()=>{ try{ d.scrollIntoView({block:'start',behavior:'smooth'}); }catch(e){} },250); };
@@ -1152,7 +1240,7 @@ document.querySelectorAll('.ov').forEach(ov=>{ const sh=ov.querySelector('.sheet
   sh.addEventListener('touchend',e=>{ if(y0===null) return; const dy=e.changedTouches[0].clientY-y0; sh.style.transition=''; sh.style.transform=''; y0=null; if(dy>90&&ov.id!=='ovKey') closeAny(ov); },{passive:true}); });
 document.getElementById('syncNow').onclick=()=>{ if(!CLOUD.on) return; if(!CLOUD.key) askKey(); else { Object.keys(S.people).forEach(w=>{ if(CLOUD.dirty[w]) cloudPush(w); }); cloudPull(); } };
 document.getElementById('syncOut').onclick=()=>{ CLOUD.key=''; try{ localStorage.removeItem('kl-key'); }catch(e){} setStatus('Not signed in','warn'); document.getElementById('ovSet').classList.remove('show'); askKey(); };
-document.getElementById('openSettings').addEventListener('click',()=>{ document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Saving to your hosting (data folder on the server). Status: '+CLOUD.status+'. Both phones and any browser see the same data once signed in.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus'); let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
+document.getElementById('openSettings').addEventListener('click',()=>{ document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Saving to your hosting (data folder on the server). Status: '+CLOUD.status+'. Both phones and any browser see the same data once signed in.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus')||{}; let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
 document.getElementById('wtAdd').onclick=()=>{ const d=document.getElementById('wtDate').value, w=parseFloat(document.getElementById('wtVal').value); if(!d||!w) return; const ps=PS(); ps.weights=ps.weights.filter(x=>x.d!==d); ps.weights.push({d,w}); document.getElementById('wtVal').value=''; save(); render(); };
 document.getElementById('keyGo').onclick=async()=>{ CLOUD.key=document.getElementById('keyIn').value.trim(); try{ localStorage.setItem('kl-key',CLOUD.key); }catch(e){} try{ const p=await api('ping'); if(!p.auth){ document.getElementById('keyMsg').textContent='Wrong password.'; return; } }catch(e){ document.getElementById('keyMsg').textContent= e.message==='locked' ? 'Too many wrong attempts. Wait 15 minutes.' : 'Cannot reach the server.'; return; } document.getElementById('ovKey').classList.remove('show'); cloudPull(); };
 document.getElementById('keySkip').onclick=()=>{ document.getElementById('ovKey').classList.remove('show'); setStatus('This device only','warn'); };
