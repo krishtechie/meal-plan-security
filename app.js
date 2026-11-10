@@ -736,7 +736,10 @@ function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = ve
 function fresh(d){ const isToday=weekDate(d).toISOString().slice(0,10)===new Date().toISOString().slice(0,10); return isToday ? template(d) : P().meals.map(m=>({name:m.name,time:m.time,items:[]})); }
 function fillTemplate(d=S.day){ const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); save(); render(); }
 function dayKeyFor(d){ return weekDate(d).toISOString().slice(0,10); }
-function migrateDays(ps){ if(ps.m3) return; const todayIdx=(new Date().getDay()+6)%7; Object.keys(ps.days).forEach(k=>{ const m=k.match(/^([0-6])([vn])([ex])$/); if(m){ const nk=dayKeyFor(+m[1])+m[2]+m[3]; if(!ps.days[nk]) ps.days[nk]=ps.days[k]; delete ps.days[k]; } }); ps.m3=1; }
+function sameAsTemplate(plan,d){ const t=template(d); return JSON.stringify(plan.map(m=>m.items))===JSON.stringify(t.map(m=>m.items)); }
+function pruneUntouched(ps){ if(ps.m4) return; const today=new Date().toISOString().slice(0,10);
+  Object.keys(ps.days).forEach(k=>{ const date=k.slice(0,10); if(date===today||!/^\d{4}-\d\d-\d\d$/.test(date)) return; const idx=(new Date(date+'T12:00').getDay()+6)%7; try{ if(sameAsTemplate(ps.days[k],idx)) delete ps.days[k]; }catch(e){} }); ps.m4=1; }
+function migrateDays(ps){ if(ps.m3){ pruneUntouched(ps); return; } const todayIdx=(new Date().getDay()+6)%7; Object.keys(ps.days).forEach(k=>{ const m=k.match(/^([0-6])([vn])([ex])$/); if(m){ const nk=dayKeyFor(+m[1])+m[2]+m[3]; if(!ps.days[nk]) ps.days[nk]=ps.days[k]; delete ps.days[k]; } }); ps.m3=1; pruneUntouched(ps); }
 function dayPlan(d=S.day){ const ps=PS(); migrateDays(ps); const key=dayKeyFor(d)+(isVeg(d)?'v':'n')+(PS().eggsVeg?'e':'x'); if(!ps.days[key]) ps.days[key]=fresh(d); return ps.days[key]; }
 const MEAL_SHARE=[['breakfast',.18],['mid-morning',.12],['lunch',.28],['pre-gym',.15],['dinner',.27]];
 function mealShare(name){ const n=name.toLowerCase(); const f=MEAL_SHARE.find(x=>n.includes(x[0])); return f?f[1]:0; }
