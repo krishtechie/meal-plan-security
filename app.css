@@ -618,3 +618,10 @@ details summary{font-size:15px}
 .dimtd{color:var(--dim);font-weight:500}
 .tdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--acc);margin-left:5px;vertical-align:middle}
 .hiddenbtn{width:100%;margin:0 0 10px;color:var(--acc);background:var(--acc3)}
+/* sheets: sized to the visible viewport, page locked behind them */
+body.lock{position:fixed;left:0;right:0;overflow:hidden;width:100%}
+.ov{height:100vh;height:100dvh}
+@media (max-width:899px){ .sheet{height:auto;max-height:calc(100dvh - 20px);max-height:calc(100vh - 20px);min-height:60dvh} }
+@supports (height:100dvh){ @media (max-width:899px){ .sheet{max-height:calc(100dvh - 20px)} } }
+.timepick{grid-template-columns:1fr 1fr 1fr auto;align-items:end}
+.timepick .tdone{padding:11px 16px;border-radius:12px;font-size:15px}

@@ -995,7 +995,7 @@ function fmtT(min){ min=((min%1440)+1440)%1440; const h=Math.floor(min/60), m=mi
 function timeCell(id,label,val){ const has=!!val; const mins=has?toMin(val):null; const h24=has?Math.floor(mins/60):22, m=has?mins%60:30; const ap=h24>=12?'PM':'AM'; const h12=(h24%12)||12;
   const opt=(arr,cur,fmt)=>arr.map(v=>`<option value="${v}"${v===cur?' selected':''}>${fmt?fmt(v):v}</option>`).join('');
   return `<button type="button" class="cell" id="${id}Cell" aria-expanded="false" aria-controls="${id}"><span class="cl">${label}</span><span class="cv"><b class="tv${has?'':' dim'}">${has?fmtT(mins):'Set'}</b></span></button>
-  <div class="timepick" id="${id}" hidden><label><span>Hour</span><select class="th" aria-label="${label} hour">${opt([12,1,2,3,4,5,6,7,8,9,10,11],h12)}</select></label><label><span>Min</span><select class="tm" aria-label="${label} minutes">${opt([0,5,10,15,20,25,30,35,40,45,50,55],m,v=>String(v).padStart(2,'0'))}</select></label><label><span>&nbsp;</span><select class="tap" aria-label="${label} AM or PM">${opt(['AM','PM'],ap)}</select></label></div>`; }
+  <div class="timepick" id="${id}" hidden><label><span>Hour</span><select class="th" aria-label="${label} hour">${opt([12,1,2,3,4,5,6,7,8,9,10,11],h12)}</select></label><label><span>Min</span><select class="tm" aria-label="${label} minutes">${opt([0,5,10,15,20,25,30,35,40,45,50,55],m,v=>String(v).padStart(2,'0'))}</select></label><label><span>&nbsp;</span><select class="tap" aria-label="${label} AM or PM">${opt(['AM','PM'],ap)}</select></label><button type="button" class="btn pri tdone">Done</button></div>`; }
 function renderCheckin(){
   const el=document.getElementById('checkin'); if(!el) return; const L=dlog(); const cups=8;
   const stepsT=P().name==='Person 1'?9000:8000; const st=parseInt(L.steps)||0; const sPc=Math.min(100,Math.round(st/stepsT*100));
@@ -1020,8 +1020,11 @@ function renderCheckin(){
   </div>`;
   el.querySelectorAll('.cup').forEach(b=>b.onclick=()=>{ const n=+b.dataset.cup; L.water = (L.water===n)? n-1 : n; save(); renderCheckin(); });
   el.querySelector('#ckSteps').onchange=e=>{ L.steps=e.target.value; save(); renderCheckin(); };
-  [['ckBed','bed'],['ckWake','wake']].forEach(([id,k])=>{ const row=el.querySelector('#'+id); const cell=el.querySelector('#'+id+'Cell'); cell.onclick=()=>{ const open=row.hidden; el.querySelectorAll('.timepick').forEach(r=>r.hidden=true); row.hidden=!open; cell.setAttribute('aria-expanded',String(open)); };
-    row.querySelectorAll('select').forEach(sel=>sel.onchange=()=>{ const h=+row.querySelector('.th').value, m=+row.querySelector('.tm').value, ap=row.querySelector('.tap').value; const H=(h%12)+(ap==='PM'?12:0); L[k]=String(H).padStart(2,'0')+':'+String(m).padStart(2,'0'); save(); renderCheckin(); el.querySelector('#'+id).hidden=false; }); });
+  [['ckBed','bed'],['ckWake','wake']].forEach(([id,k])=>{ const row=el.querySelector('#'+id); const cell=el.querySelector('#'+id+'Cell'); const tv=cell.querySelector('.tv');
+    const commit=()=>{ const h=+row.querySelector('.th').value, m=+row.querySelector('.tm').value, ap=row.querySelector('.tap').value; const H=(h%12)+(ap==='PM'?12:0); L[k]=String(H).padStart(2,'0')+':'+String(m).padStart(2,'0'); tv.textContent=fmtT(toMin(L[k])); tv.classList.remove('dim'); save(); };
+    cell.onclick=()=>{ const open=row.hidden; el.querySelectorAll('.timepick').forEach(r=>r.hidden=true); el.querySelectorAll('.cell[aria-expanded]').forEach(c=>c.setAttribute('aria-expanded','false')); row.hidden=!open; cell.setAttribute('aria-expanded',String(open)); if(open&&!L[k]) commit(); };
+    row.querySelectorAll('select').forEach(sel=>sel.onchange=commit);
+    row.querySelector('.tdone').onclick=()=>{ commit(); renderCheckin(); }; });
   el.querySelectorAll('.bartrack i').forEach(i=>{ i.style.width=i.dataset.w+'%'; });
 }
 
@@ -1381,3 +1384,7 @@ cloudInit();
 
 // Offline: register the service worker (shell cache; api.php stays live)
 if('serviceWorker' in navigator && /^https:/.test(location.protocol)){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+
+// Lock the page behind an open sheet (iOS otherwise scrolls the page and the sheet drifts off screen)
+(function(){ let y=0; const sync=()=>{ const open=[...document.querySelectorAll('.ov')].some(o=>o.classList.contains('show')); if(open&&!document.body.classList.contains('lock')){ y=window.scrollY; document.body.style.top=(-y)+'px'; document.body.classList.add('lock'); } else if(!open&&document.body.classList.contains('lock')){ document.body.classList.remove('lock'); document.body.style.top=''; window.scrollTo(0,y); } };
+  const mo=new MutationObserver(sync); document.querySelectorAll('.ov').forEach(o=>mo.observe(o,{attributes:true,attributeFilter:['class']})); })();
