@@ -1,22 +1,27 @@
 # Meal Planner Security Hardening
 
-A real web app I built and use daily, a meal and workout planner with a small PHP JSON API on shared hosting, used as a hands-on security project. Version 1 works but was written for function, not defence. This repo documents taking it from an unhardened baseline to a reasonably secure deployment, one change at a time, with evidence.
+A real web app I built and use daily, a two-person meal, check-in and workout planner with a small PHP JSON API on shared hosting, used as a hands-on security project. Version 1 worked but was written for function, not defence. This repo documents taking it from an unhardened baseline to a reasonably secure deployment, one change at a time, with evidence.
+
+Live instance: private. The code is public; the people, targets and data are not.
 
 ## What's here
 
-- `index.html`, `app.js`, `app.css`, `api.php`, `.htaccess`, `manifest.json`, `fonts/`, icons: the application
-- `config.example.php`: structure of the server config (the real one holds a password hash and is never committed)
-- `reports/`: OWASP ZAP and securityheaders.com results, before and after each phase
-- `docs/threat-model.md`: assets, attackers, attack paths, mapped to OWASP Top 10 (2021)
+- `index.html`, `app.js`, `app.css`, `sw.js`, `api.php`, `.htaccess`, `manifest.json`, `fonts/`, `splash/`, icons: the application
+- `config.example.php`: structure of the server config. The real `config.php` holds the password hash and the two people's profiles and is never committed
+- `gen.php`: one-shot bcrypt hash generator. Uploaded, run once, deleted. Not deployed by `.cpanel.yml`
+- `data/.htaccess`: blocks web access to the data folder. The data files themselves are git-ignored
+- `reports/`: OWASP ZAP and securityheaders.com results, before and after each phase. Embedded response bodies have been removed from the HTML reports because they contained application source (see fix 9)
 - `SETUP.md`: how to deploy on cPanel shared hosting
+- `.cpanel.yml`: cPanel Git deploy task. Copies the app files only, never `config.php` or `data/`
 - One commit per fix, so the diff is the explanation
 
 ## The app
 
-- Front end: HTML, vanilla JS, self-hosted fonts, installable as a PWA
-- Back end: `api.php`, three actions (ping, get, put), JSON file storage per user
-- Auth: shared password sent as a request header, verified against a bcrypt hash
-- Hosting: LiteSpeed on cPanel shared hosting, HTTPS via AutoSSL
+- Front end: HTML, vanilla JS, self-hosted fonts, installable PWA with service worker, offline shell, iOS splash screens, light and dark theme
+- Back end: `api.php`, four actions (`ping`, `get`, `put`, `rev`), one JSON file per person, revision-checked merges so two phones never overwrite each other
+- Auth: password sent as a request header, verified against a bcrypt hash. One shared password or one per person, both supported
+- Identity: the code knows only `p1` and `p2`. Names, calorie and protein targets and personal notes live in `config.php` and are returned by `ping` only after a correct password
+- Hosting: LiteSpeed on cPanel shared hosting, HTTPS via AutoSSL, deployed from this repo with cPanel Git Version Control
 
 ## Fixes, in order
 
@@ -28,9 +33,11 @@ A real web app I built and use daily, a meal and workout planner with a small PH
 | 3b | Strict CSP: inline script and styles moved to files, `unsafe-inline` removed, fonts self-hosted, COOP/CORP added | A05 Security Misconfiguration | done |
 | 3c | Forced HTTPS redirect so HSTS has a secure first visit | A02 Cryptographic Failures | done |
 | 4 | Audit log of every read and write | A09 Security Logging and Monitoring Failures | done |
-| 5 | Strict validation of the request body | A03 Injection | planned |
-| 6 | Backups and logs moved outside the web root | A05 Security Misconfiguration | planned |
-| 7 | Per-user credentials with per-account lockout | A01 Broken Access Control | planned |
+| 5 | Strict validation of the request body | A03 Injection | done |
+| 6 | Data, backups and logs moved outside the web root | A05 Security Misconfiguration | planned |
+| 7 | Per-account credentials and per-account lockout | A01 Broken Access Control | done |
+| 8 | Service worker never caches the API; `worker-src 'self'` in CSP | A05 Security Misconfiguration | done |
+| 9 | Personal data removed from the public code and reports; served from server config after sign-in | A01 Broken Access Control, A04 Insecure Design | done |
 
 ## Results
 
@@ -58,7 +65,7 @@ Evidence: `reports/headers-before.png`, `reports/headers-after-fix3.png`, `repor
 | Info | Modern web application (JS-driven) | n/a |
 | Info | Re-examine cache-control directives | Fix 3 |
 
-**What the scanners cannot see.** Neither tool reports the plain-text password in `config.php`, the absence of rate limiting on `api.php`, the lack of an audit log, or the unvalidated JSON body. These come from the threat model, not from scanning. Fixes 1, 2, 4 and 5 address them.
+**What the scanners cannot see.** Neither tool reports the plain-text password in `config.php`, the absence of rate limiting on `api.php`, the lack of an audit log, the unvalidated JSON body, or the personal information hard-coded in the client. These come from the threat model, not from scanning. Fixes 1, 2, 4, 5 and 9 address them.
 
 ### After fix 3
 
@@ -68,13 +75,54 @@ All six headers sent. Grade F to A. ZAP's three "header not set" Mediums and the
 
 Inline `<script>` moved to `app.js`, `<style>` to `app.css`, 36 inline `style=""` attributes converted to CSS rules, Google Fonts replaced by self-hosted woff2 files. CSP is now `script-src 'self'; style-src 'self'; font-src 'self'` with no `unsafe-inline`, plus `object-src 'none'`, COOP and CORP. Grade A+. ZAP: zero High, Medium or Low. Three Informational notes remain (suspicious comments in JS, "modern web application", cache-control review), none a vulnerability.
 
-### After fix 4
+### Fix 4: audit log
 
-Every API request now appends one JSON line to `data/audit.log`: timestamp, IP, action, user, outcome (`ok`, `bad_password`, `no_key`, `locked`, `bad_body`, `too_large`, `unknown_action`), revision and payload size for writes, truncated user agent. Passwords and data content are never written. The log currently lives beside the data it protects, inside the web-blocked `data/` folder; fix 6 moves both outside the web root.
+Every API request appends one JSON line to the audit log: timestamp, IP, action, account, outcome (`ok`, `bad_password`, `no_key`, `locked`, `bad_body`, `too_large`, `rejected`, `unknown_action`), revision and payload size for writes, truncated user agent. Passwords and data content are never written. The log currently lives beside the data it protects, inside the web-blocked `data/` folder; fix 6 moves both outside the web root.
 
 ### Fix 2 observation
 
 Testing the per-IP lockout (`reports/attempts-after-fix2.json`): my own browser was locked out after 5 failures as designed, but six probes from one tester spread across four IP addresses counted once each and never triggered the limit. Per-IP limiting is bypassed by distributed attempts. Fix 7 adds per-account lockout so the limit follows the credential, not the address.
+
+### Fix 5: input validation on the API
+
+**Problem.** `api.php` accepted any JSON body up to 2 MB and wrote it to disk unchanged. A valid password holder, or a stolen key, could store arbitrary content, oversized documents, or malformed records that would break the client for the other person.
+
+**Fix.** Every `put` passes two checks before anything is written:
+- `validateDoc()` walks the whole document: max depth 7, max 5,000 entries per object, strings capped at 400 UTF-8 characters, numbers must be finite and under 10 million, no other types.
+- `validateShape()` enforces the schema: only known top-level fields; day keys must be `YYYY-MM-DD` plus the veg and egg flags; item ids `^[a-z0-9_]{1,40}$`; quantities 0 to 50; weights 20 to 300 kg with a valid date; custom food macros 0 to 5,000; migration flags `^m\d{1,2}$`.
+- Account and action are matched against an allow-list; anything else is a 400 or 404 before any file path is built. Body limit lowered to 1 MB.
+
+Rejections return `422` with the reason and are logged as `rejected`. The client shows "Not saved: server rejected the data" instead of silently dropping the write.
+
+**Lesson.** The first deploy of fix 5 rejected real writes: a client-side migration flag was not on the allow-list. Strict validation needs a test run against live data before it is trusted.
+
+### Fix 7: per-account credentials and per-account lockout
+
+**Problem.** One shared password meant one credential to leak, no way to revoke one person without resetting both, and the per-IP lockout could be bypassed by rotating IPs.
+
+**Fix.**
+- `config.php` can hold `APP_USERS`, a bcrypt hash per account (`p1`, `p2`), or a single `APP_PASSWORD_HASH` shared by both. The server reports which mode is active and the client adapts.
+- Requests send `X-App-User` and `X-App-Key`. In per-account mode the hash looked up is the one for that account. A wrong pair never reveals which part was wrong.
+- Lockout is two-layered: 5 failures per IP **and** 20 failures per account across all IPs, both for 15 minutes.
+- Each stored record carries `by`, the account that wrote it, which the audit log also records.
+- `gen.php` creates the hashes in one call and is deleted after use, as with fix 1.
+
+### Fix 8: service worker
+
+The app shell (HTML, JS, CSS, fonts, icons, splash images) is cached for offline use. `api.php` is excluded from the cache so authentication and data are always live and never stored in the browser's cache storage. CSP gained `worker-src 'self'`.
+
+### Fix 9: personal data out of the public code
+
+**Problem.** The repo is public as a portfolio. Until v13 the client source contained both users' first names, body weights, calorie and protein targets and personal dietary notes. Anyone cloning the repo got them, and so did the ZAP reports, which embed the scanned response bodies.
+
+**Fix.**
+- The code refers only to `p1` and `p2`. Title, manifest, workout cues and sign-in screen are generic ("Meal Planner", "Person 1", "Person 2").
+- `config.php` holds `APP_PROFILES`: names, targets and notes. `ping` returns them only after a correct password. Unauthenticated `ping` returns nothing personal.
+- Old data files are renamed to the generic account ids on first request (`APP_LEGACY_FILES`), so no history is lost.
+- Embedded response bodies and oversized evidence cells were stripped from the three ZAP HTML reports and replaced with a note. Alert tables and header evidence are unchanged.
+- Caveat: earlier commits in this repo's history still contain the pre-v13 source. Rewriting history is the only way to remove that; for now the exposure is first names and nutrition targets, not credentials or data.
+
+**OWASP:** A01 Broken Access Control (data exposed without authentication), A04 Insecure Design (secrets in client code).
 
 ### Lessons so far
 
@@ -82,11 +130,13 @@ Testing the per-IP lockout (`reports/attempts-after-fix2.json`): my own browser 
 - The first CSP was a false sense of security: present, graded A, and still allowing inline scripts. Strictness is the point, not presence.
 - Removing the third-party font dependency fixed a security finding and made the app work offline. Fewer origins, fewer problems.
 - Testing the lockout revealed its own bypass. Every control should be attacked after it is built.
+- Strict validation broke a legitimate write on day one. Allow-lists need a test against real traffic.
+- Evidence can leak too. The scan reports that proved the fixes also carried the source they scanned.
 
 ## Status
 
-Fixes 1 to 4 done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live. Next: fix 5, input validation.
+Fixes 1 to 5 and 7 to 9 done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live. Personal data served only after sign-in. Open: fix 6 (move `data/` outside the web root; currently protected by `.htaccess` only).
 
 ## Author
 
-Person 1, based in Canada. 10 years in enterprise product design, now building and securing my own systems end to end. Every fix here is documented, tested and mapped to OWASP so the work speaks for itself.
+Krish, based in Canada. Enterprise product designer, now building and securing my own systems end to end. Every fix here is documented, tested and mapped to OWASP so the work speaks for itself.
