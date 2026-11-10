@@ -125,7 +125,7 @@ svg{display:block}
 .glab{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:6%;pointer-events:none}
 .glab span{font-size:12px;font-weight:500;color:var(--muted)}
 .glab b{font-size:clamp(32px,22cqw,46px);font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
-.glab.low b{color:var(--orange)}.glab.over b{color:var(--red)}.glab.over span{color:var(--red);font-weight:600}
+.glab.low b{color:var(--orange)}.glab.over b{color:var(--red)}.glab.empty b{color:var(--muted)}.glab.over span{color:var(--red);font-weight:600}
 .glab small{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .gpill{margin-top:-8px;position:relative;z-index:1;background:var(--card2);color:var(--text);font-weight:600;font-size:13px;padding:8px 14px;border-radius:999px;white-space:nowrap}
 .bars{display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -438,3 +438,8 @@ html[data-theme=dark] .chip.p{background:rgba(255,55,95,.22);color:#ff9bb0}html[
   html:not([data-theme=light]) .mwrap .tile{background:transparent;color:var(--text)}
   html:not([data-theme=light]) .chip.p{background:rgba(255,55,95,.22);color:#ff9bb0}html:not([data-theme=light]) .chip.c{background:rgba(255,159,10,.22);color:#ffc266}html:not([data-theme=light]) .chip.f{background:rgba(191,90,242,.22);color:#dfb0f7}
 }
+.warn.empty{padding:16px;background:var(--card)}
+.emp{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.emp b{font-size:15px}
+.emp span{font-size:13.5px;color:var(--muted);line-height:1.45}
+.emp .btn{margin-top:6px;color:var(--acc)}

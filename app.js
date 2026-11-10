@@ -731,8 +731,13 @@ function isVeg(d=S.day){ const ps=PS(); return ps.allVeg || (!ps.allNonVeg && ps
 function toggleVegDay(d){ const ps=PS(); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=[0,1,2,3,4,5,6]; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); save(); render(); }
 const SEA=/fish|prawn|shrimp|basa|sardine|seafood/i;
 function allowed(it, d=S.day){ if(SEA.test(it.n)&&!PS().seafood) return false; if(!isVeg(d)) return true; const t=it.t; if(t==='n'||t==='tn') return false; if(t==='e'||t==='te') return PS().eggsVeg; return true; }
-function fresh(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1})}; }); }
-function dayPlan(d=S.day){ const ps=PS(); const key=d+(isVeg(d)?'v':'n')+(PS().eggsVeg?'e':'x'); if(!ps.days[key]) ps.days[key]=fresh(d); return ps.days[key]; }
+function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1})}; }); }
+// A day starts empty (it is a log). Today starts from the plan template so there is something to follow.
+function fresh(d){ const isToday=weekDate(d).toISOString().slice(0,10)===new Date().toISOString().slice(0,10); return isToday ? template(d) : P().meals.map(m=>({name:m.name,time:m.time,items:[]})); }
+function fillTemplate(d=S.day){ const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); save(); render(); }
+function dayKeyFor(d){ return weekDate(d).toISOString().slice(0,10); }
+function migrateDays(ps){ if(ps.m3) return; const todayIdx=(new Date().getDay()+6)%7; Object.keys(ps.days).forEach(k=>{ const m=k.match(/^([0-6])([vn])([ex])$/); if(m){ const nk=dayKeyFor(+m[1])+m[2]+m[3]; if(!ps.days[nk]) ps.days[nk]=ps.days[k]; delete ps.days[k]; } }); ps.m3=1; }
+function dayPlan(d=S.day){ const ps=PS(); migrateDays(ps); const key=dayKeyFor(d)+(isVeg(d)?'v':'n')+(PS().eggsVeg?'e':'x'); if(!ps.days[key]) ps.days[key]=fresh(d); return ps.days[key]; }
 const MEAL_SHARE=[['breakfast',.18],['mid-morning',.12],['lunch',.28],['pre-gym',.15],['dinner',.27]];
 function mealShare(name){ const n=name.toLowerCase(); const f=MEAL_SHARE.find(x=>n.includes(x[0])); return f?f[1]:0; }
 function tot(items){ const t={k:0,p:0,c:0,f:0}; items.forEach(x=>{ const it=F[x.id]; if(!it) return; t.k+=it.k*x.q; t.p+=it.p*x.q; t.c+=it.c*x.q; t.f+=it.f*x.q; }); for(const k in t) t[k]=Math.round(t[k]); return t; }
@@ -795,18 +800,19 @@ function renderPlan(){
   wrap.querySelectorAll('.pcol').forEach(el=>{ el.style.color=el.dataset.c; });
   const T=tot(all); const rest=document.getElementById('rest').checked; const tk=P().target.k-(rest?P().restCut:0); const tp=P().target.p; const maint=P().maint;
   const pct=(a,b)=>Math.min(100,Math.round(a/b*100));
-  const kcls=T.k>tk+100?'over':T.k<tk-250?'low':'ok', pcls=T.p<P().pMin?'low':'ok';
+  const kcls=!all.length?'empty':T.k>tk?'over':T.k<tk-250?'low':'ok', pcls=T.p<P().pMin?'low':'ok';
   const ring=(val,tgt,color,size)=>{ const r=(size/2)-6, C=2*Math.PI*r, f=Math.min(1,Math.max(0,val/tgt)); return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle class="bgc" cx="${size/2}" cy="${size/2}" r="${r}"/><circle class="fg" cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-dasharray="${(C*f).toFixed(1)} ${C.toFixed(1)}"/></svg>`; };
   const left=tk-T.k; const pLeft=Math.max(0,tp-T.p); const cMax=P().carbMax, fMax=P().fatMax;
   const kcol = kcls==='over'?'var(--rose)':kcls==='low'?'var(--amber)':'var(--ink)';
-  const status = kcls==='over' ? `${Math.abs(left)} kcal over` : kcls==='low' ? `${left} kcal under, eat a little more` : left>=0 ? `${left} kcal left to eat` : `${Math.abs(left)} kcal over target`;
+  const status = kcls==='empty' ? 'Nothing logged yet' : kcls==='over' ? `${Math.abs(left)} kcal over target${Math.abs(left)<=100?', close, stop here':''}` : kcls==='low' ? `${left} kcal under, eat a little more` : left>=0 ? `${left} kcal left to eat` : `${Math.abs(left)} kcal over target`;
   const gauge=(val,tgt,color)=>{ const size=180, r=74, cx=90, cy=92; const a0=135, sweep=270; const f=Math.min(1,Math.max(0,val/tgt));
     const pt=(a)=>{ const t=(a)*Math.PI/180; return [cx+r*Math.cos(t), cy+r*Math.sin(t)]; };
     const arc=(a1,a2)=>{ const [x1,y1]=pt(a1),[x2,y2]=pt(a2); const big=(a2-a1)>180?1:0; return `M${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${big} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`; };
     const a2=a0+Math.max(0.01,sweep*f);
-    return `<svg class="gauge" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="gg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#7ad0b8"/><stop offset="1" stop-color="#c7b8ff"/></linearGradient></defs><path class="gbg" d="${arc(a0,a0+sweep)}"/><path class="gfg" d="${arc(a0,a2)}" stroke="${color}"/><circle class="gdot" cx="${pt(a2)[0].toFixed(1)}" cy="${pt(a2)[1].toFixed(1)}" r="5"/></svg>`; };
+    const G={ok:['#30d158','#8ee6a4'],low:['#ff9500','#ffd60a'],over:['#ff2d55','#ff8a65'],empty:['#c7c7cc','#c7c7cc']}[kcls]||['#30d158','#8ee6a4'];
+    return `<svg class="gauge" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="gg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="${G[0]}"/><stop offset="1" stop-color="${G[1]}"/></linearGradient></defs><path class="gbg" d="${arc(a0,a0+sweep)}"/><path class="gfg" d="${arc(a0,a2)}" stroke="url(#gg)"/><circle class="gdot" cx="${pt(a2)[0].toFixed(1)}" cy="${pt(a2)[1].toFixed(1)}" r="5"/></svg>`; };
   const gcol = kcls==='over'?'var(--red)':kcls==='low'?'var(--orange)':'var(--green)';
-  const glabel = left>=0 ? 'Still can eat' : 'Over target by';
+  const glabel = kcls==='empty' ? 'Budget for the day' : left>=0 ? 'Still can eat' : 'Over target by';
   const mini=(val,tgt,cls)=>{ const r=15,C=2*Math.PI*r,f=Math.min(1,Math.max(0,val/tgt)); return `<svg class="mini ${cls}" viewBox="0 0 40 40"><circle class="mbg" cx="20" cy="20" r="${r}"/><circle class="mfg" cx="20" cy="20" r="${r}" stroke-dasharray="${(C*f).toFixed(1)} ${C.toFixed(1)}"/></svg>`; };
   const bar=(cls,label,val,tgt,ic,over)=>{ const pc=Math.min(100,Math.round(val/tgt*100)); return `<div class="bar ${cls}${over?' over':''}"><span class="mwrap">${mini(val,tgt,cls)}<span class="ico ${ic} tile">${ICON[ic]}</span></span><div class="bart"><div class="barl"><b>${label}</b><span>${val} / ${tgt} g</span></div><div class="bartrack"><i data-w="${pc}"></i></div></div></div>`; };
   document.getElementById('totals').innerHTML = `
@@ -912,6 +918,8 @@ function renderWarnings(plan,T,tk,tp){
   if(T.f>p.fatMax){ let fat=null; plan.forEach((m,mi)=>m.items.forEach((x,ii)=>{ const it=F[x.id]; if(it&&it.f*x.q>=10&&it.cat!=='gym'){ const fv=it.f*x.q; if(!fat||fv>fat.fv) fat={mi,ii,fv,it}; } }));
     if(fat) fixes.push({t:`Biggest fat source is ${fat.it.n} <span data-s="s15">(${Math.round(fat.fv)} g fat). Swap it for a leaner option.</span>`, label:'Swap', run:()=>openSheet(fat.mi,fat.ii)}); }
   const w=document.getElementById('warn');
+  const logged=plan.reduce((n,m)=>n+m.items.length,0);
+  if(!logged){ w.style.display='block'; w.className='warn empty'; w.innerHTML=`<div class="emp"><b>Nothing logged for ${FULL[S.day]} yet.</b><span>Add what you eat with the + on each meal, or start from the plan and adjust.</span><button class="btn q" id="fillPlan">Start from the plan</button></div>`; w.querySelector('#fillPlan').onclick=()=>fillTemplate(S.day); return; }
   if(!out.length){ w.style.display='block'; w.className='warn ok'; w.innerHTML=`<b>On target.</b> ${T.k} kcal, ${T.p} g protein, ${maintDeficit(T.k)} kcal deficit. This is the day that gets you lean. Repeat it.`; return; }
   const hrNow=new Date().getHours(); if(T.k<tk-250&&hrNow>=15&&S.day===((new Date().getDay()+6)%7)) out.push({l:'amb',t:`It is after 3 pm and you are ${tk-T.k} kcal short. Put the gap into dinner or the evening snack: protein first (whey, Greek yogurt, paneer, soya, chicken), then a fist of rice. Do not skip it, under-eating today costs muscle, not fat.`});
   w.style.display='block'; w.className='warn'; w.innerHTML=out.map(o=>`<div class="wi ${o.l}"><span class="dot" aria-hidden="true">${o.l==="red"?"!":"•"}</span><span class="wt">${o.t}</span></div>`).join('')
@@ -1060,7 +1068,7 @@ document.getElementById('allNonVeg').onchange=e=>{ PS().allNonVeg=e.target.check
 document.getElementById('eggsVeg').onchange=e=>{ PS().eggsVeg=e.target.checked; save(); render(); };
 document.getElementById('seafood').onchange=e=>{ PS().seafood=e.target.checked; save(); render(); };
 document.getElementById('rest').onchange=render;
-document.getElementById('resetDay').onclick=()=>{ const ps=PS(); Object.keys(ps.days).forEach(k=>{ if(k.startsWith(String(S.day))) delete ps.days[k]; }); save(); render(); };
+document.getElementById('resetDay').onclick=()=>{ const ps=PS(); Object.keys(ps.days).forEach(k=>{ if(k.startsWith(dayKeyFor(S.day))) delete ps.days[k]; }); save(); render(); document.getElementById('ovSet').classList.remove('show'); };
 document.getElementById('resetAll').onclick=()=>{ PS().days={}; save(); render(); document.getElementById('ovSet').classList.remove('show'); };
 function bkString(){ return JSON.stringify({app:'kl-meal-v2',exported:new Date().toISOString(),people:S.people}); }
 function bkMsg(t,ok){ const m=document.getElementById('bkMsg'); m.textContent=t; m.style.color=ok?'var(--green)':'var(--rose)'; }
@@ -1091,8 +1099,8 @@ function xlsx(sheets){ const files=[];
 function exportRows(){ const me=S.who; const food=[['Date','Day','Person','Veg day','Meal','Item','Eat','Qty x','kcal','Protein g','Carbs g','Fat g']];
   const ck=[['Date','Person','Water ml','Steps','Bedtime','Wake up','Sleep h']]; const wt=[['Date','Person','kg']];
   ['p1','p2'].forEach(who=>{ S.who=who; const ps=PS(); const name=PEOPLE[who].name;
-    DAYS.forEach((dn,i)=>{ const date=weekDate(i).toISOString().slice(0,10); const plan=dayPlan(i);
-      plan.forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; food.push([date,dn,name,isVeg(i)?'Veg':'Non-veg',m.name,it.n,fmtG(it,x.q)||it.g,x.q,Math.round(it.k*x.q),Math.round(it.p*x.q),Math.round(it.c*x.q),Math.round(it.f*x.q)]); })); });
+    migrateDays(ps); Object.keys(ps.days).sort().forEach(k=>{ const date=k.slice(0,10); if(!/^\d{4}-\d\d-\d\d/.test(date)) return; const dn=new Date(date+'T12:00').toLocaleDateString(undefined,{weekday:'short'}); const veg=k[10]==='v';
+      ps.days[k].forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; food.push([date,dn,name,veg?'Veg':'Non-veg',m.name,it.n,fmtG(it,x.q)||it.g,x.q,Math.round(it.k*x.q),Math.round(it.p*x.q),Math.round(it.c*x.q),Math.round(it.f*x.q)]); })); });
     Object.keys(ps.log||{}).sort().forEach(d=>{ const L=ps.log[d]; let h=''; if(L.bed&&L.wake){ h=+((((toMin(L.wake)-toMin(L.bed))+1440)%1440)/60).toFixed(1); } ck.push([d,name,(L.water||0)*250,L.steps?+L.steps:'',L.bed||'',L.wake||'',h]); });
     (ps.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1).forEach(w=>wt.push([w.d,name,w.w])); });
   S.who=me; return {food,ck,wt}; }
