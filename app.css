@@ -514,7 +514,8 @@ body{background:
 .wi:first-child{border-top:0}
 .wi .dot{width:24px;height:24px;border-radius:50%;margin:0;display:grid;place-items:center;font-size:13px;font-weight:800;line-height:1;background:var(--amber3);color:#8a5a00;box-shadow:none;flex:none;font-family:Sora}
 .wi.red .dot{background:var(--rose3);color:#b4282f}
-.wi .wt{min-width:0}
+.wi .dot{grid-column:1}
+.wi .wt{min-width:0;grid-column:2;display:block}
 .fixhd{margin-top:14px;padding-top:12px;border-top:1px solid rgba(17,18,20,.07)}
 .fix{padding:10px 0;font-size:14px;border-top:1px dashed rgba(17,18,20,.1)}
 
