@@ -32,7 +32,7 @@
 <link rel="apple-touch-startup-image" href="splash/750x1334-light.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: light)">
 <link rel="apple-touch-startup-image" href="splash/750x1334-dark.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=37">
+<link rel="stylesheet" href="app.css?v=38">
 </head>
 <body>
 <div class="app">
@@ -169,6 +169,17 @@
     <button class="btn close q" id="guideClose">Done</button>
   </div>
 </div>
+<div class="ov" id="ovAudit">
+  <div class="sheet">
+    <h3>Activity log</h3>
+    <div class="sub" id="auSub">Loading…</div>
+    <div class="austats" id="auStats"></div>
+    <div class="aufil" id="auFil"><button data-f="all" class="on">All</button><button data-f="signin">Sign-ins</button><button data-f="problem">Problems</button><button data-f="save">Saves</button></div>
+    <div class="alog" id="auList"></div>
+    <div class="row2"><button class="btn q" id="auRefresh">Refresh</button><button class="btn q" id="auCsv">Download CSV</button></div>
+    <button class="btn close q" id="auClose">Done</button>
+  </div>
+</div>
 <div class="ov" id="ovSet">
   <div class="sheet">
     <h3>Settings for <span id="whoName"></span></h3>
@@ -188,10 +199,13 @@
     <div class="sub">Download this week's food log, check-ins and the full weight history for both of you as an Excel file. Opens in Excel, Numbers and Google Sheets.</div>
     <div class="row2"><button class="btn pri" id="xlsExport">Export to Excel</button><button class="btn q" id="csvExport">Export CSV</button></div>
     <div class="sub" id="bkMsg" data-s="s13"></div>
+    <h3 data-s="s11">Activity</h3>
+    <div class="sub">Every sign-in, sync and save on the server, with the result and which device it came from. Read-only.</div>
+    <div class="row2"><button class="btn q" id="openAudit">View activity log</button></div>
     <button class="btn close q" id="setClose">Done</button>
   </div>
 </div>
 
-<script src="app.js?v=37" defer></script>
+<script src="app.js?v=38" defer></script>
 </body>
 </html>

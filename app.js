@@ -1429,3 +1429,37 @@ if('serviceWorker' in navigator && /^https:/.test(location.protocol)){ window.ad
 // Lock the page behind an open sheet (iOS otherwise scrolls the page and the sheet drifts off screen)
 (function(){ let y=0; const sync=()=>{ const open=[...document.querySelectorAll('.ov')].some(o=>o.classList.contains('show')); if(open&&!document.body.classList.contains('lock')){ y=window.scrollY; document.body.style.top=(-y)+'px'; document.body.classList.add('lock'); } else if(!open&&document.body.classList.contains('lock')){ document.body.classList.remove('lock'); document.body.style.top=''; window.scrollTo(0,y); } };
   const mo=new MutationObserver(sync); document.querySelectorAll('.ov').forEach(o=>mo.observe(o,{attributes:true,attributeFilter:['class']})); })();
+
+// ===== Activity log (fix 4b): reads data/audit.log through api.php, signed in only =====
+const AU={lines:[],you:'',f:'all'};
+const AU_OUT={ok:['OK','ok'],bad_password:['Wrong password','bad'],no_key:['Not signed in','warn'],locked:['Locked out','bad'],rejected:['Data rejected','bad'],bad_body:['Bad request','warn'],too_large:['Too large','warn'],unknown_action:['Unknown request','warn'],bad_request:['Bad request','warn']};
+const AU_ACT={ping:'Opened the app',get:'Loaded data',put:'Saved changes',rev:'Checked for changes',audit:'Viewed activity log',unknown:'Unknown request'};
+function auDevice(ua){ ua=ua||''; if(/iPhone/.test(ua)) return 'iPhone'; if(/iPad/.test(ua)) return 'iPad'; if(/Android/.test(ua)) return 'Android'; if(/Macintosh/.test(ua)) return 'Mac'; if(/Windows/.test(ua)) return 'Windows PC'; if(/Linux|X11/.test(ua)) return 'Linux'; if(/curl|python|wget/i.test(ua)) return 'Script ('+ua.split('/')[0]+')'; if(/ZAP|nmap|nikto|sqlmap/i.test(ua)) return 'Scanner'; return ua?ua.split(' ')[0]:'Unknown device'; }
+function auKind(l){ if(l.action==='ping'||l.outcome==='bad_password'||l.outcome==='no_key'||l.outcome==='locked') return 'signin'; if(l.action==='put') return 'save'; return 'other'; }
+function auProblem(l){ return l.outcome!=='ok'&&l.outcome!=='no_key'; }
+function auName(u){ return (u&&PEOPLE[u])?PEOPLE[u].name:(u==='invalid'?'Unknown account':(u||'')); }
+async function auLoad(){
+  const sub=document.getElementById('auSub'); sub.textContent='Loading…';
+  try{ const r=await api('audit'); AU.lines=(r.lines||[]).slice().reverse(); AU.you=r.you||''; sub.textContent=`Last ${AU.lines.length} events · log file ${(r.size/1024).toFixed(0)} KB · newest first`; }
+  catch(e){ sub.textContent= e.message==='auth'?'Sign in to view the activity log.': e.message==='locked'?'Locked out. Wait 15 minutes.':'Cannot reach the server.'; AU.lines=[]; }
+  auRender();
+}
+function auRender(){
+  const day=Date.now()-86400000; const recent=AU.lines.filter(l=>new Date(l.ts).getTime()>day);
+  const fails=recent.filter(l=>l.outcome==='bad_password').length, locks=recent.filter(l=>l.outcome==='locked').length, saves=recent.filter(l=>l.action==='put'&&l.outcome==='ok').length, ips=new Set(recent.map(l=>l.ip)).size;
+  document.getElementById('auStats').innerHTML=`<div><b>${saves}</b><small>saves, 24 h</small></div><div class="${fails?'bad':''}"><b>${fails}</b><small>wrong passwords</small></div><div class="${locks?'bad':''}"><b>${locks}</b><small>lockouts</small></div><div><b>${ips}</b><small>IP addresses</small></div>`;
+  const list=document.getElementById('auList'); const rows=AU.lines.filter(l=>AU.f==='all'||(AU.f==='problem'?auProblem(l):auKind(l)===AU.f));
+  if(!rows.length){ list.innerHTML='<div class="empty">Nothing here yet.</div>'; return; }
+  let html='', lastD='';
+  for(const l of rows){ const d=new Date(l.ts); const dk=d.toDateString(); if(dk!==lastD){ lastD=dk; const td=new Date().toDateString(), yd=new Date(Date.now()-86400000).toDateString(); html+=`<div class="aud">${dk===td?'Today':dk===yd?'Yesterday':d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}</div>`; }
+    const o=AU_OUT[l.outcome]||[l.outcome,'warn']; const act=AU_ACT[l.action]||l.action; const who=l.who&&l.who!==l.user&&PEOPLE[l.who]?` for ${PEOPLE[l.who].name}`:'';
+    html+=`<div class="aur${l.ip===AU.you?' you':''}"><span class="aut">${d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</span><span class="aum">${act}${who}<small>${auName(l.user)}${l.user?' · ':''}${auDevice(l.ua)} · ${l.ip||''}</small></span><span class="aus ${o[1]}">${o[0]}</span></div>`; }
+  list.innerHTML=html;
+}
+document.getElementById('openAudit').onclick=()=>{ document.getElementById('ovSet').classList.remove('show'); document.getElementById('ovAudit').classList.add('show'); auLoad(); };
+document.getElementById('auClose').onclick=()=>document.getElementById('ovAudit').classList.remove('show');
+document.getElementById('auRefresh').onclick=auLoad;
+document.getElementById('auFil').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; AU.f=b.dataset.f; document.querySelectorAll('#auFil button').forEach(x=>x.classList.toggle('on',x===b)); auRender(); };
+document.getElementById('auCsv').onclick=()=>{ const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; const rows=[['Time (local)','Account','Action','For','Result','Device','IP','Revision','Bytes']];
+  for(const l of AU.lines){ rows.push([new Date(l.ts).toLocaleString(),auName(l.user),AU_ACT[l.action]||l.action,l.who?auName(l.who):'',(AU_OUT[l.outcome]||[l.outcome])[0],auDevice(l.ua),l.ip||'',l.rev??'',l.bytes??'']); }
+  dl(new Blob(['﻿'+rows.map(r=>r.map(esc).join(',')).join('\r\n')],{type:'text/csv'}),'meal-planner-activity-'+ymd(new Date())+'.csv'); };

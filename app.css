@@ -628,3 +628,26 @@ body.lock{position:fixed;left:0;right:0;overflow:hidden;width:100%}
 /* home-screen app feel: no long-press callouts or text selection on controls */
 button,.nav,.dayc,.cup,.ico,.tile,.chip,.opt,.copt,.fix,.wohd{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 @media (display-mode:standalone){ .hdr{padding-top:calc(10px + env(safe-area-inset-top))} .nav{bottom:calc(10px + env(safe-area-inset-bottom))} }
+
+/* v13.2 activity log */
+.austats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 12px}
+.austats div{background:var(--tile,var(--bg2,rgba(127,127,127,.08)));border-radius:14px;padding:10px 8px;text-align:center}
+.austats b{display:block;font-size:20px;font-weight:700;letter-spacing:-.3px}
+.austats small{font-size:11px;color:var(--muted);line-height:1.2;display:block;margin-top:2px}
+.austats div.bad b{color:var(--red,#ff3b30)}
+.aufil{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.aufil button{border:0;background:var(--tile,rgba(127,127,127,.1));color:var(--text);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.aufil button.on{background:var(--acc);color:#fff}
+.alog{max-height:46vh;overflow:auto;border-radius:14px;background:var(--card);box-shadow:var(--sh1)}
+.alog .aud{position:sticky;top:0;background:var(--card);padding:8px 14px 6px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--line,rgba(127,127,127,.15))}
+.alog .aur{display:grid;grid-template-columns:62px 1fr auto;gap:4px 10px;padding:9px 14px;border-bottom:1px solid var(--line,rgba(127,127,127,.12));font-size:14px;align-items:center}
+.alog .aur:last-child{border-bottom:0}
+.alog .aut{color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}
+.alog .aum{font-weight:600}
+.alog .aum small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:1px}
+.alog .aus{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(52,199,89,.14);color:var(--green,#34c759);white-space:nowrap}
+.alog .aus.warn{background:rgba(255,149,0,.16);color:var(--orange,#ff9500)}
+.alog .aus.bad{background:rgba(255,59,48,.14);color:var(--red,#ff3b30)}
+.alog .empty{padding:22px;text-align:center;color:var(--muted)}
+.alog .aur.you .aum small:after{content:" · this device";color:var(--acc)}
+@media (max-width:420px){.austats{grid-template-columns:repeat(2,1fr)}}

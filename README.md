@@ -33,6 +33,7 @@ Live instance: private. The code is public; the people, targets and data are not
 | 3b | Strict CSP: inline script and styles moved to files, `unsafe-inline` removed, fonts self-hosted, COOP/CORP added | A05 Security Misconfiguration | done |
 | 3c | Forced HTTPS redirect so HSTS has a secure first visit | A02 Cryptographic Failures | done |
 | 4 | Audit log of every read and write | A09 Security Logging and Monitoring Failures | done |
+| 4b | Activity screen in the app: the audit log readable after sign-in, file still blocked from the web | A09 Security Logging and Monitoring Failures | done |
 | 5 | Strict validation of the request body | A03 Injection | done |
 | 6 | Data, backups and logs moved outside the web root | A05 Security Misconfiguration | planned |
 | 7 | Per-account credentials and per-account lockout | A01 Broken Access Control | done |
@@ -78,6 +79,12 @@ Inline `<script>` moved to `app.js`, `<style>` to `app.css`, 36 inline `style=""
 ### Fix 4: audit log
 
 Every API request appends one JSON line to the audit log: timestamp, IP, action, account, outcome (`ok`, `bad_password`, `no_key`, `locked`, `bad_body`, `too_large`, `rejected`, `unknown_action`), revision and payload size for writes, truncated user agent. Passwords and data content are never written. The log currently lives beside the data it protects, inside the web-blocked `data/` folder; fix 6 moves both outside the web root.
+
+### Fix 4b: making the log readable
+
+A log nobody reads is not monitoring. `api.php` gained an `audit` action, allowed only with a valid password, that returns the last 300 lines. The app's Settings has an Activity screen that shows them in plain language: time, what happened (opened the app, saved changes, wrong password, locked out), which account, which device type and IP, with 24-hour counts of saves, wrong passwords, lockouts and distinct IPs, filters, and a CSV download. The file itself stays blocked by `.htaccess`; the only path to it is the authenticated API, and reading it is itself logged.
+
+This paid off immediately: after a password change, the log showed each device retrying its stored old password every 20 seconds and tripping the IP lockout on its own. The client was fixed to forget a rejected password after one failure and to pause while locked out.
 
 ### Fix 2 observation
 

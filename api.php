@@ -28,7 +28,7 @@ $user = strtolower($_SERVER['HTTP_X_APP_USER'] ?? '');
 if ($user === '' && $key !== '') { foreach ($USERS as $acct => $hash) { if (password_verify($key, $hash)) { $user = $acct; break; } } if ($user === '') { $user = 'invalid'; } }
 
 // Fix 5: strict input validation. Only known actions and known accounts.
-if (!in_array($a, ['ping', 'get', 'put', 'rev'], true)) { $a = 'unknown'; }
+if (!in_array($a, ['ping', 'get', 'put', 'rev', 'audit'], true)) { $a = 'unknown'; }
 if ($who !== '' && !array_key_exists($who, $USERS)) { $who = 'invalid'; }
 if ($user !== '' && !array_key_exists($user, $USERS)) { $user = 'invalid'; }
 if (strlen($key) > 200) { $key = ''; }
@@ -72,6 +72,19 @@ if ($a === 'ping') {
 }
 if (!$authed) { fail(401, $key === '' ? 'no_key' : 'bad_password', 'bad password'); }
 if ($a === 'unknown') { fail(404, 'unknown_action', 'unknown action'); }
+// Fix 4b: read the audit log through the API (signed in only). The file itself stays blocked from the web.
+if ($a === 'audit') {
+  $n = max(20, min(500, (int)($_GET['n'] ?? 300)));
+  $lf = DATA_DIR . '/audit.log'; $lines = [];
+  if (file_exists($lf)) {
+    $fh = fopen($lf, 'r'); $pos = filesize($lf); $buf = ''; $chunk = 8192;   // read from the end, only as much as needed
+    while ($pos > 0 && substr_count($buf, "\n") <= $n) { $rd = min($chunk, $pos); $pos -= $rd; fseek($fh, $pos); $buf = fread($fh, $rd) . $buf; }
+    fclose($fh);
+    foreach (array_slice(array_filter(explode("\n", $buf)), -$n) as $l) { $j = json_decode($l, true); if (is_array($j)) { unset($j['ua_full']); $lines[] = $j; } }
+  }
+  audit('ok');
+  echo json_encode(['ok' => true, 'you' => $ip, 'size' => file_exists($lf) ? filesize($lf) : 0, 'lines' => $lines]); exit;
+}
 if ($who === '' || $who === 'invalid') { fail(400, 'bad_request', 'who required'); }
 $file = DATA_DIR . "/$who.json";
 
