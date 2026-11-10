@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=11">
+<link rel="stylesheet" href="app.css?v=13">
 </head>
 <body>
 <div class="app">
@@ -55,7 +55,11 @@
   <section id="vWeight" hidden>
     <div class="title"><h2 id="wtTitle"></h2></div>
     <div class="note">Weigh in the morning after the bathroom, before food. Synced for both of you.</div>
-    <div class="frm"><input type="date" id="wtDate"><input type="number" step="0.1" id="wtVal" placeholder="kg"><button class="btn pri" id="wtAdd">Add</button></div>
+    <div class="card form" id="wtForm">
+      <label class="cell"><span class="cl">Date</span><span class="cv picker"><b id="wtDateLbl">Today</b><input type="date" id="wtDate" aria-label="Date"></span></label>
+      <label class="cell"><span class="cl">Weight</span><span class="cv"><input type="number" step="0.1" inputmode="decimal" autocomplete="off" name="weight-kg" id="wtVal" placeholder="0.0" aria-label="Weight in kg"><em>kg</em></span></label>
+      <button class="btn pri wide" id="wtAdd">Add weigh-in</button>
+    </div>
     <div class="kpis3" id="wtStats"></div>
     <div class="tblwrap"><table><thead><tr><th>Date</th><th>kg</th><th>7-day avg</th><th></th></tr></thead><tbody id="wtBody"></tbody></table></div>
   </section>
@@ -153,16 +157,14 @@
     <h3 data-s="s11">Sync</h3>
     <div class="sub" id="syncInfo"></div>
     <div class="row2"><button class="btn q" id="syncNow">Sync now</button><button class="btn x" id="syncOut">Sign out on this device</button></div>
-    <h3 data-s="s11">Backup and restore</h3>
-    <div class="sub" id="storeStatus">The server keeps a dated backup of each day automatically. Copy backup gives you a text copy of this phone's data to keep or paste back with Restore.</div>
-    <div class="row2"><button class="btn pri" id="bkCopy">Copy backup</button><button class="btn q" id="bkShow">Show backup text</button></div>
-    <textarea id="bkText" class="search" data-s="s12" placeholder="Paste a backup here, then tap Restore"></textarea>
-    <div class="row2" id="bkRestoreRow" data-s="s4"><button class="btn q" id="bkRestore">Restore from pasted text</button></div>
+    <h3 data-s="s11">Export</h3>
+    <div class="sub">Download this week's food log, check-ins and the full weight history for both of you as an Excel file. Opens in Excel, Numbers and Google Sheets.</div>
+    <div class="row2"><button class="btn pri" id="xlsExport">Export to Excel</button><button class="btn q" id="csvExport">Export CSV</button></div>
     <div class="sub" id="bkMsg" data-s="s13"></div>
     <button class="btn close q" id="setClose">Done</button>
   </div>
 </div>
 
-<script src="app.js?v=11" defer></script>
+<script src="app.js?v=13" defer></script>
 </body>
 </html>

@@ -98,18 +98,19 @@ svg{display:block}
 .ico.gym{background:var(--indigo3);color:var(--indigoT)}
 .ico.treat{background:var(--yellow3);color:var(--yellowT)}
 
-/* ---------- Week strip ---------- */
-.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:4px 0 14px}
-.dayc{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;background:transparent;border:0;padding:0}
-.dayc small{font-size:10.5px;font-weight:600;color:var(--muted)}
-.dayc b{display:grid;place-items:center;width:100%;max-width:44px;height:56px;border-radius:22px;border:1.5px solid var(--mint);background:var(--mint3);font-size:16px;font-weight:600;color:var(--text);transition:background .15s,color .15s}
-.dayc.past b{border-style:dashed;background:transparent;border-color:var(--line2)}
-.dayc.on small{color:var(--text);font-weight:700}
-.dayc.on b{background:var(--text);border-color:var(--text);color:var(--bg)}
-.dayc i{position:absolute;bottom:7px;width:6px;height:6px;border-radius:50%;background:var(--pink)}
+/* ---------- Week strip: grouped card ---------- */
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin:2px 0 10px;background:var(--card);border-radius:var(--rl);box-shadow:var(--sh2);padding:8px 6px 6px}
+.dayc{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;background:transparent;border:0;padding:4px 0 6px;border-radius:12px}
+.dayc small{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dayc b{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;font-size:17px;font-weight:600;color:var(--text);transition:background .15s,color .15s}
+.dayc i{width:18px;height:3px;border-radius:2px;background:var(--pink);margin-top:1px}
 .dayc i.veg{background:var(--green)}
-.dayc.on i{background:var(--bg)}
-@media (min-width:900px){ .dayc b{max-width:48px;height:60px} }
+.dayc.past b{color:var(--muted)}
+.dayc.today small:after{content:"";display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--acc);margin-left:4px;vertical-align:middle}
+.dayc:hover b{background:var(--card2)}
+.dayc.on b{background:var(--text);color:var(--bg)}
+.dayc.on small{color:var(--text)}
+@media (min-width:900px){ .strip{padding:10px 8px 8px} .dayc b{width:40px;height:40px;font-size:18px} }
 
 /* ---------- Hero: gauge + macro chips ---------- */
 .sum{margin:0}
@@ -120,10 +121,11 @@ svg{display:block}
 .gauge{width:100%;height:auto}
 .gauge path{fill:none;stroke-width:18;stroke-linecap:round}
 .gauge .gbg{stroke:var(--gaugeBg)}
-.gauge .gdot{fill:var(--card);stroke:var(--acc);stroke-width:3}
+.gauge .gdot{fill:var(--card);stroke:var(--text);stroke-width:2.5}
 .glab{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:6%;pointer-events:none}
 .glab span{font-size:12px;font-weight:500;color:var(--muted)}
-.glab b{font-size:clamp(32px,22cqw,46px);font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--acc)}
+.glab b{font-size:clamp(32px,22cqw,46px);font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
+.glab.low b{color:var(--orange)}.glab.over b{color:var(--red)}.glab.over span{color:var(--red);font-weight:600}
 .glab small{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .gpill{margin-top:-8px;position:relative;z-index:1;background:var(--card2);color:var(--text);font-weight:600;font-size:13px;padding:8px 14px;border-radius:999px;white-space:nowrap}
 .bars{display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -385,4 +387,54 @@ input:focus,textarea:focus,select:focus{outline:none;box-shadow:0 0 0 2px var(--
   #vPlan #pnotes{grid-area:rules}
   #vPlan .checkin{grid-area:notes}
   #vPlan .guidebtn{grid-area:guide;justify-content:flex-start}
+}
+
+/* ---------- Apple-style cells (forms) ---------- */
+.card.form{background:var(--card);border-radius:var(--rl);box-shadow:var(--sh1);padding:4px 16px 14px;margin:12px 0 14px}
+.cells{margin-top:4px}
+.cell{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:6px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.cells .cell:last-child,.card.form .cell:last-of-type{border-bottom:0}
+.cl{font-size:15.5px;font-weight:500;color:var(--text)}
+.cv{display:flex;align-items:center;gap:6px;min-width:0}
+.cv input[type=number]{width:96px;text-align:right;font-size:17px;font-weight:600;padding:8px 10px;border-radius:10px;background:var(--card2);border:0;color:var(--text);-webkit-appearance:none;appearance:none;-moz-appearance:textfield}
+.cv input::-webkit-outer-spin-button,.cv input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.cv em{font-style:normal;font-size:13px;color:var(--muted);font-weight:500}
+.cv.picker{position:relative;background:var(--card2);border-radius:10px;padding:8px 12px}
+.cv.picker b{font-size:16px;font-weight:600;color:var(--text);pointer-events:none}
+.cv.picker input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;padding:0;border:0;font-size:16px;-webkit-appearance:none;appearance:none;cursor:pointer}
+.cv.picker input::-webkit-calendar-picker-indicator{opacity:0;width:100%;height:100%;position:absolute;inset:0;cursor:pointer}
+.cv.picker:focus-within{box-shadow:0 0 0 2px var(--acc)}
+.btn.wide{width:100%;margin-top:10px;padding:12px;font-size:15px}
+.ckbar{padding:0 0 10px}
+.ckbar .bartrack{display:block;height:6px;border-radius:999px;background:var(--gaugeBg);overflow:hidden}
+.ckbar .bartrack i{display:block;height:100%;border-radius:999px;background:var(--orange);width:0;transition:width .4s var(--ease)}
+.ck .ckrow{flex-wrap:nowrap}
+.ck .cv input[type=number]{width:104px}
+@media (max-width:560px){ .ck .ckrow{flex-direction:row;align-items:center} .ck .ckl{flex:1 1 auto} .ck .ckrow .cups{flex:0 0 100%;justify-content:space-between;margin-top:4px} .ck .ckrow:has(.cups){flex-wrap:wrap} }
+.frm,.ckin,.cktimes{display:none}
+
+/* Dark: vivid solid tiles with white glyphs, like iOS Settings */
+html[data-theme=dark] .ico,html[data-theme=dark] .tile{color:#fff}
+html[data-theme=dark] .ico.prot,html[data-theme=dark] .ico.fruit{background:var(--pink)}
+html[data-theme=dark] .ico.carb,html[data-theme=dark] .ico.bf{background:var(--orange)}
+html[data-theme=dark] .ico.veg,html[data-theme=dark] .ico.side{background:var(--green)}
+html[data-theme=dark] .ico.snack,html[data-theme=dark] .ico.mine{background:var(--purple)}
+html[data-theme=dark] .ico.drink,html[data-theme=dark] .ico.fat{background:var(--teal)}
+html[data-theme=dark] .ico.gym{background:var(--indigo)}
+html[data-theme=dark] .ico.treat{background:#d9a400}
+html[data-theme=dark] .ckl .ico.drink{background:var(--teal)}html[data-theme=dark] .ckl .ico.gym{background:var(--orange)}html[data-theme=dark] .ckl .ico.snack{background:var(--indigo)}
+html[data-theme=dark] .mwrap .tile{background:transparent;color:var(--text)}
+html[data-theme=dark] .chip.p{background:rgba(255,55,95,.22);color:#ff9bb0}html[data-theme=dark] .chip.c{background:rgba(255,159,10,.22);color:#ffc266}html[data-theme=dark] .chip.f{background:rgba(191,90,242,.22);color:#dfb0f7}
+@media (prefers-color-scheme:dark){
+  html:not([data-theme=light]) .ico,html:not([data-theme=light]) .tile{color:#fff}
+  html:not([data-theme=light]) .ico.prot,html:not([data-theme=light]) .ico.fruit{background:var(--pink)}
+  html:not([data-theme=light]) .ico.carb,html:not([data-theme=light]) .ico.bf{background:var(--orange)}
+  html:not([data-theme=light]) .ico.veg,html:not([data-theme=light]) .ico.side{background:var(--green)}
+  html:not([data-theme=light]) .ico.snack,html:not([data-theme=light]) .ico.mine{background:var(--purple)}
+  html:not([data-theme=light]) .ico.drink,html:not([data-theme=light]) .ico.fat{background:var(--teal)}
+  html:not([data-theme=light]) .ico.gym{background:var(--indigo)}
+  html:not([data-theme=light]) .ico.treat{background:#d9a400}
+  html:not([data-theme=light]) .ckl .ico.drink{background:var(--teal)}html:not([data-theme=light]) .ckl .ico.gym{background:var(--orange)}html:not([data-theme=light]) .ckl .ico.snack{background:var(--indigo)}
+  html:not([data-theme=light]) .mwrap .tile{background:transparent;color:var(--text)}
+  html:not([data-theme=light]) .chip.p{background:rgba(255,55,95,.22);color:#ff9bb0}html:not([data-theme=light]) .chip.c{background:rgba(255,159,10,.22);color:#ffc266}html:not([data-theme=light]) .chip.f{background:rgba(191,90,242,.22);color:#dfb0f7}
 }

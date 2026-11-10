@@ -756,7 +756,7 @@ function render(){
   document.getElementById('allVeg').checked=ps.allVeg; document.getElementById('allNonVeg').checked=!!ps.allNonVeg; document.getElementById('eggsVeg').checked=ps.eggsVeg; document.getElementById('seafood').checked=!!ps.seafood;
   const vd=document.getElementById('vegDays'); vd.innerHTML=''; DAYS.forEach((n,i)=>{ const b=document.createElement('button'); const v=isVeg(i); b.className='vd'+(v?' veg':''); b.innerHTML=`${n}<small>${v?'VEG':'NON'}</small>`; b.onclick=()=>toggleVegDay(i); vd.appendChild(b); });
   const d=document.getElementById('days'); d.innerHTML='';
-  DAYS.forEach((n,i)=>{ const b=document.createElement('div'); const todayIdx=(new Date().getDay()+6)%7; b.className='dayc'+(i===S.day?' on':'')+(i<todayIdx?' past':''); const v=isVeg(i);
+  DAYS.forEach((n,i)=>{ const b=document.createElement('div'); const todayIdx=(new Date().getDay()+6)%7; b.className='dayc'+(i===S.day?' on':'')+(i<todayIdx?' past':'')+(i===todayIdx?' today':''); const v=isVeg(i);
     const dt=weekDate(i); b.innerHTML=`<small>${n}</small><b>${dt.getDate()}</b><i class="${v?'veg':''}" title="${v?'Veg day':'Non-veg day'}"></i>`; b.onclick=()=>{S.day=i;S.view='plan';render();}; d.appendChild(b); });
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.view===S.view));
   document.getElementById('vPlan').hidden=S.view!=='plan';
@@ -795,7 +795,7 @@ function renderPlan(){
   wrap.querySelectorAll('.pcol').forEach(el=>{ el.style.color=el.dataset.c; });
   const T=tot(all); const rest=document.getElementById('rest').checked; const tk=P().target.k-(rest?P().restCut:0); const tp=P().target.p; const maint=P().maint;
   const pct=(a,b)=>Math.min(100,Math.round(a/b*100));
-  const kcls=T.k>tk+150?'over':T.k<tk-250?'low':'ok', pcls=T.p<P().pMin?'low':'ok';
+  const kcls=T.k>tk+100?'over':T.k<tk-250?'low':'ok', pcls=T.p<P().pMin?'low':'ok';
   const ring=(val,tgt,color,size)=>{ const r=(size/2)-6, C=2*Math.PI*r, f=Math.min(1,Math.max(0,val/tgt)); return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle class="bgc" cx="${size/2}" cy="${size/2}" r="${r}"/><circle class="fg" cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-dasharray="${(C*f).toFixed(1)} ${C.toFixed(1)}"/></svg>`; };
   const left=tk-T.k; const pLeft=Math.max(0,tp-T.p); const cMax=P().carbMax, fMax=P().fatMax;
   const kcol = kcls==='over'?'var(--rose)':kcls==='low'?'var(--amber)':'var(--ink)';
@@ -804,15 +804,15 @@ function renderPlan(){
     const pt=(a)=>{ const t=(a)*Math.PI/180; return [cx+r*Math.cos(t), cy+r*Math.sin(t)]; };
     const arc=(a1,a2)=>{ const [x1,y1]=pt(a1),[x2,y2]=pt(a2); const big=(a2-a1)>180?1:0; return `M${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${big} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`; };
     const a2=a0+Math.max(0.01,sweep*f);
-    return `<svg class="gauge" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="gg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#7ad0b8"/><stop offset="1" stop-color="#c7b8ff"/></linearGradient></defs><path class="gbg" d="${arc(a0,a0+sweep)}"/><path class="gfg" d="${arc(a0,a2)}" stroke="${kcls==='ok'?'url(#gg)':color}"/><circle class="gdot" cx="${pt(a2)[0].toFixed(1)}" cy="${pt(a2)[1].toFixed(1)}" r="5"/></svg>`; };
-  const gcol = kcls==='over'?'var(--rose)':kcls==='low'?'var(--amber)':'var(--acc)';
+    return `<svg class="gauge" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="gg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#7ad0b8"/><stop offset="1" stop-color="#c7b8ff"/></linearGradient></defs><path class="gbg" d="${arc(a0,a0+sweep)}"/><path class="gfg" d="${arc(a0,a2)}" stroke="${color}"/><circle class="gdot" cx="${pt(a2)[0].toFixed(1)}" cy="${pt(a2)[1].toFixed(1)}" r="5"/></svg>`; };
+  const gcol = kcls==='over'?'var(--red)':kcls==='low'?'var(--orange)':'var(--green)';
   const glabel = left>=0 ? 'Still can eat' : 'Over target by';
   const mini=(val,tgt,cls)=>{ const r=15,C=2*Math.PI*r,f=Math.min(1,Math.max(0,val/tgt)); return `<svg class="mini ${cls}" viewBox="0 0 40 40"><circle class="mbg" cx="20" cy="20" r="${r}"/><circle class="mfg" cx="20" cy="20" r="${r}" stroke-dasharray="${(C*f).toFixed(1)} ${C.toFixed(1)}"/></svg>`; };
   const bar=(cls,label,val,tgt,ic,over)=>{ const pc=Math.min(100,Math.round(val/tgt*100)); return `<div class="bar ${cls}${over?' over':''}"><span class="mwrap">${mini(val,tgt,cls)}<span class="ico ${ic} tile">${ICON[ic]}</span></span><div class="bart"><div class="barl"><b>${label}</b><span>${val} / ${tgt} g</span></div><div class="bartrack"><i data-w="${pc}"></i></div></div></div>`; };
   document.getElementById('totals').innerHTML = `
     <div class="hero">
       <div class="gcard">
-        <div class="gwrap">${gauge(T.k,tk,gcol)}<div class="glab" data-l="${glabel}"><span>${glabel}</span><b>${Math.abs(left)}</b><small>kcal</small></div></div>
+        <div class="gwrap">${gauge(T.k,tk,gcol)}<div class="glab ${kcls}" data-l="${glabel}"><span>${glabel}</span><b>${Math.abs(left)}</b><small>kcal</small></div></div>
         <div class="gpill">${T.k} / ${tk} kcal</div>
       </div>
       <div class="bars">
@@ -839,14 +839,19 @@ function renderCheckin(){
   const wake=toMin(L.wake||'06:30'); if(L.bed&&L.wake){ const b=toMin(L.bed); slp=((wake-b)+1440)%1440/60; }
   bedSug=fmtT(wake-7.5*60);
   const sleepTxt = slp===null ? `Aim 7 to 8 h. For a ${fmtT(wake)} wake-up, lights out by <b>${bedSug}</b>.` : slp<6.5 ? `<b>${slp.toFixed(1)} h</b>, short. Under 7 h the body drops muscle, not fat, on the same food. Tonight: bed by <b>${bedSug}</b>.` : slp>9 ? `<b>${slp.toFixed(1)} h</b>, more than needed. Keep wake-up fixed at ${fmtT(wake)}.` : `<b>${slp.toFixed(1)} h</b>, on target. Keep it.`;
+  const fmtClock=(v)=>v?fmtT(toMin(v)):'Set';
   el.innerHTML=`<div class="ck">
     <div class="ckhd"><b>Day check-in</b><span>${weekDate(S.day).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})} · ${P().name}</span></div>
     <div class="ckrow"><div class="ckl"><span class="ico drink tile">${ICON.drink}</span><div><b>Water</b><span>${L.water*250>=1000?(L.water*0.25).toFixed(2).replace(/\.?0+$/,'')+' L':L.water*250+' ml'} of 2.5 L · tap a cup</span></div></div>
       <div class="cups">${Array.from({length:cups},(_,i)=>`<button class="cup${i<L.water?' on':''}" data-cup="${i+1}" aria-label="${(i+1)*250} ml"></button>`).join('')}</div></div>
-    <div class="ckrow"><div class="ckl"><span class="ico gym tile">${ICON.steps}</span><div><b>Steps</b><span>${st?st.toLocaleString()+' of '+stepsT.toLocaleString():'Target '+stepsT.toLocaleString()+' · enter from your phone at night'}</span></div></div>
-      <div class="ckin"><input type="number" inputmode="numeric" id="ckSteps" placeholder="8000" value="${L.steps||''}"><div class="bartrack"><i data-w="${sPc}"></i></div></div></div>
-    <div class="ckrow"><div class="ckl"><span class="ico snack tile">${ICON.sleep}</span><div><b>Sleep</b><span>${sleepTxt}</span></div></div>
-      <div class="cktimes"><label>Bed<input type="time" id="ckBed" value="${L.bed||''}"></label><label>Woke<input type="time" id="ckWake" value="${L.wake||''}"></label></div></div>
+    <div class="ckrow"><div class="ckl"><span class="ico gym tile">${ICON.steps}</span><div><b>Steps</b><span>${st?st.toLocaleString()+' of '+stepsT.toLocaleString()+(st>=stepsT?' · done':''):'Target '+stepsT.toLocaleString()}</span></div></div>
+      <div class="cv"><input type="number" inputmode="numeric" pattern="[0-9]*" autocomplete="off" name="steps-count" id="ckSteps" placeholder="0" value="${L.steps||''}" aria-label="Steps today"><em>steps</em></div></div>
+    <div class="ckbar"><div class="bartrack"><i data-w="${sPc}"></i></div></div>
+    <div class="ckrow"><div class="ckl"><span class="ico snack tile">${ICON.sleep}</span><div><b>Sleep</b><span>${sleepTxt}</span></div></div></div>
+    <div class="cells">
+      <label class="cell"><span class="cl">Bedtime</span><span class="cv picker"><b>${fmtClock(L.bed)}</b><input type="time" id="ckBed" value="${L.bed||''}" aria-label="Bedtime"></span></label>
+      <label class="cell"><span class="cl">Wake up</span><span class="cv picker"><b>${fmtClock(L.wake)}</b><input type="time" id="ckWake" value="${L.wake||''}" aria-label="Wake up time"></span></label>
+    </div>
     <div class="cknote">Evening routine: gym 5 to 6, dinner by 7:30, 10 min walk, screens off 30 min before bed. Weigh in the morning after the bathroom, before water.</div>
   </div>`;
   el.querySelectorAll('.cup').forEach(b=>b.onclick=()=>{ const n=+b.dataset.cup; L.water = (L.water===n)? n-1 : n; save(); renderCheckin(); });
@@ -929,6 +934,7 @@ function renderWeek(){
 function renderWeight(){
   const ps=PS(); document.getElementById('wtTitle').textContent=P().name+' · weight log';
   if(!document.getElementById('wtDate').value) document.getElementById('wtDate').value=new Date().toISOString().slice(0,10);
+  const _wd=document.getElementById('wtDate'); const _wl=document.getElementById('wtDateLbl'); const _fmtD=(v)=>{ const d=new Date(v+'T12:00'); const t=new Date(); return v===t.toISOString().slice(0,10)?'Today':d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'}); }; _wl.textContent=_fmtD(_wd.value); _wd.oninput=()=>{ _wl.textContent=_fmtD(_wd.value); };
   const ws=[...ps.weights].sort((a,b)=>a.d<b.d?-1:1);
   const avg7=(idx)=>{ const sl=ws.slice(Math.max(0,idx-6),idx+1); return (sl.reduce((s,x)=>s+x.w,0)/sl.length).toFixed(1); };
   const b=document.getElementById('wtBody'); b.innerHTML='';
@@ -1057,10 +1063,50 @@ document.getElementById('rest').onchange=render;
 document.getElementById('resetDay').onclick=()=>{ const ps=PS(); Object.keys(ps.days).forEach(k=>{ if(k.startsWith(String(S.day))) delete ps.days[k]; }); save(); render(); };
 document.getElementById('resetAll').onclick=()=>{ PS().days={}; save(); render(); document.getElementById('ovSet').classList.remove('show'); };
 function bkString(){ return JSON.stringify({app:'kl-meal-v2',exported:new Date().toISOString(),people:S.people}); }
-function bkMsg(t,ok){ const m=document.getElementById('bkMsg'); m.textContent=t; m.style.color=ok?'var(--mint)':'var(--rose)'; }
-document.getElementById('bkCopy').onclick=async()=>{ const txt=bkString(); try{ await navigator.clipboard.writeText(txt); bkMsg('Backup copied. Paste it into Notes or WhatsApp "message yourself" to keep it.',true); }catch(e){ document.getElementById('bkText').style.display='block'; document.getElementById('bkText').value=txt; document.getElementById('bkRestoreRow').style.display='flex'; bkMsg('Copy blocked by the browser. Select the text above and copy it manually.',false); } };
-document.getElementById('bkShow').onclick=()=>{ const t=document.getElementById('bkText'); const show=t.style.display==='none'; t.style.display=show?'block':'none'; document.getElementById('bkRestoreRow').style.display=show?'flex':'none'; if(show&&!t.value) t.value=bkString(); };
-document.getElementById('bkRestore').onclick=()=>{ try{ const o=JSON.parse(document.getElementById('bkText').value.trim()); if(!o||o.app!=='kl-meal-v2'||!o.people) throw 0; S.people=o.people; save(); render(); bkMsg('Restored. Your plans and weight log are back.',true); }catch(e){ bkMsg('That text is not a valid backup. Paste the whole thing, starting with { and ending with }.',false); } };
+function bkMsg(t,ok){ const m=document.getElementById('bkMsg'); m.textContent=t; m.style.color=ok?'var(--green)':'var(--rose)'; }
+// ---- Export: minimal XLSX writer (store-only zip, no library) ----
+const CRC_T=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_T[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipStore(files){ const enc=new TextEncoder(); const parts=[]; const cd=[]; let off=0;
+  const le16=(n)=>[n&255,(n>>8)&255], le32=(n)=>[n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+  files.forEach(f=>{ const name=enc.encode(f.name), data=typeof f.data==='string'?enc.encode(f.data):f.data; const crc=crc32(data);
+    const loc=new Uint8Array([0x50,0x4b,3,4,20,0,0,0,0,0,0,0,0,0,...le32(crc),...le32(data.length),...le32(data.length),...le16(name.length),0,0,...name]);
+    parts.push(loc,data);
+    cd.push(new Uint8Array([0x50,0x4b,1,2,20,0,20,0,0,0,0,0,0,0,0,0,...le32(crc),...le32(data.length),...le32(data.length),...le16(name.length),0,0,0,0,0,0,0,0,0,0,0,0,...le32(off),...name]));
+    off+=loc.length+data.length; });
+  const cdLen=cd.reduce((n,c)=>n+c.length,0);
+  const end=new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...le16(files.length),...le16(files.length),...le32(cdLen),...le32(off),0,0]);
+  return new Blob([...parts,...cd,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}); }
+const xesc=(v)=>String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function sheetXml(rows){ const col=(i)=>{ let s=''; i++; while(i>0){ const m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; };
+  const r=rows.map((row,ri)=>'<row r="'+(ri+1)+'">'+row.map((v,ci)=>{ const ref=col(ci)+(ri+1); if(typeof v==='number'&&isFinite(v)) return `<c r="${ref}"><v>${v}</v></c>`; if(v===''||v==null) return ''; return `<c r="${ref}" t="inlineStr"><is><t>${xesc(v)}</t></is></c>`; }).join('')+'</row>').join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${r}</sheetData></worksheet>`; }
+function xlsx(sheets){ const files=[];
+  files.push({name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`});
+  files.push({name:'_rels/.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`});
+  files.push({name:'xl/workbook.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s,i)=>`<sheet name="${xesc(s.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets></workbook>`});
+  files.push({name:'xl/_rels/workbook.xml.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}</Relationships>`});
+  sheets.forEach((s,i)=>files.push({name:`xl/worksheets/sheet${i+1}.xml`,data:sheetXml(s.rows)}));
+  return zipStore(files); }
+function exportRows(){ const me=S.who; const food=[['Date','Day','Person','Veg day','Meal','Item','Eat','Qty x','kcal','Protein g','Carbs g','Fat g']];
+  const ck=[['Date','Person','Water ml','Steps','Bedtime','Wake up','Sleep h']]; const wt=[['Date','Person','kg']];
+  ['p1','p2'].forEach(who=>{ S.who=who; const ps=PS(); const name=PEOPLE[who].name;
+    DAYS.forEach((dn,i)=>{ const date=weekDate(i).toISOString().slice(0,10); const plan=dayPlan(i);
+      plan.forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; food.push([date,dn,name,isVeg(i)?'Veg':'Non-veg',m.name,it.n,fmtG(it,x.q)||it.g,x.q,Math.round(it.k*x.q),Math.round(it.p*x.q),Math.round(it.c*x.q),Math.round(it.f*x.q)]); })); });
+    Object.keys(ps.log||{}).sort().forEach(d=>{ const L=ps.log[d]; let h=''; if(L.bed&&L.wake){ h=+((((toMin(L.wake)-toMin(L.bed))+1440)%1440)/60).toFixed(1); } ck.push([d,name,(L.water||0)*250,L.steps?+L.steps:'',L.bed||'',L.wake||'',h]); });
+    (ps.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1).forEach(w=>wt.push([w.d,name,w.w])); });
+  S.who=me; return {food,ck,wt}; }
+function dl(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000); }
+const stamp=()=>new Date().toISOString().slice(0,10);
+document.getElementById('xlsExport').onclick=()=>{ const r=exportRows(); dl(xlsx([{name:'Food log',rows:r.food},{name:'Check-in',rows:r.ck},{name:'Weight',rows:r.wt}]),`meal-planner-${stamp()}.xlsx`); bkMsg('Excel file downloaded.',true); };
+document.getElementById('csvExport').onclick=()=>{ const r=exportRows(); const csv=(rows)=>rows.map(row=>row.map(v=>{ v=String(v??''); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(',')).join('\n'); dl(new Blob(['﻿'+csv(r.food)+'\n\nCHECK-IN\n'+csv(r.ck)+'\n\nWEIGHT\n'+csv(r.wt)],{type:'text/csv'}),`meal-planner-${stamp()}.csv`); bkMsg('CSV downloaded.',true); };
+// ---- Sheets: swipe down or tap outside to close ----
+function closeAny(ov){ ov.classList.remove('show'); }
+document.querySelectorAll('.ov').forEach(ov=>{ const sh=ov.querySelector('.sheet'); if(!sh) return; let y0=null, drag=false;
+  if(ov.id!=='ovKey') ov.addEventListener('click',e=>{ if(e.target===ov) closeAny(ov); });
+  sh.addEventListener('touchstart',e=>{ if(sh.scrollTop<=0){ y0=e.touches[0].clientY; drag=true; sh.style.transition='none'; } else y0=null; },{passive:true});
+  sh.addEventListener('touchmove',e=>{ if(y0===null) return; const dy=e.touches[0].clientY-y0; if(dy>0&&sh.scrollTop<=0){ sh.style.transform=`translateY(${dy}px)`; } else { y0=null; sh.style.transform=''; } },{passive:true});
+  sh.addEventListener('touchend',e=>{ if(y0===null) return; const dy=e.changedTouches[0].clientY-y0; sh.style.transition=''; sh.style.transform=''; y0=null; if(dy>90&&ov.id!=='ovKey') closeAny(ov); },{passive:true}); });
 document.getElementById('syncNow').onclick=()=>{ if(!CLOUD.on) return; if(!CLOUD.key) askKey(); else { Object.keys(S.people).forEach(w=>{ if(CLOUD.dirty[w]) cloudPush(w); }); cloudPull(); } };
 document.getElementById('syncOut').onclick=()=>{ CLOUD.key=''; try{ localStorage.removeItem('kl-key'); }catch(e){} setStatus('Not signed in','warn'); document.getElementById('ovSet').classList.remove('show'); askKey(); };
 document.getElementById('openSettings').addEventListener('click',()=>{ document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Saving to your hosting (data folder on the server). Status: '+CLOUD.status+'. Both phones and any browser see the same data once signed in.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus'); let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
