@@ -1033,7 +1033,16 @@ document.getElementById('shClose').onclick=closeSheet;
 document.getElementById('ov').onclick=e=>{ if(e.target.id==='ov') closeSheet(); };
 document.querySelectorAll('.who').forEach(b=>b.onclick=()=>{S.who=b.dataset.who; save(); render();});
 document.querySelectorAll('.nav button[data-view]').forEach(b=>b.onclick=()=>{S.view=b.dataset.view; render();});
-document.getElementById('fab').onclick=()=>{ S.view='plan'; render(); const plan=dayPlan(); const h=new Date().getHours(); const order=[[7,/waking/i],[10,/breakfast/i],[12,/mid-morning/i],[15,/lunch/i],[17,/pre-gym/i],[21,/dinner/i],[24,/bed/i]]; let mi=plan.findIndex(m=>/lunch/i.test(m.name)); for(const [lim,re] of order){ if(h<lim){ const i=plan.findIndex(m=>re.test(m.name)); if(i>=0){ mi=i; break; } } } openSheet(mi,null); };
+
+// ---- Appearance: system / light / dark ----
+function applyTheme(t){ const h=document.documentElement; if(t==='light'||t==='dark') h.setAttribute('data-theme',t); else h.removeAttribute('data-theme');
+  const dark = t==='dark' || (t!=='light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const mc=document.getElementById('themeColor'); if(mc) mc.content = dark ? '#000000' : '#f2f2f7';
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.theme===t)); }
+(function(){ let t='system'; try{ t=localStorage.getItem('kl-theme')||'system'; }catch(e){} applyTheme(t);
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.onclick=()=>{ try{ localStorage.setItem('kl-theme',b.dataset.theme); }catch(e){} applyTheme(b.dataset.theme); });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ let t='system'; try{ t=localStorage.getItem('kl-theme')||'system'; }catch(e){} applyTheme(t); }); })();
+const _fab=document.getElementById('fab'); if(_fab) _fab.onclick=()=>{ S.view='plan'; render(); const plan=dayPlan(); const h=new Date().getHours(); const order=[[7,/waking/i],[10,/breakfast/i],[12,/mid-morning/i],[15,/lunch/i],[17,/pre-gym/i],[21,/dinner/i],[24,/bed/i]]; let mi=plan.findIndex(m=>/lunch/i.test(m.name)); for(const [lim,re] of order){ if(h<lim){ const i=plan.findIndex(m=>re.test(m.name)); if(i>=0){ mi=i; break; } } } openSheet(mi,null); };
 document.getElementById('openSettings').onclick=()=>document.getElementById('ovSet').classList.add('show');
 document.getElementById('openGuide').onclick=()=>document.getElementById('ovGuide').classList.add('show');
 document.getElementById('guideClose').onclick=()=>document.getElementById('ovGuide').classList.remove('show');
