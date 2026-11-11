@@ -169,7 +169,7 @@ function validateShape(array $d): ?string {
     if (!is_numeric($w['w']) || $w['w'] < 20 || $w['w'] > 300) return 'weight out of range';
   }
   foreach (($d['days'] ?? []) as $k => $plan) {
-    if (!preg_match('/^\d{4}-\d\d-\d\d[vn][ex]$/', (string)$k)) return 'bad day key';
+    if (!preg_match('/^\d{4}-\d\d-\d\d([vn][ex])?$/', (string)$k)) return 'bad day key';
     if (!is_array($plan) || count($plan) > 12) return 'bad day';
     foreach ($plan as $m) {
       if (!is_array($m) || !isset($m['items']) || !is_array($m['items']) || count($m['items']) > 40) return 'bad meal';

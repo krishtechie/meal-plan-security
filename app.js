@@ -1042,25 +1042,37 @@ function saveLocal(){ try{ localStorage.setItem('kl-meal-v2',JSON.stringify({peo
 function save(){ saveLocal(); schedulePush(S.who); }
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
 function P(){ return PEOPLE[S.who]; }
-function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=(P().vegDays||[]).slice(); if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } if(ps.days&&!TIDIED.has(S.who)){ TIDIED.add(S.who); tidy(ps); } if(!ps.customs) ps.customs=[]; if(!ps.templates) ps.templates=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
+function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=(P().vegDays||[]).slice(); if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } if(!ps.days) ps.days={}; if(!Array.isArray(ps.weights)) ps.weights=[]; if(!ps.log) ps.log={}; if(!ps.m7) mergeDays(ps); if(!TIDIED.has(S.who)){ TIDIED.add(S.who); tidy(ps); } if(!ps.customs) ps.customs=[]; if(!ps.templates) ps.templates=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
 function loadAllCustoms(){ Object.values(S.people).forEach(ps=>(ps.customs||[]).forEach(c=>{ if(!F[c.id]) F[c.id]=c; })); }
 function isVeg(d=S.day){ const ps=PS(); return ps.allVeg || (!ps.allNonVeg && ps.vegDays.includes(d)); }
-function toggleVegDay(d){ const ps=PS(); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=Array.isArray(ps.vegPrev)?ps.vegPrev.slice():[]; delete ps.vegPrev; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); save(); render(); }
+function retemplate(d,before){ const ps=PS(); const key=dayKeyFor(d); const plan=ps.days[key]; if(!plan) return; const after=template(d); plan.forEach((m,i)=>{ const b=before[i]&&JSON.stringify(before[i].items), a=after[i]&&after[i].items; if(a&&(JSON.stringify(m.items)===b||!m.items.length&&ymd(weekDate(d))===ymd(new Date()))) m.items=a.map(x=>({id:x.id,q:x.q})); }); }
+function toggleVegDay(d){ const ps=PS(); const before=template(d); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=Array.isArray(ps.vegPrev)?ps.vegPrev.slice():[]; delete ps.vegPrev; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); retemplate(d,before); save(); render(); }
 const SEA=/fish|prawn|shrimp|basa|sardine|seafood/i;
 function allowed(it, d=S.day){ if(SEA.test(it.n)&&!PS().seafood) return false; if(!isVeg(d)) return true; const t=it.t; if(t==='n'||t==='tn') return false; if(t==='e'||t==='te') return PS().eggsVeg; return true; }
 function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1})}; }); }
 // A day starts empty (it is a log). Today starts from the plan template so there is something to follow.
 function fresh(d){ const isToday=ymd(weekDate(d))===ymd(new Date()); return isToday ? template(d) : P().meals.map(m=>({name:m.name,time:m.time,items:[]})); }
-function fillTemplate(d=S.day){ const ps=PS(); const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); ps.manual=ps.manual||{}; ps.manual[dayKeyFor(d)+(isVeg(d)?'v':'n')+(ps.eggsVeg?'e':'x')]=1; save(); render(); }
+function fillTemplate(d=S.day){ const ps=PS(); const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); ps.manual=ps.manual||{}; ps.manual[dayKeyFor(d)]=1; save(); render(); }
 function dayKeyFor(d){ return ymd(weekDate(d)); }
+// v15.3: a day is stored under its date only. Veg / non-veg is a view on the day, not part of its identity,
+// so switching a day between veg and non-veg never loses what was logged. Older keys (date + 'v'/'n' + 'e'/'x') are merged once.
+function mergeDays(ps){ if(ps.m7) return; const days=ps.days||{}; const manual=ps.manual||{};
+  Object.keys(days).sort().forEach(k=>{ const m=k.match(/^(\d{4}-\d\d-\d\d)[vn][ex]$/); if(!m) return; const date=m[1]; const src=days[k];
+    if(!days[date]){ days[date]=src; } else { const dst=days[date]; (src||[]).forEach(sm=>{ if(!sm.items||!sm.items.length) return; let dm=dst.find(x=>x.name===sm.name); if(!dm){ dst.push(sm); return; } if(!dm.items.length){ dm.items=sm.items; return; } sm.items.forEach(it=>{ if(!dm.items.some(x=>x.id===it.id&&x.q===it.q)) dm.items.push(it); }); }); }
+    delete days[k]; });
+  Object.keys(manual).forEach(k=>{ const m=k.match(/^(\d{4}-\d\d-\d\d)[vn][ex]$/); if(m){ manual[m[1]]=1; delete manual[k]; } });
+  ps.m7=1; }
 function isFuture(d=S.day){ return ymd(weekDate(d))>ymd(new Date()); }
 function yesterdayPos(){ const t=new Date(); const dow=(t.getDay()+6)%7; return dow===0?{week:-1,day:6}:{week:0,day:dow-1}; }
-function itemsOn(week,day){ const sw=S.week; S.week=week; const ps=PS(); const k=dayKeyFor(day)+(isVeg(day)?'v':'n')+(ps.eggsVeg?'e':'x'); const plan=ps.days[k]; S.week=sw; const items=[]; (plan||[]).forEach(m=>items.push(...m.items)); return items; }
+function itemsOn(week,day){ const sw=S.week; S.week=week; const ps=PS(); const k=dayKeyFor(day); const plan=ps.days[k]; S.week=sw; const items=[]; (plan||[]).forEach(m=>items.push(...m.items)); return items; }
 function sameAsTemplate(plan,d){ const t=template(d); return JSON.stringify(plan.map(m=>m.items))===JSON.stringify(t.map(m=>m.items)); }
 // v15: one-time migrations (m3 to m6) retired. tidy() only drops empty future placeholders.
 const TIDIED=new Set();
 function tidy(ps){ const today=ymd(new Date()); Object.keys(ps.days).forEach(k=>{ const date=k.slice(0,10); if(date>today && (ps.days[k]||[]).every(m=>!m.items||!m.items.length)) delete ps.days[k]; }); }
-function dayPlan(d=S.day){ const ps=PS(); const key=dayKeyFor(d)+(isVeg(d)?'v':'n')+(PS().eggsVeg?'e':'x'); if(!ps.days[key]) ps.days[key]=fresh(d); return ps.days[key]; }
+function dayPlan(d=S.day){ const ps=PS(); const key=dayKeyFor(d); if(!ps.days[key]) ps.days[key]=fresh(d); const plan=ps.days[key];
+  // every day carries the person's full meal list, in order; logged meals keep their items
+  const names=P().meals.map(m=>m.name); if(plan.length!==names.length||plan.some((m,i)=>m.name!==names[i])){ const byName={}; plan.forEach(m=>{ byName[m.name]=byName[m.name]?{...m,items:byName[m.name].items.concat(m.items)}:m; }); const fixed=P().meals.map(m=>byName[m.name]?{name:m.name,time:m.time,items:byName[m.name].items}:{name:m.name,time:m.time,items:[]}); Object.keys(byName).forEach(n=>{ if(!names.includes(n)&&byName[n].items.length){ const tgt=fixed.find(x=>/dinner/i.test(x.name))||fixed[fixed.length-1]; tgt.items.push(...byName[n].items); } }); ps.days[key]=fixed; return fixed; }
+  return plan; }
 const MEAL_SHARE=[['breakfast',.18],['mid-morning',.12],['lunch',.28],['pre-gym',.15],['dinner',.27]];
 function mealShare(name){ const n=name.toLowerCase(); const f=MEAL_SHARE.find(x=>n.includes(x[0])); return f?f[1]:0; }
 function tot(items){ const t={k:0,p:0,c:0,f:0}; items.forEach(x=>{ const it=F[x.id]; if(!it) return; t.k+=it.k*x.q; t.p+=it.p*x.q; t.c+=it.c*x.q; t.f+=it.f*x.q; }); for(const k in t) t[k]=Math.round(t[k]); return t; }
@@ -1309,14 +1321,14 @@ function renderWarnings(plan,T,tk,tp){
 function maintDeficit(k){ return P().maint-k; }
 function scoreData(){
   const ps=PS(); const p=P(); const todayIdx=(new Date().getDay()+6)%7;
-  const days=[]; for(let i=0;i<7;i++){ if(S.week===0&&i>todayIdx) break; const k=dayKeyFor(i)+(isVeg(i)?'v':'n')+(ps.eggsVeg?'e':'x'); const plan=ps.days[k]; if(!plan) continue; const items=[]; plan.forEach(m=>items.push(...m.items)); if(!items.length) continue; const t=tot(items); days.push({i,t,ok:t.k>=p.floor&&t.k<=p.target.k+100,pok:t.p>=p.pMin}); }
+  const days=[]; for(let i=0;i<7;i++){ if(S.week===0&&i>todayIdx) break; const k=dayKeyFor(i); const plan=ps.days[k]; if(!plan) continue; const items=[]; plan.forEach(m=>items.push(...m.items)); if(!items.length) continue; const t=tot(items); days.push({i,t,ok:t.k>=p.floor&&t.k<=p.target.k+100,pok:t.p>=p.pMin}); }
   const logs=[]; for(let i=0;i<7;i++){ const L=(ps.log||{})[ymd(weekDate(i))]; if(L) logs.push(L); }
   const n=days.length; const onT=days.filter(d=>d.ok).length; const pOK=days.filter(d=>d.pok).length; const avgP=n?Math.round(days.reduce((a,d)=>a+d.t.p,0)/n):0; const avgK=n?Math.round(days.reduce((a,d)=>a+d.t.k,0)/n):0;
   const steps=logs.reduce((a,L)=>a+(parseInt(L.steps)||0),0); const water=logs.reduce((a,L)=>a+(L.water||0),0)*250;
   const sl=logs.filter(L=>L.bed&&L.wake).map(L=>(((toMin(L.wake)-toMin(L.bed))+1440)%1440)/60); const avgS=sl.length?(sl.reduce((a,b)=>a+b,0)/sl.length):null;
   const ws=[...ps.weights].sort((a,b)=>a.d<b.d?-1:1); const wkStart=ymd(weekDate(0)); const before=ws.filter(x=>x.d<wkStart), during=ws.filter(x=>x.d>=wkStart); const wchg=(before.length&&during.length)?during[during.length-1].w-before[before.length-1].w:null;
   const maint=p.maint||2300; const deficit=n?Math.round((maint-avgK)*n):0;
-  const catK={}; days.forEach(d=>{ const k=dayKeyFor(d.i)+(isVeg(d.i)?'v':'n')+(ps.eggsVeg?'e':'x'); (ps.days[k]||[]).forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; catK[it.cat]=(catK[it.cat]||0)+it.k*x.q; })); });
+  const catK={}; days.forEach(d=>{ const k=dayKeyFor(d.i); (ps.days[k]||[]).forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; catK[it.cat]=(catK[it.cat]||0)+it.k*x.q; })); });
   const snackAvg=n?Math.round(((catK.snack||0)+(catK.treat||0))/n):0; const stepsAvg=logs.length?Math.round(steps/logs.length):0; const stepsT=p.steps||8000;
   const tips=[];
   if(n<3) tips.push(n?`${n} day${n===1?'':'s'} logged so far. Three or more give a useful review.`:'Nothing logged this week yet.');
@@ -1352,7 +1364,7 @@ function renderWeek(){
   document.getElementById('wkTitle').textContent=P().name+(S.week===0?' · this week':S.week<0?' · '+Math.abs(S.week)+' week'+(S.week<-1?'s':'')+' ago':' · next week');
   const b=document.getElementById('wkBody'); b.innerHTML='';
   let sk=0,sp=0,nd=0; const ps=PS(); const todayIdx=(new Date().getDay()+6)%7;
-  DAYS.forEach((n,i)=>{ const key=dayKeyFor(i)+(isVeg(i)?'v':'n')+(ps.eggsVeg?'e':'x'); const plan=ps.days[key]; const items=[]; (plan||[]).forEach(m=>items.push(...m.items)); const logged=items.length>0; const t=tot(items); if(logged){ sk+=t.k; sp+=t.p; nd++; }
+  DAYS.forEach((n,i)=>{ const key=dayKeyFor(i); const plan=ps.days[key]; const items=[]; (plan||[]).forEach(m=>items.push(...m.items)); const logged=items.length>0; const t=tot(items); if(logged){ sk+=t.k; sp+=t.p; nd++; }
     const tr=document.createElement('tr'); tr.style.cursor='pointer'; tr.onclick=()=>{S.day=i;S.view='plan';render();};
     const p=P(); const kc = t.k<p.floor||t.k>p.target.k+300?'var(--red)':(t.k<p.target.k-150||t.k>p.target.k)?'var(--orange)':'var(--green)'; const pc = t.p<p.pMin?'var(--red)':t.p<p.target.p-10?'var(--orange)':'var(--green)';
     const isT=S.week===0&&i===todayIdx; const fut=S.week>0||(S.week===0&&i>todayIdx);
@@ -1547,9 +1559,10 @@ document.getElementById('guideClose').onclick=()=>document.getElementById('ovGui
 document.getElementById('ovGuide').onclick=e=>{ if(e.target.id==='ovGuide') document.getElementById('ovGuide').classList.remove('show'); };
 document.getElementById('setClose2').onclick=()=>document.getElementById('ovSet').classList.remove('show');
 document.getElementById('ovSet').onclick=e=>{ if(e.target.id==='ovSet') e.target.classList.remove('show'); };
-document.getElementById('allVeg').onchange=e=>{ const ps=PS(); if(e.target.checked){ ps.vegPrev=ps.vegDays.slice(); ps.allVeg=true; ps.allNonVeg=false; } else { ps.allVeg=false; if(Array.isArray(ps.vegPrev)){ ps.vegDays=ps.vegPrev.slice(); delete ps.vegPrev; } else if(ps.vegDays.length===7){ ps.vegDays=[]; } } save(); render(); };
-document.getElementById('allNonVeg').onchange=e=>{ PS().allNonVeg=e.target.checked; if(e.target.checked) PS().allVeg=false; save(); render(); };
-document.getElementById('eggsVeg').onchange=e=>{ PS().eggsVeg=e.target.checked; save(); render(); };
+function withRetemplate(fn){ const ti=(new Date().getDay()+6)%7; const days=S.week===0?[...new Set([S.day,ti])]:[S.day]; const before=days.map(d=>template(d)); fn(); days.forEach((d,i)=>retemplate(d,before[i])); }
+document.getElementById('allVeg').onchange=e=>{ withRetemplate(()=>{ const ps=PS(); if(e.target.checked){ ps.vegPrev=ps.vegDays.slice(); ps.allVeg=true; ps.allNonVeg=false; } else { ps.allVeg=false; if(Array.isArray(ps.vegPrev)){ ps.vegDays=ps.vegPrev.slice(); delete ps.vegPrev; } else if(ps.vegDays.length===7){ ps.vegDays=[]; } } }); save(); render(); };
+document.getElementById('allNonVeg').onchange=e=>{ withRetemplate(()=>{ PS().allNonVeg=e.target.checked; if(e.target.checked) PS().allVeg=false; }); save(); render(); };
+document.getElementById('eggsVeg').onchange=e=>{ withRetemplate(()=>{ PS().eggsVeg=e.target.checked; }); save(); render(); };
 document.getElementById('seafood').onchange=e=>{ PS().seafood=e.target.checked; save(); render(); };
 document.getElementById('rest').onchange=render;
 document.getElementById('resetDay').onclick=()=>{ const ps=PS(); Object.keys(ps.days).forEach(k=>{ if(k.startsWith(dayKeyFor(S.day))) delete ps.days[k]; }); save(); render(); document.getElementById('ovSet').classList.remove('show'); };
@@ -1583,7 +1596,7 @@ function xlsx(sheets){ const files=[];
 function exportRows(){ const me=S.who; const food=[['Date','Day','Person','Veg day','Meal','Item','Eat','Qty x','kcal','Protein g','Carbs g','Fat g']];
   const ck=[['Date','Person','Water ml','Steps','Bedtime (night before)','Wake up (that morning)','Sleep h']]; const wt=[['Date','Person','kg']]; const wl=[['Date','Person','Exercise','kg','Reps','Sets']];
   ['p1','p2'].forEach(who=>{ S.who=who; const ps=PS(); const name=PEOPLE[who].name;
-    tidy(ps); Object.keys(ps.days).sort().forEach(k=>{ const date=k.slice(0,10); if(!/^\d{4}-\d\d-\d\d/.test(date)) return; const dn=new Date(date+'T12:00').toLocaleDateString(undefined,{weekday:'short'}); const veg=k[10]==='v';
+    tidy(ps); Object.keys(ps.days).sort().forEach(k=>{ const date=k.slice(0,10); if(!/^\d{4}-\d\d-\d\d/.test(date)) return; const dn=new Date(date+'T12:00').toLocaleDateString(undefined,{weekday:'short'}); const di=(new Date(date+'T12:00').getDay()+6)%7; const veg=ps.allVeg||(!ps.allNonVeg&&(ps.vegDays||[]).includes(di));
       ps.days[k].forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; food.push([date,dn,name,veg?'Veg':'Non-veg',m.name,it.n,fmtG(it,x.q)||it.g,x.q,Math.round(it.k*x.q),Math.round(it.p*x.q),Math.round(it.c*x.q),Math.round(it.f*x.q)]); })); });
     Object.keys(ps.log||{}).sort().forEach(d=>{ const L=ps.log[d]; let h=''; if(L.bed&&L.wake){ h=+((((toMin(L.wake)-toMin(L.bed))+1440)%1440)/60).toFixed(1); } ck.push([d,name,(L.water||0)*250,L.steps?+L.steps:'',L.bed||'',L.wake||'',h]); });
     (ps.weights||[]).slice().sort((a,b)=>a.d<b.d?-1:1).forEach(w=>wt.push([w.d,name,w.w]));
