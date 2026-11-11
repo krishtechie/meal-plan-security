@@ -1,3 +1,4 @@
 data/*
-  !data/.htaccess
+!data/.htaccess
 .DS_Store
+config.php

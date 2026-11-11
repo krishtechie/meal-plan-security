@@ -680,3 +680,23 @@ button,.nav,.dayc,.cup,.ico,.tile,.chip,.opt,.copt,.fix,.wohd{-webkit-touch-call
 .futck{padding:4px 2px 2px}
 
 .ver{text-align:center;font-size:12px;color:var(--muted);margin:14px 0 4px}
+
+/* v15: settings sections, profiles editor */
+.sheet h3.sec{margin:26px 0 4px;padding-top:18px;border-top:1px solid var(--line)}
+.sheet .row2+.sub,.sheet .row2{margin-top:12px}
+.sheet .ver{margin:14px 0 2px}
+.btn.close.pri{margin-top:22px;font-size:15px}
+.pfwrap{display:grid;gap:14px;margin:4px 0 10px}
+.pfcard{background:var(--card2);border-radius:16px;padding:12px 14px 14px}
+.pfcard h4{margin:0 0 8px;font-size:15px}
+.pfgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.pff{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+.pff.wide{grid-column:1/-1;margin-top:8px}
+.pff input,.pff textarea{font:inherit;font-size:16px;font-weight:500;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%;box-sizing:border-box;-webkit-appearance:none}
+.pff textarea{resize:vertical;line-height:1.4}
+.pff input:focus,.pff textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+#ovProf .sheet{max-height:92dvh}
+@media (min-width:900px){.pfwrap{grid-template-columns:1fr 1fr}}
+.pre{flex-wrap:wrap}
+.pre button{flex:1 1 calc(50% - 6px);min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media (min-width:600px){.pre button{flex:1 1 calc(25% - 6px)}}

@@ -4,9 +4,10 @@
 // GET  api.php?a=get&who=p1          -> stored JSON for that person
 // POST api.php?a=put&who=p1          -> body = {data:{...}}; returns {ok:true, rev:N}
 // Every request needs header X-App-Key: <that person's password> (optionally X-App-User: p1|p2)
-require __DIR__ . '/config.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
+if (!file_exists(__DIR__ . '/config.php')) { http_response_code(503); echo json_encode(['ok' => false, 'error' => 'setup', 'hint' => 'open setup.php once to create config.php']); exit; }
+require __DIR__ . '/config.php';
 
 if (!is_dir(DATA_DIR)) { mkdir(DATA_DIR, 0700, true); }
 // Fix 6: data lives outside the web root. If DATA_DIR was moved, carry the old files over once (never the .htaccess).
@@ -33,7 +34,7 @@ $user = strtolower($_SERVER['HTTP_X_APP_USER'] ?? '');
 if ($user === '' && $key !== '') { foreach ($USERS as $acct => $hash) { if (password_verify($key, $hash)) { $user = $acct; break; } } if ($user === '') { $user = 'invalid'; } }
 
 // Fix 5: strict input validation. Only known actions and known accounts.
-if (!in_array($a, ['ping', 'get', 'put', 'rev', 'audit'], true)) { $a = 'unknown'; }
+if (!in_array($a, ['ping', 'get', 'put', 'rev', 'audit', 'profiles_put'], true)) { $a = 'unknown'; }
 if ($who !== '' && !array_key_exists($who, $USERS)) { $who = 'invalid'; }
 if ($user !== '' && !array_key_exists($user, $USERS)) { $user = 'invalid'; }
 if (strlen($key) > 200) { $key = ''; }
@@ -72,11 +73,50 @@ if ($a === 'ping') {
   audit($authed ? 'ok' : ($key === '' ? 'no_key' : 'bad_password'));
   $shared = count(array_unique(array_values($USERS))) === 1;   // one password for both: the app asks who is signing in
   $out = ['ok' => true, 'auth' => $authed, 'user' => $authed ? $user : null, 'shared' => $shared];
-  if ($authed && defined('APP_PROFILES') && is_array(APP_PROFILES)) { $out['profiles'] = APP_PROFILES; }   // names only after sign-in
+  if ($authed) { $pr = loadProfiles(); if ($pr) { $out['profiles'] = $pr; } }   // names and targets only after sign-in
   echo json_encode($out); exit;
 }
 if (!$authed) { fail(401, $key === '' ? 'no_key' : 'bad_password', 'bad password'); }
 if ($a === 'unknown') { fail(404, 'unknown_action', 'unknown action'); }
+// v15: profiles (names, targets, notes) live in DATA_DIR/profiles.json and are editable in the app after sign-in.
+// APP_PROFILES in config.php is only the starting point for installs that predate this.
+function profilesFile() { return DATA_DIR . '/profiles.json'; }
+function loadProfiles() {
+  $f = profilesFile();
+  if (file_exists($f)) { $j = json_decode(file_get_contents($f), true); if (is_array($j)) return $j; }
+  if (defined('APP_PROFILES') && is_array(APP_PROFILES)) return APP_PROFILES;
+  return null;
+}
+function validateProfiles($p) {
+  if (!is_array($p)) return 'profiles must be an object';
+  $num = ['kcal' => [800, 6000], 'protein' => [30, 400], 'floor' => [600, 6000], 'fatMax' => [10, 300], 'carbMax' => [20, 800], 'maint' => [1000, 7000], 'pMin' => [20, 400], 'kg' => [20, 300], 'goal' => [20, 300], 'steps' => [0, 50000], 'restCut' => [0, 500]];
+  foreach (['p1', 'p2'] as $k) {
+    if (!isset($p[$k]) || !is_array($p[$k])) return "missing $k";
+    foreach ($p[$k] as $f => $v) {
+      if ($f === 'name') { if (!is_string($v) || trim($v) === '' || mb_strlen($v) > 40) return "bad name for $k"; continue; }
+      if ($f === 'notesTitle') { if (!is_string($v) || mb_strlen($v) > 60) return "bad notes title for $k"; continue; }
+      if ($f === 'notes') { if (!is_array($v) || count($v) > 12) return "too many notes for $k"; foreach ($v as $n) { if (!is_string($n) || mb_strlen($n) > 200) return "bad note for $k"; } continue; }
+      if ($f === 'vegDays') { if (!is_array($v) || count($v) > 7) return "bad veg days for $k"; foreach ($v as $d) { if (!is_int($d) || $d < 0 || $d > 6) return "bad veg day for $k"; } continue; }
+      if ($f === 'sex') { if (!in_array($v, ['m', 'f', 'x'], true)) return "bad sex for $k"; continue; }
+      if (isset($num[$f])) { if (!is_numeric($v) || $v < $num[$f][0] || $v > $num[$f][1]) return "$f out of range for $k"; continue; }
+      return "unknown profile field $f";
+    }
+    if (!isset($p[$k]['name'])) return "name required for $k";
+  }
+  return null;
+}
+if ($a === 'profiles_put') {
+  if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail(405, 'method', 'POST required');
+  $body = json_decode(file_get_contents('php://input'), true);
+  $p = $body['profiles'] ?? null;
+  $err = validateProfiles($p);
+  if ($err) { audit('rejected'); fail(422, 'rejected', $err); }
+  $clean = [];
+  foreach (['p1', 'p2'] as $k) { $clean[$k] = []; foreach ($p[$k] as $f => $v) { if ($f === 'notes') { $clean[$k][$f] = array_values(array_map(fn($n) => trim(strip_tags($n)), $v)); } elseif (is_string($v)) { $clean[$k][$f] = trim(strip_tags($v)); } elseif ($f === 'vegDays') { $clean[$k][$f] = array_values($v); } else { $clean[$k][$f] = +$v; } } }
+  $tmp = profilesFile() . '.tmp'; file_put_contents($tmp, json_encode($clean, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX); rename($tmp, profilesFile());
+  audit('ok');
+  echo json_encode(['ok' => true, 'profiles' => $clean]); exit;
+}
 // Fix 4b: read the audit log through the API (signed in only). The file itself stays blocked from the web.
 if ($a === 'audit') {
   $n = max(20, min(500, (int)($_GET['n'] ?? 300)));

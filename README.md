@@ -7,7 +7,8 @@ Live instance: private. The code is public; the people, targets and data are not
 ## What's here
 
 - `index.html`, `app.js`, `app.css`, `sw.js`, `api.php`, `.htaccess`, `manifest.json`, `fonts/`, `splash/`, icons: the application
-- `config.example.php`: structure of the server config. The real `config.php` holds the password hash and the two people's profiles and is never committed
+- `setup.php`: first-run page. Creates `config.php` and the two profiles, then deletes itself
+- `config.example.php`: structure of the server config for a manual install. The real `config.php` holds the password hash and the data path and is never committed
 - `gen.php`: one-shot bcrypt hash generator. Uploaded, run once, deleted. Not deployed by `.cpanel.yml`
 - `data/.htaccess`: blocks web access to the data folder. The data files themselves are git-ignored
 - `reports/`: OWASP ZAP and securityheaders.com results, before and after each phase. Embedded response bodies have been removed from the HTML reports because they contained application source (see fix 9)
@@ -20,7 +21,7 @@ Live instance: private. The code is public; the people, targets and data are not
 - Front end: HTML, vanilla JS, self-hosted fonts, installable PWA with service worker, offline shell, iOS splash screens, light and dark theme
 - Back end: `api.php`, four actions (`ping`, `get`, `put`, `rev`), one JSON file per person, revision-checked merges so two phones never overwrite each other
 - Auth: password sent as a request header, verified against a bcrypt hash. One shared password or one per person, both supported
-- Identity: the code knows only `p1` and `p2`. Names, calorie and protein targets and personal notes live in `config.php` and are returned by `ping` only after a correct password
+- Identity: the code knows only `p1` and `p2`. Names, calorie and protein targets and personal notes live in `profiles.json` inside the data folder, are edited in the app (Settings → Profiles) and are returned by `ping` only after a correct password
 - Hosting: LiteSpeed on cPanel shared hosting, HTTPS via AutoSSL, deployed from this repo with cPanel Git Version Control
 
 ## Fixes, in order
@@ -132,7 +133,7 @@ The app shell (HTML, JS, CSS, fonts, icons, splash images) is cached for offline
 
 **Fix.**
 - The code refers only to `p1` and `p2`. Title, manifest, workout cues and sign-in screen are generic ("Meal Planner", "Person 1", "Person 2").
-- `config.php` holds `APP_PROFILES`: names, targets and notes. `ping` returns them only after a correct password. Unauthenticated `ping` returns nothing personal.
+- Names, targets and notes live server-side (`profiles.json` in the data folder; `APP_PROFILES` in `config.php` is accepted as a starting point for older installs). `ping` returns them only after a correct password. Unauthenticated `ping` returns nothing personal. Since v15 they are edited in the app and validated by `api.php` (field allow-list, ranges, tags stripped).
 - Old data files are renamed to the generic account ids on first request (`APP_LEGACY_FILES`), so no history is lost.
 - Embedded response bodies and oversized evidence cells were stripped from the three ZAP HTML reports and replaced with a note. Alert tables and header evidence are unchanged.
 - Caveat: earlier commits in this repo's history still contain the pre-v13 source. Rewriting history is the only way to remove that; for now the exposure is first names and nutrition targets, not credentials or data.
@@ -148,9 +149,19 @@ The app shell (HTML, JS, CSS, fonts, icons, splash images) is cached for offline
 - Strict validation broke a legitimate write on day one. Allow-lists need a test against real traffic.
 - Evidence can leak too. The scan reports that proved the fixes also carried the source they scanned.
 
+## Run it for your own household
+
+The app has no names, targets or household rules baked in. To host your own copy:
+
+1. Fork or clone this repo and deploy the app files to any PHP 7.4+ host with HTTPS (cPanel's Git Version Control works with the included `.cpanel.yml`; edit the deploy path).
+2. Upload `setup.php` and open it once in a browser. It asks for a shared password, two names and starting targets, writes `config.php` and `profiles.json`, and deletes itself.
+3. Open the app, sign in, pick who you are on each phone. Everything else (targets, notes, veg days, theme) is editable in Settings.
+
+`SETUP.md` has the longer version. Nothing personal ever goes into git: `config.php` and the data folder are ignored, and the data folder sits above the web root.
+
 ## Status
 
-All nine fixes done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live and readable in the app. Personal data served only after sign-in. Data stored outside the web root. Next: short-lived session tokens instead of the stored password, and removal of the one-time migration code.
+All nine fixes done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live and readable in the app. Personal data served only after sign-in and editable in the app. Data stored outside the web root. One-time migration code removed in v15. Next: short-lived session tokens instead of the stored password.
 
 ## Author
 
