@@ -161,7 +161,7 @@ function validateDoc($d, int $depth = 0): ?string {
   return 'bad type';
 }
 function validateShape(array $d): ?string {
-  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','templates','vegPrev','m3','m4','m5','m6','name','savedAt'];
+  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','templates','vegPrev','gen','m3','m4','m5','m6','name','savedAt'];
   foreach (array_keys($d) as $k) { if (!in_array($k, $allowed, true) && !preg_match('/^m\d{1,2}$/', (string)$k)) return "unknown field $k"; }
   foreach (($d['weights'] ?? []) as $w) {
     if (!is_array($w) || !isset($w['d'], $w['w'])) return 'bad weight entry';

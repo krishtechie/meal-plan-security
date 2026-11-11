@@ -1015,13 +1015,14 @@ function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.ad
 async function cloudPull(){
   setStatus('Syncing…');
   try{
-    for(const who of ['p1','p2']){ const r=await api('get',who); if(r.data){ CLOUD.rev[who]=r.rev; if(!CLOUD.dirty[who]) S.people[who]=r.data; } else if(S.people[who]){ CLOUD.dirty[who]=true; schedulePush(who,0); } }
+    for(const who of ['p1','p2']){ const r=await api('get',who); if(r.data){ CLOUD.rev[who]=r.rev; if(!CLOUD.dirty[who]||(r.data.gen||0)>((S.people[who]||{}).gen||0)){ S.people[who]=r.data; CLOUD.dirty[who]=false; } } else if(S.people[who]){ CLOUD.dirty[who]=true; schedulePush(who,0); } }
     loadAllCustoms(); saveLocal(); render(); setStatus('Synced','ok');
   }catch(e){ if(e.message==='auth'){ askKey('Wrong password. Try again.'); } else if(e.message==='locked'){ askKey('Too many wrong attempts. Wait 15 minutes.'); } else setStatus('Offline, saved on this device','warn'); }
 }
 function schedulePush(who,delay=700){ if(!CLOUD.on||!CLOUD.key||isLocked()) return; CLOUD.dirty[who]=true; clearTimeout(CLOUD.timer[who]); CLOUD.timer[who]=setTimeout(()=>cloudPush(who),delay); }
 // Merge a server copy into the local one. Local wins on the same key; everything else is kept from both sides.
-function mergeDoc(local,server){ if(!server) return local; const out=Object.assign({},server,local);
+function mergeDoc(local,server){ if(!server) return local; if((server.gen||0)>(local.gen||0)) return server;   // a server-side restore (higher generation) replaces the local copy outright
+  const out=Object.assign({},server,local);
   ['days','log','wlog','manual'].forEach(k=>{ out[k]=Object.assign({},server[k]||{},local[k]||{}); });
   const byD={}; (server.weights||[]).forEach(w=>byD[w.d]=w); (local.weights||[]).forEach(w=>byD[w.d]=w); out.weights=Object.values(byD).sort((a,b)=>a.d<b.d?-1:1);
   const byId={}; (server.customs||[]).forEach(c=>byId[c.id]=c); (local.customs||[]).forEach(c=>byId[c.id]=c); out.customs=Object.values(byId);
