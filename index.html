@@ -32,7 +32,7 @@
 <link rel="apple-touch-startup-image" href="splash/750x1334-light.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: light)">
 <link rel="apple-touch-startup-image" href="splash/750x1334-dark.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=45">
+<link rel="stylesheet" href="app.css?v=46">
 </head>
 <body>
 <div class="app">
@@ -170,55 +170,68 @@
   </div>
 </div>
 <div class="ov" id="ovProf">
-  <div class="sheet">
-    <h3>Profiles</h3>
-    <div class="sub">Targets drive the gauge, warnings and suggestions. Notes show on that person's Plan tab.</div>
+  <div class="sheet ios">
+    <div class="shead"><button class="sdone plain" id="pfCancel">Cancel</button><span class="stitle">Profiles</span><button class="sdone" id="pfSave">Save</button></div>
+    <div class="gf top">Targets drive the gauge, warnings and suggestions. Notes show on that person's Plan tab.</div>
     <div class="pfwrap" id="pfForm"></div>
-    <div class="sub" id="pfMsg"></div>
-    <div class="row2"><button class="btn q" id="pfCancel">Cancel</button><button class="btn pri" id="pfSave">Save profiles</button></div>
+    <div class="gf" id="pfMsg"></div>
   </div>
 </div>
 <div class="ov" id="ovAudit">
-  <div class="sheet">
-    <h3>Activity log</h3>
-    <div class="sub" id="auSub">Loading…</div>
+  <div class="sheet ios">
+    <div class="shead"><span class="stitle">Activity</span><button class="sdone" id="auClose">Done</button></div>
+    <div class="gf top" id="auSub">Loading…</div>
     <div class="austats" id="auStats"></div>
     <div class="aufil" id="auFil"><button data-f="all" class="on">All</button><button data-f="signin">Sign-ins</button><button data-f="problem">Problems</button><button data-f="save">Saves</button></div>
     <div class="alog" id="auList"></div>
-    <div class="row2"><button class="btn q" id="auRefresh">Refresh</button><button class="btn q" id="auCsv">Download CSV</button></div>
-    <button class="btn close q" id="auClose">Done</button>
+    <div class="grp top"><button class="row act" id="auRefresh">Refresh</button><button class="row act" id="auCsv">Download CSV</button></div>
   </div>
 </div>
 <div class="ov" id="ovSet">
-  <div class="sheet">
-    <h3>Settings for <span id="whoName"></span></h3>
-    <div class="sub">Each person has their own. Changes sync to the server.</div>
-    <div class="tgl" data-s="s10"><span>Appearance<small>System follows your phone. Light and dark force it.</small></span><div class="theme" id="themeSeg"><button data-theme="system">System</button><button data-theme="light">Light</button><button data-theme="dark">Dark</button></div></div>
-    <div class="tgl" data-s="s10"><span>Veg days<small>Tap a day to switch it between veg and non-veg.</small></span><div class="vdays" id="vegDays"></div></div>
-    <label class="tgl"><span>Veg every day<small>For a veg-only stretch or a fasting period. Overrides the days above while on.</small></span><span class="swt"><input type="checkbox" id="allVeg"><i></i></span></label>
-    <label class="tgl"><span>Non-veg every day<small>Non-veg at lunch and dinner all week. Overrides the days above while on.</small></span><span class="swt"><input type="checkbox" id="allNonVeg"><i></i></span></label>
-    <label class="tgl"><span>Eggs allowed on veg days<small>Off by default: no eggs or non-veg anywhere on a veg day. Turn on if this person eats eggs on veg days.</small></span><span class="swt"><input type="checkbox" id="eggsVeg"><i></i></span></label>
-    <label class="tgl"><span>Seafood available<small>Adds fish and prawn options to non-veg days.</small></span><span class="swt"><input type="checkbox" id="seafood"><i></i></span></label>
-    <label class="tgl"><span>Rest day<small>Lowers today's calorie target a little.</small></span><span class="swt"><input type="checkbox" id="rest"><i></i></span></label>
-    <div class="row2"><button class="btn q" id="resetDay">Reset this day</button><button class="btn x" id="resetAll">Reset all days</button></div>
-    <h3 class="sec" data-s="s11">Profiles</h3>
-    <div class="sub">Names, calorie and protein targets, weight goals, step goals and personal notes for both people. Saved on the server, shown only after sign-in.</div>
-    <div class="row2"><button class="btn q" id="openProf">Edit profiles</button></div>
-    <h3 class="sec" data-s="s11">Sync</h3>
-    <div class="sub" id="syncInfo"></div>
-    <div class="row2"><button class="btn q" id="syncNow">Sync now</button><button class="btn x" id="syncOut">Sign out on this device</button></div>
-    <h3 class="sec" data-s="s11">Export</h3>
-    <div class="sub">Download the food log, check-ins, weight history and workouts for both people as an Excel or CSV file. Opens in Excel, Numbers and Google Sheets.</div>
-    <div class="row2"><button class="btn q" id="xlsExport">Export to Excel</button><button class="btn q" id="csvExport">Export CSV</button></div>
-    <div class="sub" id="bkMsg" data-s="s13"></div>
-    <h3 class="sec" data-s="s11">Activity</h3>
-    <div class="sub">Every sign-in, sync and save on the server, with the result and which device it came from. Read-only.</div>
-    <div class="row2"><button class="btn q" id="openAudit">View activity log</button></div>
+  <div class="sheet ios">
+    <div class="shead"><span class="stitle">Settings · <span id="whoName"></span></span><button class="sdone" id="setClose2">Done</button></div>
+    <div class="gh">General</div>
+    <div class="grp">
+      <div class="row stack" data-s="s10"><span>Appearance</span><div class="theme" id="themeSeg"><button data-theme="system">System</button><button data-theme="light">Light</button><button data-theme="dark">Dark</button></div></div>
+    </div>
+    <div class="gf">System follows the phone. Light and dark force it.</div>
+    <div class="gh">Food days</div>
+    <div class="grp">
+      <div class="row stack" data-s="s10"><span>Veg days</span><div class="vdays" id="vegDays"></div></div>
+      <label class="row"><span>Veg every day<small>Overrides the days above while on.</small></span><span class="swt"><input type="checkbox" id="allVeg"><i></i></span></label>
+      <label class="row"><span>Non-veg every day<small>Overrides the days above while on.</small></span><span class="swt"><input type="checkbox" id="allNonVeg"><i></i></span></label>
+      <label class="row"><span>Eggs on veg days</span><span class="swt"><input type="checkbox" id="eggsVeg"><i></i></span></label>
+      <label class="row"><span>Seafood available</span><span class="swt"><input type="checkbox" id="seafood"><i></i></span></label>
+      <label class="row"><span>Rest day today<small>Lowers today's calorie target a little.</small></span><span class="swt"><input type="checkbox" id="rest"><i></i></span></label>
+    </div>
+    <div class="gf">Tap a day to switch it between veg and non-veg. Eggs stay off on veg days unless turned on. Seafood adds fish and prawn options to non-veg days.</div>
+    <div class="grp">
+      <button class="row act" id="resetDay">Reset this day to the plan</button>
+      <button class="row act red" id="resetAll">Reset all days</button>
+    </div>
+    <div class="gh">Profiles</div>
+    <div class="grp"><button class="row navr" id="openProf"><span>Edit profiles</span><i class="chev"></i></button></div>
+    <div class="gf">Names, calorie and protein targets, weight and step goals, and notes for both people. Saved on the server, shown only after sign-in.</div>
+    <div class="gh">Sync</div>
+    <div class="grp">
+      <button class="row act" id="syncNow">Sync now</button>
+      <button class="row act red" id="syncOut">Sign out on this device</button>
+    </div>
+    <div class="gf" id="syncInfo"></div>
+    <div class="gh">Export</div>
+    <div class="grp">
+      <button class="row act" id="xlsExport">Export to Excel</button>
+      <button class="row act" id="csvExport">Export CSV</button>
+    </div>
+    <div class="gf">Food log, check-ins, weight history and workouts for both people. Opens in Excel, Numbers and Google Sheets.<span id="bkMsg" data-s="s13"></span></div>
+    <div class="gh">Activity</div>
+    <div class="grp"><button class="row navr" id="openAudit"><span>View activity log</span><i class="chev"></i></button></div>
+    <div class="gf">Every sign-in, sync and save on the server, with the result and which device it came from.</div>
     <button class="btn close pri" id="setClose">Done</button>
-    <div class="sub ver" id="appVer">Meal Planner v15.0.0</div>
+    <div class="ver" id="appVer">Meal Planner v15.1.0</div>
   </div>
 </div>
 
-<script src="app.js?v=45" defer></script>
+<script src="app.js?v=46" defer></script>
 </body>
 </html>

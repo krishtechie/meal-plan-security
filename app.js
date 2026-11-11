@@ -1546,6 +1546,7 @@ document.getElementById('openGuide').onclick=()=>document.getElementById('ovGuid
 document.getElementById('guideClose').onclick=()=>document.getElementById('ovGuide').classList.remove('show');
 document.getElementById('ovGuide').onclick=e=>{ if(e.target.id==='ovGuide') document.getElementById('ovGuide').classList.remove('show'); };
 document.getElementById('setClose').onclick=()=>document.getElementById('ovSet').classList.remove('show');
+document.getElementById('setClose2').onclick=()=>document.getElementById('ovSet').classList.remove('show');
 document.getElementById('ovSet').onclick=e=>{ if(e.target.id==='ovSet') e.target.classList.remove('show'); };
 document.getElementById('allVeg').onchange=e=>{ PS().allVeg=e.target.checked; if(e.target.checked) PS().allNonVeg=false; save(); render(); };
 document.getElementById('allNonVeg').onchange=e=>{ PS().allNonVeg=e.target.checked; if(e.target.checked) PS().allVeg=false; save(); render(); };
@@ -1555,7 +1556,7 @@ document.getElementById('rest').onchange=render;
 document.getElementById('resetDay').onclick=()=>{ const ps=PS(); Object.keys(ps.days).forEach(k=>{ if(k.startsWith(dayKeyFor(S.day))) delete ps.days[k]; }); save(); render(); document.getElementById('ovSet').classList.remove('show'); };
 document.getElementById('resetAll').onclick=()=>{ PS().days={}; save(); render(); document.getElementById('ovSet').classList.remove('show'); };
 function bkString(){ return JSON.stringify({app:'kl-meal-v2',exported:new Date().toISOString(),people:S.people}); }
-function bkMsg(t,ok){ const m=document.getElementById('bkMsg'); m.textContent=t; m.style.color=ok?'var(--green)':'var(--rose)'; }
+function bkMsg(t,ok){ const m=document.getElementById('bkMsg'); m.textContent=t?' '+t:''; m.style.color=ok?'var(--green)':'var(--rose)'; }
 // ---- Export: minimal XLSX writer (store-only zip, no library) ----
 const CRC_T=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
 function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_T[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
