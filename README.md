@@ -35,7 +35,7 @@ Live instance: private. The code is public; the people, targets and data are not
 | 4 | Audit log of every read and write | A09 Security Logging and Monitoring Failures | done |
 | 4b | Activity screen in the app: the audit log readable after sign-in, file still blocked from the web | A09 Security Logging and Monitoring Failures | done |
 | 5 | Strict validation of the request body | A03 Injection | done |
-| 6 | Data, backups and logs moved outside the web root | A05 Security Misconfiguration | planned |
+| 6 | Data, backups and logs moved outside the web root | A05 Security Misconfiguration | done |
 | 7 | Per-account credentials and per-account lockout | A01 Broken Access Control | done |
 | 8 | Service worker never caches the API; `worker-src 'self'` in CSP | A05 Security Misconfiguration | done |
 | 9 | Personal data removed from the public code and reports; served from server config after sign-in | A01 Broken Access Control, A04 Insecure Design | done |
@@ -103,6 +103,14 @@ Rejections return `422` with the reason and are logged as `rejected`. The client
 
 **Lesson.** The first deploy of fix 5 rejected real writes: a client-side migration flag was not on the allow-list. Strict validation needs a test run against live data before it is trusted.
 
+### Fix 6: data outside the web root
+
+**Problem.** `data/` sat inside the site folder, protected only by `data/.htaccess`. One mis-deploy, a server switch that ignores `.htaccess`, or a hosting change and every JSON file is one URL away.
+
+**Fix.** `DATA_DIR` in `config.php` now points above the web root (`/home/USER/meal-data`), created with mode 0700 on first request. No URL can reach it whatever the server config. `api.php` moves the existing JSON and log files from the old folder on the first request after the change, so nothing is lost and no manual step is needed. `data/.htaccess` stays as a second layer in case someone keeps the old path.
+
+**Also in this release.** Future dates are read-only (the plan is shown, nothing can be logged, check-in and weigh-in are closed), so a stray tap can never create a record for a day that has not happened. Weigh-in dates are capped at today on both client and server validation paths.
+
 ### Fix 7: per-account credentials and per-account lockout
 
 **Problem.** One shared password meant one credential to leak, no way to revoke one person without resetting both, and the per-IP lockout could be bypassed by rotating IPs.
@@ -142,7 +150,7 @@ The app shell (HTML, JS, CSS, fonts, icons, splash images) is cached for offline
 
 ## Status
 
-Fixes 1 to 5 and 7 to 9 done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live. Personal data served only after sign-in. Open: fix 6 (move `data/` outside the web root; currently protected by `.htaccess` only).
+All nine fixes done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live and readable in the app. Personal data served only after sign-in. Data stored outside the web root. Next: short-lived session tokens instead of the stored password, and removal of the one-time migration code.
 
 ## Author
 

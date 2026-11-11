@@ -45,10 +45,13 @@ REQUIREMENTS
   signing in, set the folder permissions to 755 in File Manager.
 
 HOW DATA IS KEPT
-  data/p1.json and data/p2.json          - current state
-  data/backup-p1-YYYY-MM-DD.json         - automatic daily backup copies
-  data/audit.log                         - one line per API request
-  All are blocked from the web by .htaccess; only api.php reads them.
+  DATA_DIR in config.php, by default /home/USER/meal-data, OUTSIDE the
+  site folder so no URL can reach it:
+    p1.json and p2.json                  - current state
+    backup-p1-YYYY-MM-DD.json            - automatic daily backup copies
+    audit.log                            - one line per API request
+  If you upgrade from an install that used ./data, the files are moved
+  over automatically on the first request. Only api.php reads them.
   Upgrading from an older install: set APP_LEGACY_FILES in config.php to
   map the old file names to p1 and p2; they are renamed on first request.
   To back up, download the data folder from File Manager, or use

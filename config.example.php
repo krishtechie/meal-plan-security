@@ -16,4 +16,9 @@ define('APP_PROFILES', [
 // define('APP_LEGACY_FILES', ['p1' => 'oldname1', 'p2' => 'oldname2']);
 // Old single shared password; still honoured if APP_USERS is not defined.
 define('APP_PASSWORD_HASH', '$2y$10$REPLACE_WITH_OUTPUT_OF_password_hash');
-define('DATA_DIR', __DIR__ . '/data');
+// Fix 6: keep the data OUTSIDE the web root so no URL can ever reach it, even if .htaccess is lost.
+// On cPanel the site folder is e.g. /home/USER/meal.example.com, so this puts data in /home/USER/meal-data.
+// Existing files in the old ./data folder are moved over automatically on the first request.
+define('DATA_DIR', dirname(__DIR__) . '/meal-data');
+// Old location, if you prefer to keep it inside the site (protected by data/.htaccess only):
+// define('DATA_DIR', __DIR__ . '/data');

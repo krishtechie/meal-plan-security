@@ -8,7 +8,12 @@ require __DIR__ . '/config.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-if (!is_dir(DATA_DIR)) { mkdir(DATA_DIR, 0755, true); }
+if (!is_dir(DATA_DIR)) { mkdir(DATA_DIR, 0700, true); }
+// Fix 6: data lives outside the web root. If DATA_DIR was moved, carry the old files over once (never the .htaccess).
+$oldDir = __DIR__ . '/data';
+if (is_dir($oldDir) && realpath($oldDir) !== realpath(DATA_DIR)) {
+  foreach (glob($oldDir . '/*.{json,log}', GLOB_BRACE) as $f) { $b = basename($f); if (is_file($f) && !file_exists(DATA_DIR . "/$b")) { @rename($f, DATA_DIR . "/$b"); } }
+}
 
 // Fix 7: one password per person. Accounts are p1 and p2; names and targets live in config.php (APP_PROFILES), never in this repo.
 $USERS = defined('APP_USERS') && is_array(APP_USERS) ? APP_USERS
@@ -116,7 +121,7 @@ function validateDoc($d, int $depth = 0): ?string {
   return 'bad type';
 }
 function validateShape(array $d): ?string {
-  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','m3','m4','m5','m6','name','savedAt'];
+  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','templates','m3','m4','m5','m6','name','savedAt'];
   foreach (array_keys($d) as $k) { if (!in_array($k, $allowed, true) && !preg_match('/^m\d{1,2}$/', (string)$k)) return "unknown field $k"; }
   foreach (($d['weights'] ?? []) as $w) {
     if (!is_array($w) || !isset($w['d'], $w['w'])) return 'bad weight entry';
@@ -132,6 +137,17 @@ function validateShape(array $d): ?string {
         if (!is_array($it) || !isset($it['id']) || !preg_match('/^[a-z0-9_]{1,40}$/', (string)$it['id'])) return 'bad item id';
         if (isset($it['q']) && (!is_numeric($it['q']) || $it['q'] < 0 || $it['q'] > 50)) return 'bad quantity';
       }
+    }
+  }
+  $tp = $d['templates'] ?? [];
+  if (!is_array($tp) || count($tp) > 50) return 'too many templates';
+  foreach ($tp as $t) {
+    if (!is_array($t) || !isset($t['id'], $t['name'], $t['meal'], $t['items']) || !preg_match('/^[a-z0-9_]{1,40}$/', (string)$t['id'])) return 'bad template';
+    if (!is_string($t['name']) || mb_strlen($t['name']) > 60 || !is_string($t['meal']) || mb_strlen($t['meal']) > 40) return 'bad template name';
+    if (!is_array($t['items']) || count($t['items']) > 40) return 'bad template items';
+    foreach ($t['items'] as $it) {
+      if (!is_array($it) || !isset($it['id']) || !preg_match('/^[a-z0-9_]{1,40}$/', (string)$it['id'])) return 'bad template item';
+      if (isset($it['q']) && (!is_numeric($it['q']) || $it['q'] < 0 || $it['q'] > 50)) return 'bad template quantity';
     }
   }
   foreach (($d['customs'] ?? []) as $c) {

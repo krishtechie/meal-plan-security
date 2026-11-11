@@ -1016,6 +1016,7 @@ function mergeDoc(local,server){ if(!server) return local; const out=Object.assi
   ['days','log','wlog','manual'].forEach(k=>{ out[k]=Object.assign({},server[k]||{},local[k]||{}); });
   const byD={}; (server.weights||[]).forEach(w=>byD[w.d]=w); (local.weights||[]).forEach(w=>byD[w.d]=w); out.weights=Object.values(byD).sort((a,b)=>a.d<b.d?-1:1);
   const byId={}; (server.customs||[]).forEach(c=>byId[c.id]=c); (local.customs||[]).forEach(c=>byId[c.id]=c); out.customs=Object.values(byId);
+  const byT={}; (server.templates||[]).forEach(t=>byT[t.id]=t); (local.templates||[]).forEach(t=>byT[t.id]=t); out.templates=Object.values(byT);
   return out; }
 async function cloudPush(who){ if(CLOUD.busy[who]){ schedulePush(who,500); return; } CLOUD.busy[who]=true; setStatus('Saving…');
   try{ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ const r=await api('get',who); if(r.data){ S.people[who]=mergeDoc(S.people[who],r.data); loadAllCustoms(); saveLocal(); render(); } }
@@ -1032,7 +1033,7 @@ function saveLocal(){ try{ localStorage.setItem('kl-meal-v2',JSON.stringify({peo
 function save(){ saveLocal(); schedulePush(S.who); }
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
 function P(){ return PEOPLE[S.who]; }
-function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=[1,4,5]; if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } if(!ps.customs) ps.customs=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
+function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=[1,4,5]; if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } if(!ps.customs) ps.customs=[]; if(!ps.templates) ps.templates=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
 function loadAllCustoms(){ Object.values(S.people).forEach(ps=>(ps.customs||[]).forEach(c=>{ if(!F[c.id]) F[c.id]=c; })); }
 function isVeg(d=S.day){ const ps=PS(); return ps.allVeg || (!ps.allNonVeg && ps.vegDays.includes(d)); }
 function toggleVegDay(d){ const ps=PS(); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=[0,1,2,3,4,5,6]; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); save(); render(); }
@@ -1043,6 +1044,9 @@ function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = ve
 function fresh(d){ const isToday=ymd(weekDate(d))===ymd(new Date()); return isToday ? template(d) : P().meals.map(m=>({name:m.name,time:m.time,items:[]})); }
 function fillTemplate(d=S.day){ const ps=PS(); const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); ps.manual=ps.manual||{}; ps.manual[dayKeyFor(d)+(isVeg(d)?'v':'n')+(ps.eggsVeg?'e':'x')]=1; save(); render(); }
 function dayKeyFor(d){ return ymd(weekDate(d)); }
+function isFuture(d=S.day){ return ymd(weekDate(d))>ymd(new Date()); }
+function yesterdayPos(){ const t=new Date(); const dow=(t.getDay()+6)%7; return dow===0?{week:-1,day:6}:{week:0,day:dow-1}; }
+function itemsOn(week,day){ const sw=S.week; S.week=week; const ps=PS(); const k=dayKeyFor(day)+(isVeg(day)?'v':'n')+(ps.eggsVeg?'e':'x'); const plan=ps.days[k]; S.week=sw; const items=[]; (plan||[]).forEach(m=>items.push(...m.items)); return items; }
 function sameAsTemplate(plan,d){ const t=template(d); return JSON.stringify(plan.map(m=>m.items))===JSON.stringify(t.map(m=>m.items)); }
 function pruneUntouched(ps){ if(ps.m6) return; const today=ymd(new Date()); const keep=ps.manual||{};
   Object.keys(ps.days).forEach(k=>{ const date=k.slice(0,10); if(date===today||!/^\d{4}-\d\d-\d\d$/.test(date)) return; const idx=(new Date(date+'T12:00').getDay()+6)%7; if(keep[k]) return; try{ if(sameAsTemplate(ps.days[k],idx)) delete ps.days[k]; }catch(e){} }); ps.m4=1; ps.m6=1; }
@@ -1058,7 +1062,7 @@ function tot(items){ const t={k:0,p:0,c:0,f:0}; items.forEach(x=>{ const it=F[x.
 function tagHtml(t){ return t==='v'?'<em>veg</em>':t==='e'?'<em class="e">egg</em>':t==='n'?'<em class="n">non-veg</em>':t==='t'?'<em data-s="s14">treat</em>':t==='tn'?'<em class="n">treat, non-veg</em>':'<em class="e">treat, egg</em>'; }
 function pill(t){ return t==='v'?'v':t==='e'||t==='te'?'e':t==='n'||t==='tn'?'n':'t'; }
 function baseOf(it){ if(!it.g) return null; let m=it.g.match(/(\d+(?:\.\d+)?)\s*(g|ml)\b/); if(m) return {n:+m[1],unit:m[2],step:m[2]==='ml'?50:10}; m=it.g.match(/^(\d+(?:\.\d+)?)\b/); if(m) return {n:+m[1],unit:'pcs',step:1}; if(/^half\b/i.test(it.g)) return {n:0.5,unit:'pcs',step:0.5}; return null; }
-function fmtG(it,q){ if(!it.g) return q===1?'':q+' x'; if(q===1) return it.g; if(/\d+\s*(g|ml)\b/.test(it.g)) return it.g.replace(/(\d+(?:\.\d+)?)\s*(g|ml)\b/g,(m,a,u)=>Math.round(+a*q)+' '+u); const b=baseOf(it); if(b&&b.unit==='pcs') return it.g.replace(/^(\d+(?:\.\d+)?|half)\b/i,()=>String(+(b.n*q).toFixed(1))); return q+' x '+it.g; }
+function fmtG(it,q){ if(!it.g) return q===1?'':q+' x'; if(q===1) return it.g; const pm=it.g.match(/^(\d+(?:\.\d+)?)(\s.*)?\((\d+(?:\.\d+)?)\s*(g|ml)\)\s*$/); if(pm){ const cnt=+(+pm[1]*q).toFixed(1); return (cnt===0.5?'½':cnt===1.5?'1½':String(cnt))+(pm[2]||' ')+'('+Math.round(+pm[3]*q)+' '+pm[4]+')'; } const b0=baseOf(it); if(b0&&b0.unit==='pcs'&&/^\d/.test(it.g)) return it.g.replace(/^(\d+(?:\.\d+)?)\b/,()=>String(+(b0.n*q).toFixed(1))).replace(/\((\d+(?:\.\d+)?)\s*(g|ml)\)/,(m,a,u)=>'('+Math.round(+a*q)+' '+u+')'); if(/\d+\s*(g|ml)\b/.test(it.g)) return it.g.replace(/(\d+(?:\.\d+)?)\s*(g|ml)\b/g,(m,a,u)=>Math.round(+a*q)+' '+u); const b=baseOf(it); if(b&&b.unit==='pcs') return it.g.replace(/^(\d+(?:\.\d+)?|half)\b/i,()=>String(+(b.n*q).toFixed(1))); return q+' x '+it.g; }
 
 // ================= RENDER =================
 let _lastView=null,_lastDay=null;
@@ -1094,14 +1098,17 @@ function render(){
   requestAnimationFrame(()=>window.scrollTo(0,_sy));
 }
 function renderPlan(){
-  const ps=PS(); const plan=dayPlan();
+  const ps=PS(); const plan=isFuture()?template(S.day):dayPlan();   // future days show the suggested plan, read-only, never stored
   document.getElementById('title').textContent=P().name+' · '+FULL[S.day];
   const other=S.who==='p1'?'p2':'p1'; const cb=document.getElementById('copyDay'); cb.textContent='Copy to '+PEOPLE[other].name; cb.title='Give '+PEOPLE[other].name+' the same meals, scaled to their portions';
   cb.onclick=()=>{ if(!confirm(`Replace ${PEOPLE[other].name}'s ${FULL[S.day]} with what ${P().name} ate, portions scaled to ${PEOPLE[other].name}'s target? Non-veg and eggs are dropped on ${PEOPLE[other].name}'s veg days.`)) return; const n=copyDayTo(other); schedulePush(other); alert(`${n} items copied to ${PEOPLE[other].name}. Tap ${PEOPLE[other].name} at the top to review.`); };
   const sw=document.getElementById('daySwitch'); sw.className='daysw'+(isVeg()?' veg':''); sw.textContent = isVeg() ? 'Veg day · tap for non-veg' : 'Non-veg day · tap for veg'; sw.onclick=()=>toggleVegDay(S.day);
   document.getElementById('subtitle').textContent = isVeg() ? (ps.allVeg?'Veg month is on. ':'Veg day. ')+'Protein from paneer, pappu, Greek yogurt, soya, tofu and whey'+(ps.eggsVeg?' (eggs allowed).':' (no eggs).') : (ps.allNonVeg?'Non-veg every day is on. ':'Non-veg day. ')+'Chicken at lunch and dinner, same dishes for both, portions scaled to each target.';
   const n=document.getElementById('pnotes'); n.innerHTML=P().notes||''; n.style.display=P().notes?'block':'none';
-  const wrap=document.getElementById('meals'); wrap.innerHTML=''; const all=[];
+  const wrap=document.getElementById('meals'); wrap.innerHTML=''; const all=[]; const fut=isFuture(); const todayIdx=(new Date().getDay()+6)%7; const isToday=S.week===0&&S.day===todayIdx;
+  cb.style.display=fut?'none':'';
+  if(isToday){ const y=yesterdayPos(); const yItems=itemsOn(y.week,y.day); const dis=localStorage.getItem('kl-ydis')===ymd(new Date()); if(!yItems.length&&!dis){ const yd=new Date(); yd.setDate(yd.getDate()-1); wrap.innerHTML+=`<div class="ynote"><span>Yesterday (${yd.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}) has nothing logged.</span><button class="btn q" id="goY">Log yesterday</button><button class="btn q dim" id="disY" aria-label="Dismiss">×</button></div>`; }
+    if(todayIdx===0){ const rv=reviewHtml(-1,'Last week in review'); if(rv) wrap.innerHTML+=rv; } }
   const dayP=plan.reduce((n,m)=>n+tot(m.items).p,0); const dayOK=dayP>=P().target.p-10;
   plan.forEach((m,mi)=>{
     const mt=tot(m.items); all.push(...m.items);
@@ -1110,14 +1117,18 @@ function renderPlan(){
     const wo=WORKOUTS.find(x=>x.day===S.day); const mname=/^gym$/i.test(m.name.trim())&&wo?`Gym · ${wo.name}`:m.name;
     const share=mealShare(m.name); const ptgt=share?Math.round(P().target.p*share):0; const pc = !ptgt?'var(--muted)':(dayOK||mt.p>=ptgt-3)?'var(--mint)':mt.p>=ptgt*0.7?'var(--amber)':'var(--rose)';
     const mcat=/gym/i.test(m.name)?'gym':/breakfast/i.test(m.name)?'bf':/waking/i.test(m.name)?'drink':/lunch|dinner/i.test(m.name)?'prot':'snack';
-    let html=`<div class="hd"><span class="ico ${mcat} tile">${ICON[mcat]||ICON.mine}</span><div class="hdt"><b>${mname}</b><span><em>${tshort}</em> · ${mt.k} kcal${ptgt?` · <b class="pcol" data-c="${pc}">${mt.p} / ${ptgt} g protein</b>`:''}</span></div><button class="btn addr" data-a="add" data-mi="${mi}" title="Add food" aria-label="Add food to ${m.name}">+</button></div>`;
+    let html=`<div class="hd"><span class="ico ${mcat} tile">${ICON[mcat]||ICON.mine}</span><div class="hdt"><b>${mname}</b><span><em>${tshort}</em> · ${mt.k} kcal${ptgt?` · <b class="pcol" data-c="${pc}">${mt.p} / ${ptgt} g protein</b>`:''}</span></div>${fut?'':`<button class="btn addr" data-a="add" data-mi="${mi}" title="Add food" aria-label="Add food to ${m.name}">+</button>`}</div>`;
     m.items.forEach((x,ii)=>{ const it=F[x.id]; if(!it) return;
       html+=`<div class="item" data-cat="${it.cat}">${ic(it.cat)}<div><div class="n">${it.n}</div><div class="eat">Eat <b>${fmtG(it,x.q)||'as listed'}</b> · ${Math.round(it.k*x.q)} kcal</div><div class="chips"><span class="chip p">Protein ${Math.round(it.p*x.q)} g</span><span class="chip c">Carbs ${Math.round(it.c*x.q)} g</span><span class="chip f">Fat ${Math.round(it.f*x.q)} g</span>${tagHtml(it.t)}</div></div>
-        <div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div></div>`; });
-    if(!m.items.length){ const y=yesterdayMeal(mi); html+=`<div class="addrow"><button class="btn add" data-a="add" data-mi="${mi}">+ Add food</button>${y?`<button class="btn add yd" data-a="yday" data-mi="${mi}" title="${y.map(x=>F[x.id]?F[x.id].n:'').join(', ')}">↺ Same as yesterday</button>`:''}</div>`; }
+        ${fut?'':`<div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div>`}</div>`; });
+    if(fut){ if(!m.items.length) html+=`<div class="addrow dim"><span class="note">Nothing planned</span></div>`; }
+    else if(!m.items.length){ const y=yesterdayMeal(mi); const tp=(ps.templates||[]).filter(t=>t.meal.toLowerCase()===m.name.toLowerCase()); html+=`<div class="addrow"><button class="btn add" data-a="add" data-mi="${mi}">+ Add food</button>${y?`<button class="btn add yd" data-a="yday" data-mi="${mi}" title="${y.map(x=>F[x.id]?F[x.id].n:'').join(', ')}">↺ Same as yesterday</button>`:''}${tp.length?`<button class="btn add yd" data-a="usual" data-mi="${mi}" title="${tp[0].name}">☆ ${tp.length===1?tp[0].name:'My usual'}</button>`:''}</div>`; }
+    else if(!/^gym$/i.test(m.name.trim())&&!/waking/i.test(m.name)){ html+=`<div class="tplrow"><button class="btn q" data-a="savetpl" data-mi="${mi}">☆ Save as my usual ${m.name.replace(/ \(.*\)/,'').toLowerCase()}</button></div>`; }
     box.innerHTML=html; wrap.appendChild(box);
   });
   wrap.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>action(b.dataset.a,+b.dataset.mi,+b.dataset.ii));
+  const gy=document.getElementById('goY'); if(gy) gy.onclick=()=>{ const y=yesterdayPos(); S.week=y.week; S.day=y.day; render(); window.scrollTo(0,0); };
+  const dy=document.getElementById('disY'); if(dy) dy.onclick=()=>{ localStorage.setItem('kl-ydis',ymd(new Date())); render(); };
   wrap.querySelectorAll('input.amt').forEach(inp=>{ inp.onchange=()=>{ const mi=+inp.dataset.mi, ii=+inp.dataset.ii; const x=plan[mi].items[ii]; const b=baseOf(F[x.id]); const v=parseFloat(inp.value); if(b&&v>0){ x.q=+(v/b.n).toFixed(3); save(); render(); } else render(); }; });
   wrap.querySelectorAll('.pcol').forEach(el=>{ el.style.color=el.dataset.c; });
   const T=tot(all); const rest=document.getElementById('rest').checked; const tk=P().target.k-(rest?P().restCut:0); const tp=P().target.p; const maint=P().maint;
@@ -1134,13 +1145,13 @@ function renderPlan(){
     const G={ok:['#30d158','#8ee6a4'],low:['#ff9500','#ffd60a'],over:['#ff2d55','#ff8a65'],empty:['#c7c7cc','#c7c7cc']}[kcls]||['#30d158','#8ee6a4'];
     return `<svg class="gauge" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="gg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="${G[0]}"/><stop offset="1" stop-color="${G[1]}"/></linearGradient></defs><path class="gbg" d="${arc(a0,a0+sweep)}"/><path class="gfg" d="${arc(a0,a2)}" stroke="url(#gg)"/><circle class="gdot" cx="${pt(a2)[0].toFixed(1)}" cy="${pt(a2)[1].toFixed(1)}" r="5"/></svg>`; };
   const gcol = kcls==='over'?'var(--red)':kcls==='low'?'var(--orange)':'var(--green)';
-  const glabel = kcls==='empty' ? 'Budget for the day' : left>=0 ? 'Still can eat' : 'Over target by';
+  const glabel = fut ? 'Planned' : kcls==='empty' ? 'Budget for the day' : left>=0 ? 'Still can eat' : 'Over target by';
   const mini=(val,tgt,cls)=>{ const r=15,C=2*Math.PI*r,f=Math.min(1,Math.max(0,val/tgt)); return `<svg class="mini ${cls}" viewBox="0 0 40 40"><circle class="mbg" cx="20" cy="20" r="${r}"/><circle class="mfg" cx="20" cy="20" r="${r}" stroke-dasharray="${(C*f).toFixed(1)} ${C.toFixed(1)}"/></svg>`; };
   const bar=(cls,label,val,tgt,ic,over)=>{ const pc=Math.min(100,Math.round(val/tgt*100)); return `<div class="bar ${cls}${over?' over':''}"><span class="mwrap">${mini(val,tgt,cls)}<span class="ico ${ic} tile">${ICON[ic]}</span></span><div class="bart"><div class="barl"><b>${label}</b><span>${val} / ${tgt} g</span></div><div class="bartrack"><i data-w="${pc}"></i></div></div></div>`; };
   document.getElementById('totals').innerHTML = `
     <div class="hero">
       <div class="gcard">
-        <div class="gwrap">${gauge(T.k,tk,gcol)}<div class="glab ${kcls}" data-l="${glabel}"><span>${glabel}</span><b>${Math.abs(left)}</b><small>kcal</small></div></div>
+        <div class="gwrap">${gauge(T.k,tk,gcol)}<div class="glab ${kcls}" data-l="${glabel}"><span>${glabel}</span><b>${fut?T.k:Math.abs(left)}</b><small>kcal</small></div></div>
         <div class="gpill">${T.k} / ${tk} kcal</div>
       </div>
       <div class="bars">
@@ -1148,7 +1159,7 @@ function renderPlan(){
         ${bar('c','Carbs',T.c,cMax,'carb',T.c>cMax)}
         ${bar('f','Fat',T.f,fMax,'fat',T.f>fMax)}
       </div>
-      <div class="pace">${status}. ${maint-T.k>0?'−':'+'}${Math.abs(maint-T.k)} kcal vs maintenance, about ${Math.abs((maint-T.k)*7/7700).toFixed(1)} kg a week at this pace.</div>
+      <div class="pace">${fut?`Suggested plan: ${T.k} kcal, ${T.p} g protein. Adjust it on the day.`:`${status}. ${maint-T.k>0?'−':'+'}${Math.abs(maint-T.k)} kcal vs maintenance, about ${Math.abs((maint-T.k)*7/7700).toFixed(1)} kg a week at this pace.`}</div>
     </div>`;
   document.querySelectorAll('.bartrack i').forEach(i=>{ i.style.width=i.dataset.w+'%'; });
   renderWarnings(plan,T,tk,tp);
@@ -1167,7 +1178,7 @@ function timeCell(id,label,val){ const has=!!val; const mins=has?toMin(val):null
   return `<button type="button" class="cell" id="${id}Cell" aria-expanded="false" aria-controls="${id}"><span class="cl">${label}</span><span class="cv"><b class="tv${has?'':' dim'}">${has?fmtT(mins):'Set'}</b></span></button>
   <div class="timepick" id="${id}" hidden><label><span>Hour</span><select class="th" aria-label="${label} hour">${opt([12,1,2,3,4,5,6,7,8,9,10,11],h12)}</select></label><label><span>Min</span><select class="tm" aria-label="${label} minutes">${opt([0,5,10,15,20,25,30,35,40,45,50,55],m,v=>String(v).padStart(2,'0'))}</select></label><label><span>&nbsp;</span><select class="tap" aria-label="${label} AM or PM">${opt(['AM','PM'],ap)}</select></label><button type="button" class="btn pri tdone">Done</button></div>`; }
 function renderCheckin(){
-  const el=document.getElementById('checkin'); if(!el) return; const L=dlog(); const cups=8;
+  const el=document.getElementById('checkin'); if(!el) return; if(isFuture()){ el.innerHTML='<div class="note futck">Water, steps and sleep check-in opens on the day itself.</div>'; return; } const L=dlog(); const cups=8;
   const stepsT=P().steps||8000; const st=parseInt(L.steps)||0; const sPc=Math.min(100,Math.round(st/stepsT*100));
   let slp=null, bedSug='';
   const wake=toMin(L.wake||'06:30'); if(L.bed&&L.wake){ const b=toMin(L.bed); slp=((wake-b)+1440)%1440/60; }
@@ -1274,6 +1285,7 @@ function renderWarnings(plan,T,tk,tp){
     if(fat) fixes.push({t:`Biggest fat source is ${fat.it.n} <span data-s="s15">(${Math.round(fat.fv)} g fat). Swap it for a leaner option.</span>`, label:'Swap', run:()=>openSheet(fat.mi,fat.ii)}); }
   const w=document.getElementById('warn');
   const logged=plan.reduce((n,m)=>n+m.items.length,0);
+  if(isFuture()){ w.style.display='block'; w.className='warn empty'; const dt=weekDate(S.day).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'short'}); w.innerHTML=`<div class="emp"><b>${FULL[S.day]} is ahead. Planned, not eaten.</b><span>This is the suggested day so you can shop and prep. Logging, check-in and weigh-in open on ${dt}.</span></div>`; return; }
   if(!logged){ w.style.display='block'; w.className='warn empty'; w.innerHTML=`<div class="emp"><b>Nothing logged for ${FULL[S.day]} yet.</b><span>Add what you eat with the + on each meal, or start from the plan and adjust.</span><button class="btn q" id="fillPlan">Start from the plan</button></div>`; w.querySelector('#fillPlan').onclick=()=>fillTemplate(S.day); return; }
   if(!out.length){ w.style.display='block'; w.className='warn ok'; w.innerHTML=`<b>On target.</b> ${T.k} kcal, ${T.p} g protein, ${maintDeficit(T.k)} kcal deficit. This is the day that gets you lean. Repeat it.`; return; }
   const hrNow=new Date().getHours(); if(T.k<tk-250&&hrNow>=15&&S.day===((new Date().getDay()+6)%7)) out.push({l:'amb',t:`It is after 3 pm and you are ${tk-T.k} kcal short. Put the gap into dinner or the evening snack: protein first (whey, Greek yogurt, paneer, soya, chicken), then a fist of rice. Do not skip it, under-eating today costs muscle, not fat.`});
@@ -1284,8 +1296,8 @@ function renderWarnings(plan,T,tk,tp){
   w.querySelectorAll('button[data-fix]').forEach(b=>b.onclick=()=>fixes[+b.dataset.fix].run());
 }
 function maintDeficit(k){ return P().maint-k; }
-function renderScore(){
-  const el=document.getElementById('score'); if(!el) return; const ps=PS(); const p=P(); const todayIdx=(new Date().getDay()+6)%7;
+function scoreData(){
+  const ps=PS(); const p=P(); const todayIdx=(new Date().getDay()+6)%7;
   const days=[]; for(let i=0;i<7;i++){ if(S.week===0&&i>todayIdx) break; const k=dayKeyFor(i)+(isVeg(i)?'v':'n')+(ps.eggsVeg?'e':'x'); const plan=ps.days[k]; if(!plan) continue; const items=[]; plan.forEach(m=>items.push(...m.items)); if(!items.length) continue; const t=tot(items); days.push({i,t,ok:t.k>=p.floor&&t.k<=p.target.k+100,pok:t.p>=p.pMin}); }
   const logs=[]; for(let i=0;i<7;i++){ const L=(ps.log||{})[ymd(weekDate(i))]; if(L) logs.push(L); }
   const n=days.length; const onT=days.filter(d=>d.ok).length; const pOK=days.filter(d=>d.pok).length; const avgP=n?Math.round(days.reduce((a,d)=>a+d.t.p,0)/n):0; const avgK=n?Math.round(days.reduce((a,d)=>a+d.t.k,0)/n):0;
@@ -1293,6 +1305,24 @@ function renderScore(){
   const sl=logs.filter(L=>L.bed&&L.wake).map(L=>(((toMin(L.wake)-toMin(L.bed))+1440)%1440)/60); const avgS=sl.length?(sl.reduce((a,b)=>a+b,0)/sl.length):null;
   const ws=[...ps.weights].sort((a,b)=>a.d<b.d?-1:1); const wkStart=ymd(weekDate(0)); const before=ws.filter(x=>x.d<wkStart), during=ws.filter(x=>x.d>=wkStart); const wchg=(before.length&&during.length)?during[during.length-1].w-before[before.length-1].w:null;
   const maint=p.maint||2300; const deficit=n?Math.round((maint-avgK)*n):0;
+  const catK={}; days.forEach(d=>{ const k=dayKeyFor(d.i)+(isVeg(d.i)?'v':'n')+(ps.eggsVeg?'e':'x'); (ps.days[k]||[]).forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; catK[it.cat]=(catK[it.cat]||0)+it.k*x.q; })); });
+  const snackAvg=n?Math.round(((catK.snack||0)+(catK.treat||0))/n):0; const stepsAvg=logs.length?Math.round(steps/logs.length):0; const stepsT=p.steps||8000;
+  const tips=[];
+  if(n<3) tips.push(n?`${n} day${n===1?'':'s'} logged so far. Three or more give a useful review.`:'Nothing logged this week yet.');
+  else {
+    if(pOK/n<0.7) tips.push(`Protein landed on ${pOK} of ${n} days (avg ${avgP} g). Two eggs or a whey at breakfast is 25 g before lunch even starts.`);
+    if(avgK>p.target.k+100) tips.push(`Calories averaged ${avgK}, about ${avgK-p.target.k} over target. ${snackAvg>300?`Snacks and treats ran ${snackAvg} kcal a day; swap the second snack for fruit or curd.`:'Lunch and dinner portions are the lever; take a third off the rice.'}`);
+    else if(avgK<p.floor) tips.push(`Calories averaged ${avgK}, under the ${p.floor} floor. Too low and the body holds fat and drops muscle; add a carb at lunch.`);
+    if(avgS!==null&&avgS<7) tips.push(`Sleep averaged ${avgS.toFixed(1)} h. Under 7 h hunger hormones rise; bed 30 minutes earlier this week.`);
+    if(logs.length>=3&&stepsAvg<stepsT*0.8) tips.push(`Steps averaged ${stepsAvg.toLocaleString()} against ${stepsT.toLocaleString()}; a 15 minute walk after dinner closes most of that.`);
+    if(!tips.length) tips.push(wchg!==null&&wchg<0?`On track: ${Math.abs(wchg).toFixed(1)} kg down with calories and protein in range. Repeat this week.`:'On track: calories and protein in range. Repeat this week and weigh in to confirm.');
+  }
+  return {n,onT,pOK,avgP,avgK,steps,water,avgS,wchg,deficit,logs,tips:tips.slice(0,2)};
+}
+function reviewHtml(week,title){ const sw=S.week; S.week=week; const d=scoreData(); S.week=sw; if(!d.n) return ''; return `<div class="review"><div class="rvhd"><b>${title}</b><span>${d.onT}/${d.n} days on target · avg ${d.avgP} g protein${d.avgS!==null?` · ${d.avgS.toFixed(1)} h sleep`:''}${d.wchg!==null?` · ${d.wchg<=0?'':'+'}${d.wchg.toFixed(1)} kg`:''}</span></div><div class="rvtip">${d.tips.join(' ')}</div></div>`; }
+function renderScore(){
+  const el=document.getElementById('score'); if(!el) return; const p=P();
+  const {n,onT,pOK,avgP,avgK,steps,water,avgS,wchg,deficit,logs,tips}=scoreData();
   const tile=(k,v,t,cls='')=>`<div class="st ${cls}"><div class="k">${k}</div><div class="v">${v}</div><div class="t">${t}</div></div>`;
   const grade = !n?'':(onT/n>=0.8&&pOK/n>=0.8)?'On track':(onT/n>=0.5)?'Getting there':'Off plan';
   el.innerHTML=`<div class="scard"><div class="schd"><b>${S.week===0?'This week so far':'Week summary'}</b><span class="grade ${grade.replace(/ .*/,'').toLowerCase()}">${grade}</span></div>
@@ -1304,7 +1334,7 @@ function renderScore(){
       ${tile('Sleep',avgS!==null?avgS.toFixed(1)+'<small> h</small>':'–',avgS!==null?(avgS>=7?'on target':'under 7 h'):'',avgS!==null&&avgS>=7?'good':'')}
       ${tile('Water',water?(water/1000).toFixed(1)+'<small> L</small>':'–',logs.length?'total this week':'')}
       ${tile('Weight',wchg!==null?`${wchg<=0?'':'+'}${wchg.toFixed(1)}<small> kg</small>`:'–',wchg!==null?'vs last weigh-in before this week':'weigh in to compare',wchg!==null&&wchg<0?'good':'')}
-    </div></div>`;
+    </div><div class="rvtip">${tips.join(' ')}</div></div>`;
 }
 function renderWeek(){
   renderScore();
@@ -1347,7 +1377,7 @@ function renderWeightChart(ws){
 }
 function renderWeight(){
   const ps=PS(); document.getElementById('wtTitle').textContent=P().name+' · weight log';
-  if(!document.getElementById('wtDate').value) document.getElementById('wtDate').value=ymd(new Date());
+  if(!document.getElementById('wtDate').value) document.getElementById('wtDate').value=ymd(new Date()); document.getElementById('wtDate').max=ymd(new Date());
   const _wd=document.getElementById('wtDate'); const _wl=document.getElementById('wtDateLbl'); const _fmtD=(v)=>{ const d=new Date(v+'T12:00'); const t=new Date(); return v===ymd(t)?'Today':d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'}); }; _wl.textContent=_fmtD(_wd.value); _wd.oninput=()=>{ _wl.textContent=_fmtD(_wd.value); };
   const ws=[...ps.weights].sort((a,b)=>a.d<b.d?-1:1);
   const avg7=(idx)=>{ const sl=ws.slice(Math.max(0,idx-6),idx+1); return (sl.reduce((s,x)=>s+x.w,0)/sl.length).toFixed(1); };
@@ -1362,7 +1392,10 @@ function renderWeight(){
 
 // ================= ACTIONS =================
 function action(a,mi,ii){
+  if(isFuture()) return;
   const plan=dayPlan();
+  if(a==='savetpl'){ const m=plan[mi]; if(!m.items.length) return; const ps=PS(); const name=prompt('Name this set of foods',`My usual ${m.name.replace(/ \(.*\)/,'').toLowerCase()}`); if(!name) return; ps.templates.push({id:'t'+Date.now().toString(36),name:name.trim().slice(0,60),meal:m.name.replace(/ \(.*\)/,''),items:m.items.map(x=>({id:x.id,q:x.q}))}); save(); render(); return; }
+  if(a==='usual'){ const m=plan[mi]; const tp=PS().templates.filter(t=>t.meal.toLowerCase()===m.name.replace(/ \(.*\)/,'').toLowerCase()); if(tp.length===1){ m.items=tp[0].items.map(x=>({id:x.id,q:x.q})); save(); render(); } else openSheet(mi,null); return; }
   const it=F[plan[mi]?.items[ii]?.id]; const b=it?baseOf(it):null; const stepQ = b ? b.step/b.n : 0.5;
   if(a==='inc'){ plan[mi].items[ii].q=+Math.min(5,plan[mi].items[ii].q+stepQ).toFixed(3); }
   else if(a==='dec'){ plan[mi].items[ii].q=+Math.max(stepQ,plan[mi].items[ii].q-stepQ).toFixed(3); }
@@ -1374,6 +1407,7 @@ function action(a,mi,ii){
 }
 let sheet={mi:0,ii:null,cat:null};
 function openSheet(mi,ii){
+  if(isFuture()) return;
   const plan=dayPlan(); sheet={mi,ii,cat:null};
   if(ii!==null){ const cur=F[plan[mi].items[ii].id]; sheet.cat=cur.cat; document.getElementById('shTitle').textContent='Swap in '+plan[mi].name; document.getElementById('shSub').textContent='Current: '+cur.n+' ('+cur.p+' g protein). Sorted by closest protein.'; }
   else { sheet.cat='all';
@@ -1397,6 +1431,7 @@ function renderSheet(){
   if(hiddenN&&!q){ const t=document.createElement('button'); t.type='button'; t.className='btn q hiddenbtn'; t.textContent=sheet.showAll?`Hide the ${hiddenN} non-veg / egg items again`:`${hiddenN} non-veg / egg items hidden on this veg day · show anyway`; t.onclick=()=>{ sheet.showAll=!sheet.showAll; renderSheet(); }; o.appendChild(t); }
   const recentIds=(()=>{ const ps=PS(); const m=new Map(); const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-14); Object.keys(ps.days).sort().reverse().forEach(k=>{ if(!/^\d{4}/.test(k)||new Date(k.slice(0,10)+'T12:00')<cutoff) return; ps.days[k].forEach(mm=>mm.items.forEach(x=>{ if(!m.has(x.id)) m.set(x.id,1); })); }); return m; })();
   const hd=(t)=>{ const h=document.createElement('div'); h.className='chd'; h.textContent=t; o.appendChild(h); };
+  if(!q&&!cur&&sheet.cat==='all'){ const mn=plan[sheet.mi].name.replace(/ \(.*\)/,'').toLowerCase(); const tps=PS().templates.filter(t=>t.meal.toLowerCase()===mn); if(tps.length){ hd('My usual'); tps.forEach(t=>{ const tt=tot(t.items); const d=document.createElement('div'); d.className='opt tpl'; d.innerHTML=`<div><div class="n">☆ ${t.name}</div><div class="m">${t.items.map(x=>F[x.id]?F[x.id].n+(x.q!==1?' ×'+x.q:''):'').filter(Boolean).join(', ')} · ${tt.k} kcal · ${tt.p} g protein</div></div><button class="btn x tdel" aria-label="Delete template">×</button>`; d.onclick=()=>{ plan[sheet.mi].items.push(...t.items.map(x=>({id:x.id,q:x.q}))); save(); closeSheet(); render(); }; d.querySelector('.tdel').onclick=(e)=>{ e.stopPropagation(); if(!confirm(`Delete "${t.name}"?`)) return; const ps=PS(); ps.templates=ps.templates.filter(x=>x.id!==t.id); save(); renderSheet(); }; o.appendChild(d); }); } }
   const mealName=plan[sheet.mi].name.toLowerCase(); const fitCats = /breakfast/.test(mealName)?['bf','prot','fruit','side']:/waking/.test(mealName)?['drink','fruit']:/mid-morning|pre-gym|evening|snack/.test(mealName)?['snack','fruit','prot','drink']:['prot','carb','veg','side'];
   const recFor=(it)=>REC.has(it.id)&&fitCats.includes(it.cat);
   const sugg=(!q&&!cur&&sheet.cat==='all')?suggestFor(sheet.mi):new Set();
@@ -1404,8 +1439,11 @@ function renderSheet(){
   if(!q&&!cur&&sheet.cat==='all') list.sort((a,b)=>{ const ga=sugg.has(a.id)?0:recFor(a)?1:recentIds.has(a.id)?2:3, gb=sugg.has(b.id)?0:recFor(b)?1:recentIds.has(b.id)?2:3; return ga-gb; });
   list.forEach(it=>{ const g=grpOf(it); if(g&&g!==lastGrp){ hd(g); lastGrp=g; } const d=document.createElement('div'); d.className='opt'+(cur&&it.id===cur.id?' cur':'');
     const diff=cur?it.p-cur.p:null; const lbl=cur?(it.id===cur.id?'current':(diff>=0?'+':'')+diff+' g protein'):(it.custom?'my food':it.t==='v'?'veg':it.t==='e'||it.t==='te'?'egg':it.t==='n'||it.t==='tn'?'non-veg':'treat');
-    d.innerHTML=`<div><div class="n">${REC.has(it.id)?'<span data-s="s16">★</span> ':''}${it.n}${it.g?' · '+it.g:''}</div><div class="m">${it.k} kcal · ${it.p} g protein · ${it.c} c · ${it.f} f${costTxt(it.id)?' · <span data-s="s16">'+costTxt(it.id)+'</span>':''}</div></div><span class="pill ${pill(it.t)}">${lbl}</span>`;
-    d.onclick=()=>{ if(sheet.ii!==null) plan[sheet.mi].items[sheet.ii]={id:it.id,q:1}; else plan[sheet.mi].items.push({id:it.id,q:1}); save(); closeSheet(); render(); };
+    const b00=baseOf(it); const combo=/\+/.test(it.g||''); const pre=(!cur&&it.cat!=='gym'&&it.cat!=='drink'&&!(b00&&b00.n===0))?`<div class="pre">${[0.5,1,1.5,2].map(qq=>{ const b=baseOf(it); const frac=qq===0.5?'½':qq===1.5?'1½':String(qq); let lab=frac+'×'; const pm=!combo&&it.g&&it.g.match(/^(\d+(?:\.\d+)?)(\s.*)?\((\d+(?:\.\d+)?)\s*(g|ml)\)\s*$/); if(pm){ const cnt=+(+pm[1]*qq).toFixed(1); lab=(cnt===0.5?'½':cnt===1.5?'1½':String(cnt))+(pm[2]&&/cup|tbsp|tsp|slice|scoop|bowl|glass|plate|pack|bag|small|medium|large|square|cracker/i.test(pm[2])?pm[2].replace(/\s+$/,''):'')+' · '+Math.round(+pm[3]*qq)+' '+pm[4]; } else if(combo){ lab=frac+'×'; } else if(b&&b.unit!=='pcs') lab=Math.round(b.n*qq)+' '+b.unit; else if(b){ const gm=(it.g.match(/\((\d+(?:\.\d+)?)\s*(g|ml)\)/)||[]); const cnt=+(b.n*qq).toFixed(1); lab=(cnt===0.5?'½':cnt===1.5?'1½':String(cnt))+(gm[1]?' · '+Math.round(+gm[1]*qq)+' '+gm[2]:''); } return `<button type="button" data-q="${qq}" class="${qq===1?'on':''}">${lab}</button>`; }).join('')}</div>`:'';
+    d.innerHTML=`<div class="optmain"><div><div class="n">${REC.has(it.id)?'<span data-s="s16">★</span> ':''}${it.n}${it.g?' · '+it.g:''}</div><div class="m">${it.k} kcal · ${it.p} g protein · ${it.c} c · ${it.f} f${costTxt(it.id)?' · <span data-s="s16">'+costTxt(it.id)+'</span>':''}</div></div><span class="pill ${pill(it.t)}">${lbl}</span></div>${pre}`;
+    const addWith=(qq)=>{ if(sheet.ii!==null) plan[sheet.mi].items[sheet.ii]={id:it.id,q:qq}; else plan[sheet.mi].items.push({id:it.id,q:qq}); save(); closeSheet(); render(); };
+    d.onclick=()=>addWith(1);
+    d.querySelectorAll('.pre button').forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); addWith(+b.dataset.q); });
     o.appendChild(d); });
 }
 let cRows=[];
@@ -1545,7 +1583,7 @@ document.querySelectorAll('.ov').forEach(ov=>{ const sh=ov.querySelector('.sheet
 document.getElementById('syncNow').onclick=()=>{ if(!CLOUD.on) return; if(!CLOUD.key) askKey(); else { Object.keys(S.people).forEach(w=>{ if(CLOUD.dirty[w]) cloudPush(w); }); cloudPull(); } };
 document.getElementById('syncOut').onclick=()=>{ CLOUD.key=''; CLOUD.user=''; try{ localStorage.removeItem('kl-key'); localStorage.removeItem('kl-user'); }catch(e){} setStatus('Not signed in','warn'); document.getElementById('ovSet').classList.remove('show'); askKey(); };
 document.getElementById('openSettings').addEventListener('click',()=>{ document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Signed in as '+(PEOPLE[CLOUD.user]?PEOPLE[CLOUD.user].name:PEOPLE.p1.name)+'. Saving to your hosting (data folder on the server). Status: '+CLOUD.status+'. Both phones and any browser see the same data once signed in.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus')||{}; let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
-document.getElementById('wtAdd').onclick=()=>{ const d=document.getElementById('wtDate').value, w=parseFloat(document.getElementById('wtVal').value); if(!d||!w) return; const ps=PS(); ps.weights=ps.weights.filter(x=>x.d!==d); ps.weights.push({d,w}); document.getElementById('wtVal').value=''; save(); render(); };
+document.getElementById('wtAdd').onclick=()=>{ const d=document.getElementById('wtDate').value, w=parseFloat(document.getElementById('wtVal').value); if(!d||!w) return; if(d>ymd(new Date())){ alert('Weigh-ins cannot be in the future.'); return; } const ps=PS(); ps.weights=ps.weights.filter(x=>x.d!==d); ps.weights.push({d,w}); document.getElementById('wtVal').value=''; save(); render(); };
 document.getElementById('keyGo').onclick=async()=>{ CLOUD.key=document.getElementById('keyIn').value.trim(); CLOUD.user=''; try{ localStorage.setItem('kl-key',CLOUD.key); }catch(e){} try{ const p=await api('ping'); if(!p.auth){ forgetKey(); document.getElementById('keyMsg').textContent='Wrong password.'; return; } applyProfiles(p);
     if(p.shared){ // shared password: ask which person this phone belongs to, with the real names now that we are signed in
       const wrap=document.getElementById('keyWhoWrap'); wrap.hidden=false; document.getElementById('keyIn').hidden=true; document.getElementById('keyGo').hidden=true; document.getElementById('keyMsg').textContent='';

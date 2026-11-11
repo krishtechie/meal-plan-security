@@ -651,3 +651,30 @@ button,.nav,.dayc,.cup,.ico,.tile,.chip,.opt,.copt,.fix,.wohd{-webkit-touch-call
 .alog .empty{padding:22px;text-align:center;color:var(--muted)}
 .alog .aur.you .aum small:after{content:" · this device";color:var(--acc)}
 @media (max-width:420px){.austats{grid-template-columns:repeat(2,1fr)}}
+
+/* v14: future lock, review, presets, templates */
+.futnote{background:rgba(255,149,0,.12);color:var(--text);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.45;margin-bottom:12px}
+.futnote b{color:var(--orange,#ff9500)}
+.ynote{display:flex;align-items:center;gap:10px;background:var(--card);box-shadow:var(--sh1);border-radius:14px;padding:10px 12px 10px 14px;font-size:14px;margin-bottom:12px}
+.ynote span{flex:1;line-height:1.35}
+.ynote .btn.q{margin:0;white-space:nowrap}
+.ynote .btn.dim{color:var(--muted);padding:6px 10px}
+.addrow.dim .note{padding:6px 2px;font-size:13.5px}
+.tplrow{margin-top:8px;display:flex;justify-content:flex-end}
+.tplrow .btn.q{font-size:13px;color:var(--muted);background:transparent;padding:6px 8px}
+.tplrow .btn.q:hover{color:var(--acc)}
+.review{background:var(--card);box-shadow:var(--sh1);border-radius:16px;padding:14px 16px;margin-bottom:12px}
+.rvhd b{display:block;font-size:16px;font-weight:700;letter-spacing:-.2px}
+.rvhd span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.rvtip{font-size:14.5px;line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px solid var(--line,rgba(127,127,127,.15))}
+.scard .rvtip{margin:12px 2px 0;padding-top:12px}
+.opt{flex-direction:column;align-items:stretch}
+.optmain{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%}
+.pre{display:flex;gap:6px;margin-top:9px}
+.pre button{flex:1;border:0;font-family:inherit;font-size:13px;font-weight:600;padding:7px 4px;border-radius:999px;background:var(--card3,rgba(127,127,127,.12));color:var(--text);cursor:pointer;white-space:nowrap}
+.pre button.on{background:var(--acc);color:#fff}
+.pre button:active{transform:scale(.97)}
+.opt.tpl .n{color:var(--acc)}
+.opt.tpl{flex-direction:row;align-items:center}
+.opt.tpl .tdel{margin:0;flex:0 0 auto}
+.futck{padding:4px 2px 2px}
