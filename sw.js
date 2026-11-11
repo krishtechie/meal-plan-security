@@ -1,5 +1,5 @@
 // Offline shell cache. App files are served from cache first and refreshed in the background; api.php is always network.
-const VER = 'kl-v13e';
+const VER = 'kl-v13f';
 const SHELL = ['./', 'index.html', 'app.css?v=35', 'app.js?v=35', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png',
   'fonts/sora-latin-600-normal.woff2', 'fonts/sora-latin-700-normal.woff2', 'fonts/manrope-latin-500-normal.woff2', 'fonts/manrope-latin-600-normal.woff2', 'fonts/manrope-latin-700-normal.woff2'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VER).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
