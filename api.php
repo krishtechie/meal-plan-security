@@ -161,7 +161,7 @@ function validateDoc($d, int $depth = 0): ?string {
   return 'bad type';
 }
 function validateShape(array $d): ?string {
-  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','templates','m3','m4','m5','m6','name','savedAt'];
+  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','templates','vegPrev','m3','m4','m5','m6','name','savedAt'];
   foreach (array_keys($d) as $k) { if (!in_array($k, $allowed, true) && !preg_match('/^m\d{1,2}$/', (string)$k)) return "unknown field $k"; }
   foreach (($d['weights'] ?? []) as $w) {
     if (!is_array($w) || !isset($w['d'], $w['w'])) return 'bad weight entry';
@@ -190,6 +190,7 @@ function validateShape(array $d): ?string {
       if (isset($it['q']) && (!is_numeric($it['q']) || $it['q'] < 0 || $it['q'] > 50)) return 'bad template quantity';
     }
   }
+  if (isset($d['vegPrev'])) { if (!is_array($d['vegPrev']) || count($d['vegPrev']) > 7) return 'bad vegPrev'; foreach ($d['vegPrev'] as $v) { if (!is_int($v) || $v < 0 || $v > 6) return 'bad vegPrev'; } }
   foreach (($d['customs'] ?? []) as $c) {
     if (!is_array($c) || !isset($c['id'], $c['n'])) return 'bad custom food';
     foreach (['k','p','c','f'] as $f) { if (isset($c[$f]) && (!is_numeric($c[$f]) || $c[$f] < 0 || $c[$f] > 5000)) return 'bad custom macro'; }

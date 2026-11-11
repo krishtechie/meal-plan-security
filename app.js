@@ -1045,7 +1045,7 @@ function P(){ return PEOPLE[S.who]; }
 function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=(P().vegDays||[]).slice(); if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } if(ps.days&&!TIDIED.has(S.who)){ TIDIED.add(S.who); tidy(ps); } if(!ps.customs) ps.customs=[]; if(!ps.templates) ps.templates=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
 function loadAllCustoms(){ Object.values(S.people).forEach(ps=>(ps.customs||[]).forEach(c=>{ if(!F[c.id]) F[c.id]=c; })); }
 function isVeg(d=S.day){ const ps=PS(); return ps.allVeg || (!ps.allNonVeg && ps.vegDays.includes(d)); }
-function toggleVegDay(d){ const ps=PS(); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=[0,1,2,3,4,5,6]; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); save(); render(); }
+function toggleVegDay(d){ const ps=PS(); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=Array.isArray(ps.vegPrev)?ps.vegPrev.slice():[]; delete ps.vegPrev; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); save(); render(); }
 const SEA=/fish|prawn|shrimp|basa|sardine|seafood/i;
 function allowed(it, d=S.day){ if(SEA.test(it.n)&&!PS().seafood) return false; if(!isVeg(d)) return true; const t=it.t; if(t==='n'||t==='tn') return false; if(t==='e'||t==='te') return PS().eggsVeg; return true; }
 function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1})}; }); }
@@ -1096,7 +1096,7 @@ function render(){
   const gEl=document.getElementById('greet'); if(gEl){ gEl.textContent=(window.innerWidth<560?greet.replace('Good ','').replace(/^./,c=>c.toUpperCase()):greet)+', '+P().name; }
   const dEl=document.getElementById('today'); if(dEl){ dEl.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'}); }
   document.getElementById('allVeg').checked=ps.allVeg; document.getElementById('allNonVeg').checked=!!ps.allNonVeg; document.getElementById('eggsVeg').checked=ps.eggsVeg; document.getElementById('seafood').checked=!!ps.seafood;
-  const vd=document.getElementById('vegDays'); vd.innerHTML=''; DAYS.forEach((n,i)=>{ const b=document.createElement('button'); const v=isVeg(i); b.className='vd'+(v?' veg':''); b.innerHTML=`${n}<small>${v?'VEG':'NON'}</small>`; b.onclick=()=>toggleVegDay(i); vd.appendChild(b); });
+  const vd=document.getElementById('vegDays'); vd.innerHTML=''; DAYS.forEach((n,i)=>{ const b=document.createElement('button'); const v=isVeg(i); b.className='vd'+(v?' veg':'')+((ps.allVeg||ps.allNonVeg)?' ovr':''); b.innerHTML=`${n}<small>${v?'VEG':'NON'}</small>`; b.onclick=()=>toggleVegDay(i); vd.appendChild(b); });
   renderWeekNav(); const d=document.getElementById('days'); d.innerHTML='';
   DAYS.forEach((n,i)=>{ const b=document.createElement('div'); const todayIdx=(new Date().getDay()+6)%7; b.className='dayc'+(i===S.day?' on':'')+((S.week<0||(S.week===0&&i<todayIdx))?' past':'')+((S.week===0&&i===todayIdx)?' today':''); const v=isVeg(i);
     const dt=weekDate(i); b.innerHTML=`<small>${n}</small><b>${dt.getDate()}</b><i class="${v?'veg':''}" title="${v?'Veg day':'Non-veg day'}"></i>`; b.onclick=()=>{S.day=i;S.view='plan';render();}; d.appendChild(b); });
@@ -1547,7 +1547,7 @@ document.getElementById('guideClose').onclick=()=>document.getElementById('ovGui
 document.getElementById('ovGuide').onclick=e=>{ if(e.target.id==='ovGuide') document.getElementById('ovGuide').classList.remove('show'); };
 document.getElementById('setClose2').onclick=()=>document.getElementById('ovSet').classList.remove('show');
 document.getElementById('ovSet').onclick=e=>{ if(e.target.id==='ovSet') e.target.classList.remove('show'); };
-document.getElementById('allVeg').onchange=e=>{ PS().allVeg=e.target.checked; if(e.target.checked) PS().allNonVeg=false; save(); render(); };
+document.getElementById('allVeg').onchange=e=>{ const ps=PS(); if(e.target.checked){ ps.vegPrev=ps.vegDays.slice(); ps.allVeg=true; ps.allNonVeg=false; } else { ps.allVeg=false; if(Array.isArray(ps.vegPrev)){ ps.vegDays=ps.vegPrev.slice(); delete ps.vegPrev; } else if(ps.vegDays.length===7){ ps.vegDays=[]; } } save(); render(); };
 document.getElementById('allNonVeg').onchange=e=>{ PS().allNonVeg=e.target.checked; if(e.target.checked) PS().allVeg=false; save(); render(); };
 document.getElementById('eggsVeg').onchange=e=>{ PS().eggsVeg=e.target.checked; save(); render(); };
 document.getElementById('seafood').onchange=e=>{ PS().seafood=e.target.checked; save(); render(); };
@@ -1655,3 +1655,14 @@ document.getElementById('auFil').onclick=e=>{ const b=e.target.closest('button')
 document.getElementById('auCsv').onclick=()=>{ const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; const rows=[['Time (local)','Account','Action','For','Result','Device','IP','Revision','Bytes']];
   for(const l of AU.lines){ rows.push([new Date(l.ts).toLocaleString(),auName(l.user),AU_ACT[l.action]||l.action,l.who?auName(l.who):'',(AU_OUT[l.outcome]||[l.outcome])[0],auDevice(l.ua),l.ip||'',l.rev??'',l.bytes??'']); }
   dl(new Blob(['﻿'+rows.map(r=>r.map(esc).join(',')).join('\r\n')],{type:'text/csv'}),'meal-planner-activity-'+ymd(new Date())+'.csv'); };
+
+// ===== keyboard-aware sheets: size the open sheet to the visible viewport so the keyboard never covers the list =====
+(function(){ const vv=window.visualViewport; if(!vv) return;
+  function fit(){ const ov=document.querySelector('.ov.show'); if(!ov) return; const sh=ov.querySelector('.sheet'); if(!sh) return;
+    const kb=window.innerHeight-vv.height>120;   // keyboard (or similar) is up
+    ov.style.top=kb?vv.offsetTop+'px':''; ov.style.height=kb?vv.height+'px':''; ov.classList.toggle('kb',kb);
+    sh.style.height=kb?vv.height+'px':''; sh.style.maxHeight=kb?vv.height+'px':''; }
+  vv.addEventListener('resize',fit); vv.addEventListener('scroll',fit);
+  document.addEventListener('focusin',e=>{ if(e.target&&e.target.id==='search'){ setTimeout(()=>{ fit(); const sh=e.target.closest('.sheet'); if(sh) sh.scrollTo({top:e.target.offsetTop-10,behavior:'smooth'}); },250); } });
+  document.addEventListener('focusout',()=>setTimeout(fit,100));
+})();
