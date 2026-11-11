@@ -7,3 +7,4 @@ deployment:
     - /bin/cp splash/*.png $DEPLOYPATH/splash/
     - /bin/cp fonts/*.woff2 $DEPLOYPATH/fonts/
     - /bin/cp data/.htaccess $DEPLOYPATH/data/
+    - /bin/cp reset.php $DEPLOYPATH/ 2>/dev/null || true
