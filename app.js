@@ -993,7 +993,8 @@ async function cloudInit(){
   if(!/^https?:/.test(location.protocol)) return;
   try{ CLOUD.key=localStorage.getItem('kl-key')||''; CLOUD.user=localStorage.getItem('kl-user')||''; }catch(e){}
   if(CLOUD.user&&S.people[CLOUD.user]) S.who=CLOUD.user;
-  let ping; try{ ping=await api('ping'); }catch(e){ if(e.message==='http 503'){ CLOUD.on=false; setStatus('Not set up','warn'); document.getElementById('subtitle').textContent='The server has no config yet. Open setup.php on this site once to create it.'; return; } if(e.message==='auth'){ CLOUD.on=true; askKey('Password changed. Sign in again.'); } else if(e.message==='locked'){ CLOUD.on=true; askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } return; }   // other errors: no api.php here -> stay local
+  let ping; try{ ping=await api('ping'); }catch(e){ if(!/^auth$|^locked$|^http 503$/.test(e.message)){ const sk=document.getElementById('keySkip'); if(sk) sk.hidden=false; }   // no api.php here: allow a local-only mode
+    if(e.message==='http 503'){ CLOUD.on=false; setStatus('Not set up','warn'); document.getElementById('subtitle').textContent='The server has no config yet. Open setup.php on this site once to create it.'; return; } if(e.message==='auth'){ CLOUD.on=true; askKey('Password changed. Sign in again.'); } else if(e.message==='locked'){ CLOUD.on=true; askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } return; }   // other errors: no api.php here -> stay local
   CLOUD.on=true;
   if(!ping.auth){ forgetKey(); askKey(CLOUD.key?'':''); return; }
   applyProfiles(ping);
