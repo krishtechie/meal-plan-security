@@ -330,7 +330,7 @@ snack:[
 ['k_whites','Boiled egg whites','4',70,14,1,0,'e'],
 ['k_chana','Roasted chana','50 g',180,10,30,3,'v'],
 ['k_peanuts','Peanuts, roasted, unsalted','30 g',170,8,5,14,'v'],
-['k_almonds','Almonds','20 g (15)',120,4,4,10,'v'],
+['k_almonds','Almonds','15 (20 g)',120,4,4,10,'v'],
 ['k_nuts','Mixed nuts','25 g',150,5,5,13,'v'],
 ['k_bmchana','Buttermilk 300 ml + roasted chana 30 g','300 ml + 30 g chana',180,10,25,3,'v'],
 ['k_bar','Protein bar (20 g protein)','1',200,20,22,7,'v'],
@@ -448,7 +448,7 @@ const ICON = {
 const ic=(cat)=>`<span class="ico ${cat}">${ICON[cat]||ICON.mine}</span>`;
 const ALIAS = {
  pc_egg1:'boiled egg 1 whole egg guddu',pc_white1:'egg white 1',pc_om1:'omelette 1 egg omlette',pc_om2:'omelette 2 eggs omlette',pc_om3:'omelette 3 eggs omlette',pc_bread1:'bread slice 1 brown bread',pc_toast1:'toast butter slice',pc_choc80:'dark chocolate square 80',pc_choc70:'dark chocolate square 70',pc_roti1:'roti 1 phulka chapati',pc_cheese1:'cheese slice',pc_almond10:'almonds 10 badam',pc_date1:'date khajoor',pc_swcracker:'sweet potato cracker crackers rw garcia costco 3 seed',pc_falafel1:'falafel patty patties hannah chickpea costco',pc_crackerpizza:'cracker pizza mozzarella bell pepper capsicum salsa sriracha ranch',pc_sriracha:'sriracha hot sauce chilli sauce',bf_idli1:'idli idly 1 single',bf_dosa1:'dosa 1 single plain',bf_setdosa1:'set dosa sponge dosa',bf_uttapam1:'uttapam utappam onion tomato',bf_pesarattu1:'pesarattu 1 single moong dosa',bf_mlapesarattu:'mla pesarattu upma pesarattu',bf_vada1:'vada garelu medu vada garee',bf_punugulu:'punugulu bonda',bf_bonda1:'bonda batata vada aloo',bf_upma1:'upma rava 1 cup',bf_poha1:'poha atukulu 1 cup',bf_pongal1:'pongal ven pongal',bf_paratha1:'paratha plain',bf_alooparatha1:'aloo paratha potato',bf_puri1:'puri 1 single poori',bf_cereal1:'cereal cornflakes cheerios',bf_pancake1:'pancake 1',bf_waffle1:'waffle',bf_oatsplain:'oats plain water oatmeal',bf_chai1:'tea chai milk sugar',bf_coffeemilk1:'coffee milk sugar',bf_filtercoffee:'filter coffee kaapi',sd_peanutch1:'peanut chutney palli pachadi 1 tbsp',sd_coconutch1:'coconut chutney kobbari pachadi 1 tbsp',sd_gingerch1:'ginger chutney allam pachadi',sd_tomatoch1:'tomato chutney pachadi 1 tbsp',sd_idlipodi:'idli podi karam podi gunpowder',sd_sambarhalf:'sambar half cup',sd_butter1:'butter 1 tsp',sd_pb1:'peanut butter',sd_jam1:'jam',sd_honey1:'honey',sd_sugar1:'sugar 1 tsp',sd_maple1:'maple syrup',sd_nutella1:'nutella hazelnut spread',sd_ketchup1:'ketchup tomato sauce',sd_mayo1:'mayo mayonnaise',sd_soy1:'soy sauce',sd_hummus2:'hummus',sd_salsa2:'salsa',sd_guac2:'guacamole avocado dip',sd_sourcream1:'sour cream',sd_creamcheese1:'cream cheese',sd_onionraw:'onion raw ullipaya',sn_popair:'popcorn air popped light kirkland',bs_idli1:'idli 1 idly single',bs_pesarattu1:'pesarattu 1 pesara attu moong dosa',bs_setdosa1:'set dosa 1',bs_uttapam1:'uttapam onion 1',bs_vada1:'vada garelu medu vada 1',bs_upma1:'upma 1 cup rava',bs_pongal1:'pongal ven pongal 1 cup',bs_poha1:'poha 1 cup atukulu',bs_puri1:'puri 1 poori',bs_paratha1:'paratha plain 1',bs_alooparatha1:'aloo paratha 1',bs_chilla1:'chilla besan 1',bs_cornflakes:'cornflakes cereal',bs_oats40:'oats plain dry',sd_tomatochutney:'tomato chutney tomato pachadi',sd_mintchutney:'mint chutney coriander pudina kothimeera',sd_sambar1:'sambar 1 cup',sd_rasam1:'rasam 1 cup charu',sd_ghee1:'ghee 1 tsp neyyi',sd_oil1:'oil 1 tsp cooking oil',sd_butter1:'butter 1 tsp',sd_pb1:'peanut butter 1 tbsp',sd_mayo1:'mayo mayonnaise',sd_ketchup1:'ketchup tomato sauce',sd_pickle1:'pickle avakaya achar',sd_podi1:'podi karam kandi podi dry',sd_sugar1:'sugar 1 tsp',sd_jaggery1:'jaggery bellam gur',sd_honey1:'honey 1 tsp',cs_rice1cup:'rice 1 cup annam cooked',cs_rice05cup:'rice half cup annam',cs_chapati1:'chapati 1 roti single',sn_pop1cup:'popcorn 1 cup air popped',sn_popbutter1cup:'popcorn butter 1 cup microwave',sn_peanuts1tbsp:'peanuts 1 tbsp palli roasted',sn_popmw:'popcorn microwave butter orville',sn_popskinny:'popcorn skinnypop skinny pop',sn_popmovie:'popcorn cinema movie theatre',sn_chips:'chips lays potato crisps',sn_doritos:'doritos cheetos nacho chips',sn_tortilla:'tortilla chips corn chips',sn_pringles:'pringles chips',sn_veggiestraw:'veggie straws',sn_pretzel:'pretzels',sn_protchips:'quest protein chips',sn_mixture:'mixture chivda boondi namkeen karam',sn_bananachips:'banana chips arati',sn_khakra:'khakra',sn_samosa:'samosa',sn_pakora:'pakora pakoda bajji onion',sn_bhel:'bhel puri chaat',sn_panipuri:'pani puri gol gappa chaat',sn_chikki:'chikki peanut palli patti jaggery',sn_laddu:'laddu ladoo besan rava sweet',sn_mysorepak:'mysore pak sweet',sn_gulab:'gulab jamun sweet',sn_kulfi:'kulfi',sn_icecream:'ice cream',sn_parleg:'parle g biscuits',sn_marie:'marie biscuits',sn_digestive:'digestive biscuit',sn_oreo:'oreo cookies',sn_cookie:'cookie chocolate chip',sn_ricecake:'rice cake',sn_granola:'granola bar nature valley',sn_kind:'kind bar nut bar',sn_trail:'trail mix',sn_seaweed:'seaweed snack nori',sn_nachos:'nachos cheese',sn_hummuscr:'hummus crackers',pc_ranch:'ranch dressing dip sauce',
- c_tandoori:'tandoori chicken tikka grilled',c_grillbreast:'grilled chicken breast grill plain',c_breastcurry:'chicken breast curry kodi kura',c_thighcurry:'chicken thigh curry boneless',c_legs2:'chicken legs drumsticks leg piece',c_wings6:'chicken wings baked air fryer',c_wingsfried:'chicken wings fried restaurant',c_chk65:'chicken 65 pakoda pakora',c_keema:'chicken keema minced peas',c_pesarapappudal:'pesara pappu dal moong plain pesalu',c_pesarapappufry:'pesara pappu fry podi dry moong',
+ c_tandoori:'tandoori chicken tikka grilled',c_grillbreast:'grilled chicken breast grill plain',c_breastcurry:'chicken breast curry kodi kura',c_thighcurry:'chicken thigh curry boneless',c_thighair1:'air fryer chicken thigh airfryer thigh boneless skinless',c_thighairskin1:'air fryer chicken thigh skin on airfryer',c_thighgrill:'grilled chicken thigh tandoori thigh',c_kebab1:'kebab seekh kabab chicken kebab skewer',c_tikka:'chicken tikka grilled pieces boti',c_wing1:'chicken wing single wings',c_drum1:'drumstick chicken leg single air fryer',c_shawarma:'shawarma chicken shawarma meat',c_strips:'grilled chicken strips chicken salad topping',c_popcornchk:'popcorn chicken nuggets air fryer',c_legs2:'chicken legs drumsticks leg piece',c_wings6:'chicken wings baked air fryer',c_wingsfried:'chicken wings fried restaurant',c_chk65:'chicken 65 pakoda pakora',c_keema:'chicken keema minced peas',c_pesarapappudal:'pesara pappu dal moong plain pesalu',c_pesarapappufry:'pesara pappu fry podi dry moong',
  n_brazil:'brazil nut',n_chia:'chia seeds',n_sunflower:'sunflower seeds',n_pumpkin:'pumpkin seeds gummadi ginjalu',n_flax:'flax seeds avise alsi',n_sesame:'sesame til nuvvulu',n_anjeer:'anjeer dried fig figs',n_dates2:'dates khajur kharjuram',n_raisins:'raisins kismis endu draksha',n_almonds10:'almonds badam',n_mixseeds:'mixed seeds',n_trail30:'trail mix nuts mix',
  h_chikkudutomato:'chikkudu tomato chikkudukaya broad beans valor papdi',h_chikkudufry:'chikkudu fry chikkudukaya vepudu broad beans',h_munagatomato:'munagakaya tomato drumstick mulakkada',h_thotakura:'thotakura fry thota kura amaranth leafy',h_capsicumaloo:'capsicum aloo curry potato capsicum bell pepper',h_alookurma:'aloo kurma potato kurma korma',h_eggtomato:'egg tomato curry guddu tamata',
  h_khichdi:'khichdi kichidi kichdi rice moong pongal',h_pohaplain:'poha atukulu upma flattened rice',h_pulihora:'pulihora tamarind rice chitrannam',h_jeerarice:'jeera rice cumin rice',h_curdrice:'curd rice daddojanam perugu annam',
@@ -739,6 +739,16 @@ const EXTRA = {
     ['c_wingsfried','Chicken wings, restaurant fried, 6 pieces','6 wings',600,34,18,42,'tn'],
     ['c_chk65','Chicken 65 / chicken pakoda, restaurant','150 g',380,28,16,23,'tn'],
     ['c_keema','Chicken keema with peas','150 g',250,28,6,12,'n'],
+    ['c_thighair1','Chicken thigh, air fryer, skinless, boneless','1 (110 g)',190,27,0,9,'n'],
+    ['c_thighairskin1','Chicken thigh, air fryer, skin on','1 (120 g)',250,26,0,16,'n'],
+    ['c_thighgrill','Chicken thigh, grilled or tandoori, boneless','100 g',175,24,1,8,'n'],
+    ['c_kebab1','Chicken seekh kebab, 1 skewer','1 (60 g)',110,13,2,6,'n'],
+    ['c_tikka','Chicken tikka pieces, grilled','100 g',165,26,2,6,'n'],
+    ['c_wing1','Chicken wing, baked or air-fried','1 (35 g)',72,6,0,5,'n'],
+    ['c_drum1','Chicken drumstick with bone, skinless, baked or air-fried','1 (90 g)',115,15,1,5,'n'],
+    ['c_shawarma','Chicken shawarma meat, no bread','100 g',180,22,3,9,'n'],
+    ['c_strips','Grilled chicken strips, plain (salad or crackers)','100 g',165,30,0,4,'n'],
+    ['c_popcornchk','Popcorn chicken / nuggets, air fryer','100 g',260,17,16,14,'tn'],
     ['c_pesarapappudal','Pesara pappu (moong dal) plain, no tadka','150 g',150,10,24,2,'v'],
     ['c_pesarapappufry','Pesara pappu podi / dry moong dal fry','100 g',170,11,22,5,'v'],
   ],
@@ -758,6 +768,13 @@ const EXTRA = {
   ],
 };
 for(const c0 in EXTRA){ const c=c0==='pieces'?'snack':c0.replace('hyd_','').replace(/\d$/,''); EXTRA[c0].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; if(RAW[c]) RAW[c].push(r); }); }
+// v15.7: duplicate library rows collapse into one visible entry. The hidden ids stay in F so old logs still compute,
+// and suggestions/templates are redirected to the visible row with the portion scaled (REDIR[id] = [visible id, q factor]).
+const REDIR={ k_gy:['p_gy170',1], k_gyberries:['b_gyberries',0.75], k_whey:['p_whey',1], s_curd100:['p_curd200',0.5], s_curd150:['p_curd200',0.75], d_curdbed:['p_curd200',0.5],
+  p_milk300:['d_milk',1.5], c_roti2:['c_roti1',2], pc_roti1:['c_roti1',1], c_mroti2:['c_mroti1',2], p_eggc3:['p_eggc2',1.5], f_hbanana:['f_banana',0.5], n_almonds10:['k_almonds',0.67], pc_almond10:['k_almonds',0.67],
+  v_sorakaya:['h_sorakaya',1], v_carrotfry:['h_carrotfry',1.5], v_beansfry:['h_beansfry',1.5], s_avakaya:['h_avakaya',1], s_podi:['h_podi',1] };
+for(const id in REDIR){ if(F[id]) F[id].hidden=true; }
+function canon(x){ const r=REDIR[x.id]; return r&&F[r[0]] ? {id:r[0],q:+((x.q||1)*r[1]).toFixed(3)} : x; }
 // Every dish in the library is also searchable as an ingredient in the custom builder, converted to per 100 g (or per piece)
 (function(){ const have=new Set(ING.map(x=>x[0].toLowerCase()));
   Object.values(F).forEach(it=>{ if(it.cat==='gym'||it.cat==='drink'&&it.k===0) return; const b=(function(){ if(!it.g) return null; let m=it.g.match(/^(\d+(?:\.\d+)?)[^(\d]*\((\d+(?:\.\d+)?)\s*g\)/); if(m) return {n:+m[2],unit:'g',pc:+m[2]/+m[1]}; m=it.g.match(/(\d+(?:\.\d+)?)\s*(g|ml)\b/); if(m) return {n:+m[1],unit:m[2]}; m=it.g.match(/^(\d+(?:\.\d+)?)\b/); if(m) return {n:+m[1],unit:'pcs'}; return null; })(); if(!b||!b.n) return;
@@ -1055,7 +1072,7 @@ function isVeg(d=S.day){ const ps=PS(); return ps.allVeg || (!ps.allNonVeg && ps
 function toggleVegDay(d){ const ps=PS(); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=Array.isArray(ps.vegPrev)?ps.vegPrev.slice():[]; delete ps.vegPrev; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); save(); render(); }
 const SEA=/fish|prawn|shrimp|basa|sardine|seafood/i;
 function allowed(it, d=S.day){ if(SEA.test(it.n)&&!PS().seafood) return false; if(!isVeg(d)) return true; const t=it.t; if(t==='n'||t==='tn') return false; if(t==='e'||t==='te') return PS().eggsVeg; return true; }
-function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1})}; }); }
+function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>canon(Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1}))}; }); }
 // A day starts empty (it is a log). Today starts from the plan template so there is something to follow.
 function fresh(d){ return P().meals.map(m=>({name:m.name,time:m.time,items:[]})); }   // v15.4: nothing is logged by default; suggestions are shown, never stored
 function fillTemplate(d=S.day){ const ps=PS(); const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); save(); render(); }
@@ -1126,13 +1143,18 @@ function render(){
   if(S.view==='plan') renderPlan(); else if(S.view==='week') renderWeek(); else if(S.view==='workout') renderWorkout(); else renderWeight();
   requestAnimationFrame(()=>window.scrollTo(0,_sy));
 }
+// v15.7: meal cards fold. Session memory only (never stored). Default open = the meal whose start time is the latest one already passed today.
+const OPENM={};
+function mealMin(t){ const m=(t||'').match(/(\d{1,2})(?::(\d\d))?\s*(am|pm)/i); if(!m) return null; let h=+m[1]%12; if(/pm/i.test(m[3])) h+=12; return h*60+(+(m[2]||0)); }
+function defaultOpen(meals){ const now=new Date(); const cur=now.getHours()*60+now.getMinutes(); let best=0; meals.forEach((m,i)=>{ const t=mealMin(m.time); if(t!==null&&t<=cur) best=i; }); return best; }
+function openSet(){ const k=S.who+'|'+dayKeyFor(S.day); if(!OPENM[k]) OPENM[k]=new Set([defaultOpen(P().meals)]); return OPENM[k]; }
 function renderPlan(){
   const ps=PS(); const plan=isFuture()?P().meals.map(m=>({name:m.name,time:m.time,items:[]})):dayPlan();   // future days: empty meals with suggestions, never stored
-  document.getElementById('title').textContent=P().name+' · '+FULL[S.day];
-  const other=S.who==='p1'?'p2':'p1'; const cb=document.getElementById('copyDay'); cb.textContent='Copy to '+PEOPLE[other].name; cb.title='Give '+PEOPLE[other].name+' the same meals, scaled to their portions';
+  document.getElementById('title').textContent=FULL[S.day]+', '+weekDate(S.day).toLocaleDateString(undefined,{day:'numeric',month:'short'});   // v15.7: the person is already shown in the header
+  const other=S.who==='p1'?'p2':'p1'; const cb=document.getElementById('copyDay'); cb.textContent='Copy'; cb.title='Give '+PEOPLE[other].name+' the same meals, scaled to their portions';
   cb.onclick=()=>{ if(!confirm(`Replace ${PEOPLE[other].name}'s ${FULL[S.day]} with what ${P().name} ate, portions scaled to ${PEOPLE[other].name}'s target? Non-veg and eggs are dropped on ${PEOPLE[other].name}'s veg days.`)) return; const n=copyDayTo(other); schedulePush(other); alert(`${n} items copied to ${PEOPLE[other].name}. Tap ${PEOPLE[other].name} at the top to review.`); };
-  const sw=document.getElementById('daySwitch'); sw.className='daysw'+(isVeg()?' veg':''); sw.textContent = isVeg() ? 'Veg day · tap for non-veg' : 'Non-veg day · tap for veg'; sw.onclick=()=>toggleVegDay(S.day);
-  document.getElementById('subtitle').textContent = isVeg() ? (ps.allVeg?'Veg month is on. ':'Veg day. ')+'Protein from paneer, pappu, Greek yogurt, soya, tofu and whey'+(ps.eggsVeg?' (eggs allowed).':' (no eggs).') : (ps.allNonVeg?'Non-veg every day is on. ':'Non-veg day. ')+'Chicken, eggs or fish carry the protein; portions scale to your target.';
+  const sw=document.getElementById('daySwitch'); sw.className='daysw'+(isVeg()?' veg':''); sw.textContent = isVeg() ? 'Veg' : 'Non-veg'; sw.title=isVeg()?'Veg day, tap for non-veg':'Non-veg day, tap for veg'; sw.setAttribute('aria-label',sw.title); sw.onclick=()=>toggleVegDay(S.day);
+  document.getElementById('subtitle').textContent='';
   const n=document.getElementById('pnotes'); n.innerHTML=P().notes||''; n.style.display=P().notes?'block':'none';
   const wrap=document.getElementById('meals'); wrap.innerHTML=''; const all=[]; const fut=isFuture(); const todayIdx=(new Date().getDay()+6)%7; const isToday=S.week===0&&S.day===todayIdx;
   cb.style.display=fut?'none':'';
@@ -1141,12 +1163,12 @@ function renderPlan(){
   const dayP=plan.reduce((n,m)=>n+tot(m.items).p,0); const dayOK=dayP>=P().target.p-10;
   plan.forEach((m,mi)=>{
     const mt=tot(m.items); all.push(...m.items);
-    const box=document.createElement('div'); box.className='meal'+(/^gym$/i.test(m.name.trim())?' gym':'');
+    const box=document.createElement('div'); const opn=openSet().has(mi); box.className='meal'+(/^gym$/i.test(m.name.trim())?' gym':'')+(opn?'':' closed');
     const tshort=m.time.replace(' to ','–').replace(/:00/g,'').replace(/ (am|pm)/g,'$1');
     const wo=WORKOUTS.find(x=>x.day===S.day); const mname=/^gym$/i.test(m.name.trim())&&wo?`Gym · ${wo.name}`:m.name;
     const share=mealShare(m.name); const ptgt=share?Math.round(P().target.p*share):0; const pc = !ptgt?'var(--muted)':(dayOK||mt.p>=ptgt-3)?'var(--mint)':mt.p>=ptgt*0.7?'var(--amber)':'var(--rose)';
     const mcat=/gym/i.test(m.name)?'gym':/breakfast/i.test(m.name)?'bf':/waking/i.test(m.name)?'drink':/lunch|dinner/i.test(m.name)?'prot':'snack';
-    let html=`<div class="hd"><span class="ico ${mcat} tile">${ICON[mcat]||ICON.mine}</span><div class="hdt"><b>${mname}</b><span><em>${tshort}</em> · ${mt.k} kcal${ptgt?` · <b class="pcol" data-c="${pc}">${mt.p} / ${ptgt} g protein</b>`:''}</span></div>${fut?'':`<button class="btn addr" data-a="add" data-mi="${mi}" title="Add food" aria-label="Add food to ${m.name}">+</button>`}</div>`;
+    let html=`<div class="hd" role="button" tabindex="0" aria-expanded="${opn}" data-fold="${mi}"><span class="ico ${mcat} tile">${ICON[mcat]||ICON.mine}</span><div class="hdt"><b>${mname}</b><span><em>${tshort}</em> · ${m.items.length?`${m.items.length} item${m.items.length>1?'s':''} · `:''}${mt.k} kcal${ptgt?` · <b class="pcol" data-c="${pc}">${mt.p} / ${ptgt} g protein</b>`:''}</span></div>${fut?'':`<button class="btn addr" data-a="add" data-mi="${mi}" title="Add food" aria-label="Add food to ${m.name}">+</button>`}<span class="fchev" aria-hidden="true"></span></div><div class="mbody">`;
     m.items.forEach((x,ii)=>{ const it=F[x.id]; if(!it) return;
       html+=`<div class="item" data-cat="${it.cat}">${ic(it.cat)}<div><div class="n">${it.n}</div><div class="eat">Eat <b>${fmtG(it,x.q)||'as listed'}</b> · ${Math.round(it.k*x.q)} kcal</div><div class="chips"><span class="chip p">Protein ${Math.round(it.p*x.q)} g</span><span class="chip c">Carbs ${Math.round(it.c*x.q)} g</span><span class="chip f">Fat ${Math.round(it.f*x.q)} g</span>${tagHtml(it.t)}</div></div>
         ${fut?'':`<div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit==='pcs'?(b.n*x.q===1?'pc':'pcs'):b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div>`}</div>`; });
@@ -1155,9 +1177,10 @@ function renderPlan(){
     else if(!m.items.length){
       const y=yesterdayMeal(mi); const tp=(ps.templates||[]).filter(t=>t.meal.toLowerCase()===m.name.toLowerCase()); html+=`<div class="addrow"><button class="btn add" data-a="add" data-mi="${mi}">+ Add food</button>${y?`<button class="btn add yd" data-a="yday" data-mi="${mi}" title="${y.map(x=>F[x.id]?F[x.id].n:'').join(', ')}">↺ Same as yesterday</button>`:''}${tp.length?`<button class="btn add yd" data-a="usual" data-mi="${mi}" title="${tp[0].name}">☆ ${tp.length===1?tp[0].name:'My usual'}</button>`:''}</div>`; }
     else if(!/^gym$/i.test(m.name.trim())&&!/waking/i.test(m.name)){ html+=`<div class="tplrow"><button class="btn q" data-a="savetpl" data-mi="${mi}">☆ Save as my usual ${m.name.replace(/ \(.*\)/,'').toLowerCase()}</button></div>`; }
-    box.innerHTML=html; wrap.appendChild(box);
+    box.innerHTML=html+'</div>'; wrap.appendChild(box);
   });
   wrap.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>action(b.dataset.a,+b.dataset.mi,+b.dataset.ii));
+  wrap.querySelectorAll('.hd[data-fold]').forEach(h=>{ const go=(e)=>{ if(e.target.closest('button')) return; const mi=+h.dataset.fold; const o=openSet(); if(o.has(mi)) o.delete(mi); else o.add(mi); const box=h.parentElement; box.classList.toggle('closed',!o.has(mi)); h.setAttribute('aria-expanded',o.has(mi)); }; h.onclick=go; h.onkeydown=(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(e); } }; });
   const gy=document.getElementById('goY'); if(gy) gy.onclick=()=>{ const y=yesterdayPos(); S.week=y.week; S.day=y.day; render(); window.scrollTo(0,0); };
   const dy=document.getElementById('disY'); if(dy) dy.onclick=()=>{ localStorage.setItem('kl-ydis',ymd(new Date())); render(); };
   wrap.querySelectorAll('input.amt').forEach(inp=>{ inp.onchange=()=>{ const mi=+inp.dataset.mi, ii=+inp.dataset.ii; const x=plan[mi].items[ii]; const b=baseOf(F[x.id]); const v=parseFloat(inp.value); if(b&&v>0){ x.q=+(v/b.n).toFixed(3); save(); render(); } else render(); }; });
@@ -1267,13 +1290,14 @@ function recentFamilies(){ const ps=PS(); const y=new Set(), w=new Map(), ever=n
 // Top picks for a meal slot given what is still missing today (protein gap first, then calories), varied by history
 function suggestFor(mi){ const plan=isFuture()?P().meals.map(m=>({name:m.name,time:m.time,items:[]})):dayPlan(); const p=P(); const all=[]; plan.forEach(m=>all.push(...m.items)); const T=tot(all); const pGap=p.target.p-T.p, kGap=p.target.k-T.k; const used=new Set(all.map(x=>x.id)); const recent=recentFamilies(); const name=plan[mi].name.toLowerCase();
   const snackSlot=/mid-morning|pre-gym|evening|snack|waking/.test(name);
-  const cands=Object.values(F).filter(it=>allowed(it)&&!used.has(it.id)&&it.cat!=='gym'&&(snackSlot?['snack','fruit','prot','drink','bf'].includes(it.cat):['prot','carb','veg','side','bf'].includes(it.cat)))
+  const cands=Object.values(F).filter(it=>!it.hidden&&allowed(it)&&!used.has(it.id)&&it.cat!=='gym'&&(snackSlot?['snack','fruit','prot','drink','bf'].includes(it.cat):['prot','carb','veg','side','bf'].includes(it.cat)))
     .map(it=>{ const fam=family(it.n); let sc=0; if(pGap>10) sc+=Math.abs(Math.min(it.p,pGap)-Math.min(35,pGap))*1.2 - (it.p>=15?8:0); else sc+=it.p*0.3; if(kGap<300) sc+=it.k/40; else sc+=Math.abs(it.k-Math.min(kGap,450))/60; sc+=(COST[it.id]||2)*3; if(recent.y.has(fam)) sc+=8; sc+=Math.min(8,(recent.w.get(fam)||0)*3); if(recent.ever.has(it.id)) sc-=5; if(REC.has(it.id)) sc-=3; sc+=hashStr(it.id+ymd(weekDate(S.day)))%5; return {it,fam,sc}; })
     .sort((a,b)=>a.sc-b.sc).filter((c,i,arr)=>arr.findIndex(o=>o.fam===c.fam)===i).slice(0,4);
   return new Set(cands.map(c=>c.it.id)); }
 function treatCount(items){ return items.filter(x=>F[x.id]&&F[x.id].cat==='treat').length; }
+const WARN_OPEN=new Set();
 function renderWarnings(plan,T,tk,tp){
-  const p=P(); const out=[]; const red=(t)=>out.push({l:'red',t}), amb=(t)=>out.push({l:'amb',t});
+  const p=P(); const out=[]; const left=tk-T.k; const red=(t)=>out.push({l:'red',t}), amb=(t)=>out.push({l:'amb',t});
   if(T.k<p.floor) red(`Eating too little: ${T.k} kcal is under your ${p.floor} floor. Below this you lose muscle and your metabolism slows, which is the opposite of lean. Add protein, not carbs.`);
   else if(T.k<tk-150) amb(`Under target by ${tk-T.k} kcal. Once in a while is fine, every day is a shortcut that costs muscle.`);
   if(T.k>tk+300) red(`Over by ${T.k-tk} kcal. At this level there is no deficit left. Cut the carb portion with −, swap the treat, or drop a snack.`);
@@ -1296,7 +1320,7 @@ function renderWarnings(plan,T,tk,tp){
   const mainsShort=plan.map((m,mi)=>({m,mi,p:tot(m.items).p})).filter(x=>/lunch|dinner/i.test(x.m.name)&&x.p<20);
   if(T.p<tp-10||T.p<p.pMin||mainsShort.length||T.k<p.floor){ const gap=Math.max(tp-T.p, mainsShort.length?25:0, T.k<p.floor?20:0); const used=new Set(allItems.map(x=>x.id)); const usedNames=new Set(allItems.map(x=>F[x.id]&&F[x.id].n.toLowerCase().split(',')[0]));
     const mealIdx=(re)=>plan.findIndex(m=>re.test(m.name));
-    const cands=Object.values(F).filter(it=>(it.cat==='prot'||it.cat==='snack')&&it.p>=10&&allowed(it)&&!used.has(it.id)&&!usedNames.has(it.n.toLowerCase().split(',')[0]))
+    const cands=Object.values(F).filter(it=>!it.hidden&&(it.cat==='prot'||it.cat==='snack')&&it.p>=10&&allowed(it)&&!used.has(it.id)&&!usedNames.has(it.n.toLowerCase().split(',')[0]))
       .map(it=>{ const snacky=/whey|yogurt|skyr|curd|milk|cottage|cheese|chana|peanut|nuts|bar|sprout|whites|eggs/i.test(it.n); let target;
         if(mainsShort.length&&!snacky) target=mainsShort[0].mi; else if(snacky) target=(gap>25?mealIdx(/mid-morning/i):mealIdx(/pre-gym|evening/i)); else target=mealIdx(/dinner/i); if(target<0) target=mealIdx(/lunch/i);
         const fit=Math.abs(it.p-gap); const fam=family(it.n); const recent=recentFamilies(); const yday=recent.y.has(fam), week=recent.w.get(fam)||0, ever=recent.ever.has(it.id);
@@ -1320,10 +1344,13 @@ function renderWarnings(plan,T,tk,tp){
   if(!logged){ w.style.display='block'; w.className='warn empty'; w.innerHTML=`<div class="emp"><b>Nothing logged for ${FULL[S.day]} yet.</b><span>Add what you eat with the + on each meal, or start from the plan and adjust.</span><button class="btn q" id="fillPlan">Start from the plan</button></div>`; w.querySelector('#fillPlan').onclick=()=>fillTemplate(S.day); return; }
   if(!out.length){ w.style.display='block'; w.className='warn ok'; w.innerHTML=`<b>On target.</b> ${T.k} kcal, ${T.p} g protein, ${maintDeficit(T.k)} kcal deficit. This is the day that gets you lean. Repeat it.`; return; }
   const hrNow=new Date().getHours(); if(T.k<tk-250&&hrNow>=15&&S.day===((new Date().getDay()+6)%7)) out.push({l:'amb',t:`It is after 3 pm and you are ${tk-T.k} kcal short. Put the gap into dinner or the evening snack: protein first (whey, Greek yogurt, paneer, soya, chicken), then a fist of rice. Do not skip it, under-eating today costs muscle, not fat.`});
-  w.style.display='block'; w.className='warn'; w.innerHTML=out.map(o=>`<div class="wi ${o.l}"><span class="dot" aria-hidden="true">${o.l==="red"?"!":"•"}</span><span class="wt">${o.t}</span></div>`).join('')
+  const brief=[]; if(T.p<tp) brief.push(`Protein ${tp-T.p} g short`); if(left<-100) brief.push(`${-left} kcal over`); else if(left>0) brief.push(`${left} kcal left`); if(T.c>p.carbMax) brief.push('carbs high'); if(T.f>p.fatMax) brief.push('fat high'); if(!brief.length) brief.push(out[0].t.split('.')[0]);
+  const hasRed=out.some(o=>o.l==='red'); const wopen=WARN_OPEN.has(dayKeyFor(S.day));
+  w.style.display='block'; w.className='warn fold'+(wopen?' open':''); w.innerHTML=`<button class="wsum" aria-expanded="${wopen}"><span class="dot ${hasRed?'red':'amb'}" aria-hidden="true">${hasRed?'!':'•'}</span><span class="wt">${brief.join(' · ')}</span><span class="fchev" aria-hidden="true"></span></button><div class="wbody">`+out.map(o=>`<div class="wi ${o.l}"><span class="dot" aria-hidden="true">${o.l==="red"?"!":"•"}</span><span class="wt">${o.t}</span></div>`).join('')
     + (()=>{ const more=[],less=[]; fixes.forEach((f,i)=>{ (/^(Shrink|Swap)/.test(f.label)||/^Biggest fat/.test(f.t)?less:more).push(i); });
         const grp=(hd,ids)=>ids.length?`<div class="fixhd">${hd}</div>`+ids.map(i=>`<div class="fix"><span>${fixes[i].t}</span><button class="btn sw" data-fix="${i}">${fixes[i].label}</button></div>`).join(''):'';
-        return grp('Eat more of this',more)+grp('Eat less of this',less); })();
+        return grp('Eat more of this',more)+grp('Eat less of this',less); })()+'</div>';
+  w.querySelector('.wsum').onclick=()=>{ const k=dayKeyFor(S.day); if(WARN_OPEN.has(k)) WARN_OPEN.delete(k); else WARN_OPEN.add(k); w.classList.toggle('open'); w.querySelector('.wsum').setAttribute('aria-expanded',w.classList.contains('open')); };
   w.querySelectorAll('button[data-fix]').forEach(b=>b.onclick=()=>fixes[+b.dataset.fix].run());
 }
 function maintDeficit(k){ return P().maint-k; }
@@ -1424,6 +1451,7 @@ function renderWeight(){
 // ================= ACTIONS =================
 function action(a,mi,ii){
   if(isFuture()) return;
+  if(mi>=0) openSet().add(mi);
   const plan=dayPlan();
   if(a==='sugg'){ const sg=(template(S.day)[mi]||{}).items||[]; const x=sg[ii]; if(x){ plan[mi].items.push({id:x.id,q:x.q}); save(); render(); } return; }
   if(a==='suggall'){ const sg=(template(S.day)[mi]||{}).items||[]; plan[mi].items.push(...sg.map(x=>({id:x.id,q:x.q}))); save(); render(); return; }
@@ -1454,9 +1482,9 @@ function renderSheet(){
   const q=document.getElementById('search').value.trim().toLowerCase();
   document.getElementById('search').style.display = sheet.cat==='custom' ? 'none' : 'block';
   if(sheet.cat==='custom'){ renderCustomForm(); return; }
-  const foodSearch=(q)=>{ const words=q.split(/\s+/).filter(Boolean); const esc=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); return Object.values(F).filter(x=>x.cat!=='gym').map(x=>{ const name=x.n.toLowerCase(), al=(ALIAS[x.id]||'').toLowerCase(); let sc=0; for(const w of words){ const ww=new RegExp('(^|[^a-z])'+esc(w)+'([^a-z]|$)'); if(ww.test(name)) sc+=8; else if(name.split(/[\s,/()+·-]+/).some(t=>t.startsWith(w))) sc+=5; else if(ww.test(al)) sc+=4; else if(al.split(/\s+/).some(t=>t.startsWith(w))) sc+=3; else if((name+' '+al).includes(w)) sc+=1; else return null; } return {x,sc}; }).filter(Boolean).sort((a,b)=>b.sc-a.sc||(REC.has(b.x.id)?1:0)-(REC.has(a.x.id)?1:0)||a.x.n.length-b.x.n.length).map(o=>o.x); };
-  let list = q ? foodSearch(q) : (sheet.cat==='all' ? Object.values(F).filter(x=>x.cat!=='gym') : sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]));
-  const hiddenN=list.filter(it=>!allowed(it)).length; if(!sheet.showAll) list=list.filter(allowed);
+  const foodSearch=(q)=>{ const words=q.split(/\s+/).filter(Boolean); const esc=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); return Object.values(F).filter(x=>x.cat!=='gym'&&!x.hidden).map(x=>{ const name=x.n.toLowerCase(), al=(ALIAS[x.id]||'').toLowerCase(); let sc=0; for(const w of words){ const ww=new RegExp('(^|[^a-z])'+esc(w)+'([^a-z]|$)'); if(ww.test(name)) sc+=8; else if(name.split(/[\s,/()+·-]+/).some(t=>t.startsWith(w))) sc+=5; else if(ww.test(al)) sc+=4; else if(al.split(/\s+/).some(t=>t.startsWith(w))) sc+=3; else if((name+' '+al).includes(w)) sc+=1; else return null; } return {x,sc}; }).filter(Boolean).sort((a,b)=>b.sc-a.sc||(REC.has(b.x.id)?1:0)-(REC.has(a.x.id)?1:0)||a.x.n.length-b.x.n.length).map(o=>o.x); };
+  let list = q ? foodSearch(q) : (sheet.cat==='all' ? Object.values(F).filter(x=>x.cat!=='gym'&&!x.hidden) : sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]).filter(x=>!x.hidden));
+  const hiddenN=list.filter(it=>!allowed(it)).length; if(!sheet.showAll) list=list.filter(it=>allowed(it));   // v15.7 fix: filter(allowed) passed the array index as the day
   if(cur) list.sort((a,b)=>Math.abs(a.p-cur.p)-Math.abs(b.p-cur.p));
   if(!q) list.sort((a,b)=>(REC.has(b.id)?1:0)-(REC.has(a.id)?1:0));
   const o=document.getElementById('opts'); o.innerHTML='';

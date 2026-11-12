@@ -852,3 +852,29 @@ html[data-theme=dark] #toast,html:not([data-theme=light]) #toast{background:rgba
 @media (min-width:900px){#toast{bottom:28px}#savebar{left:auto;right:24px;max-width:480px}}
 #ovKey #keyGo{width:100%;margin-top:14px;min-height:50px;border-radius:12px;font-size:17px;font-weight:600}
 #ovKey #keySkip{width:100%;margin-top:8px}
+
+/* ===== v15.7: compact top band, folding meals ===== */
+.title{flex-direction:row;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 8px}
+.title h2{font-size:22px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbtns{flex-wrap:nowrap;flex-shrink:0}
+#subtitle:empty{display:none}
+.fchev{width:10px;height:10px;border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);transform:rotate(45deg);transition:transform .2s;flex-shrink:0;margin:0 4px 4px 2px}
+.meal .hd{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.meal .hd:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:12px}
+.meal.closed .hd{border-bottom:0;padding-bottom:2px;margin-bottom:0}
+.meal.closed .mbody{display:none}
+.meal.closed .fchev{transform:rotate(-45deg);margin-bottom:0}
+.meal.closed{padding-bottom:12px}
+.warn.fold{padding:0 16px}
+.warn.fold .wsum{display:flex;align-items:center;gap:12px;width:100%;background:transparent;border:0;padding:12px 0;font:inherit;font-size:14.5px;font-weight:600;color:var(--text);text-align:left;cursor:pointer}
+.warn.fold .wsum .dot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;line-height:1;background:var(--orange3);color:var(--orangeT);flex-shrink:0}
+.warn.fold .wsum .dot.red{background:var(--red3);color:var(--red)}
+.warn.fold .wsum .wt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.warn.fold .wsum .fchev{transform:rotate(-45deg);margin-bottom:0}
+.warn.fold.open .wsum .fchev{transform:rotate(45deg)}
+.warn.fold .wbody{display:none;padding-bottom:6px}
+.warn.fold.open .wbody{display:block}
+.warn.fold .wbody .wi:first-child{border-top:1px solid var(--line)}
+.title h2{font-size:19px}
+.title .daysw{font-size:12.5px;padding:6px 10px}
+.title .daysw.copy:before{content:""}
