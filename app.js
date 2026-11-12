@@ -981,7 +981,10 @@ loadAllCustoms();
 let storeOK=true;
 // ---------- CLOUD SYNC (api.php on your own hosting) ----------
 const CLOUD={on:false, key:'', user:'', status:'local', rev:{}, timer:{}, busy:{}, dirty:{}};
-function setStatus(t,c){ CLOUD.status=t; const el=document.getElementById('sync'); if(!el) return; el.textContent=t; el.className='sync '+(c||''); }
+function setStatus(t,c){ CLOUD.status=t; const el=document.getElementById('sync'); if(el){ el.textContent=t; el.className='sync '+(c||''); }
+  const bar=document.getElementById('savebar'); if(bar){ const bad=/^Not saved|^Offline/.test(t); bar.classList.toggle('show',bad); if(bad) bar.querySelector('span').textContent=t.replace('Offline, will retry','Offline. Your entries are kept on this phone and will be saved when it reconnects.').replace('Not saved: server rejected the data','Not saved: the server refused this change. Tap Retry; if it keeps failing, check the Activity log in Settings.'); }
+  if(c==='ok'&&t==='Synced'&&CLOUD.pendingToast){ CLOUD.pendingToast=false; toast('Saved '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})); } }
+let _toastT=null; function toast(msg){ let el=document.getElementById('toast'); if(!el){ el=document.createElement('div'); el.id='toast'; document.body.appendChild(el); } el.textContent=msg; el.classList.add('show'); clearTimeout(_toastT); _toastT=setTimeout(()=>el.classList.remove('show'),1600); }
 function apiUrl(){ return 'api.php'; }
 async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who='+who:''),{method:body?'POST':'GET',headers:{'X-App-Key':CLOUD.key,'X-App-User':CLOUD.user||'p1','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'}); if(r.status===401){ forgetKey(); throw new Error('auth'); } if(r.status===429){ CLOUD.lockedUntil=Date.now()+15*60*1000; throw new Error('locked'); } if(r.status===422){ let j={}; try{ j=await r.json(); }catch(e){} throw new Error('rejected: '+(j.error||'')); } if(r.status===429) throw new Error('locked'); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
 function forgetKey(){ CLOUD.key=''; try{ localStorage.removeItem('kl-key'); }catch(e){} }
@@ -1042,7 +1045,7 @@ window.addEventListener('focus',()=>{ if(CLOUD.on&&CLOUD.key&&!isLocked()&&!Obje
 setInterval(async()=>{ if(document.visibilityState!=='visible'||!CLOUD.on||!CLOUD.key||isLocked()||Object.values(CLOUD.dirty).some(Boolean)||Object.values(CLOUD.busy).some(Boolean)) return;
   try{ for(const who of ['p1','p2']){ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ await cloudPull(); break; } } }catch(e){ if(e.message==='auth') askKey('Password changed. Sign in again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } },20000);
 function saveLocal(){ try{ localStorage.setItem('kl-meal-v2',JSON.stringify({people:S.people,who:S.who,savedAt:new Date().toISOString()})); storeOK=true; }catch(e){ storeOK=false; } }
-function save(){ saveLocal(); schedulePush(S.who); }
+function save(){ saveLocal(); CLOUD.pendingToast=true; schedulePush(S.who); if(!CLOUD.on||!CLOUD.key) toast('Saved on this phone only'); }
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
 function P(){ return PEOPLE[S.who]; }
 function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=(P().vegDays||[]).slice(); if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } fixMaps(ps); if(!ps.days) ps.days={}; if(!Array.isArray(ps.weights)) ps.weights=[]; if(!ps.log) ps.log={}; if(!ps.m7) mergeDays(ps); if(!TIDIED.has(S.who)){ TIDIED.add(S.who); tidy(ps); } if(!ps.customs) ps.customs=[]; if(!ps.templates) ps.templates=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
@@ -1684,3 +1687,5 @@ document.getElementById('auCsv').onclick=()=>{ const esc=v=>'"'+String(v??'').re
   document.addEventListener('focusin',e=>{ if(e.target&&e.target.id==='search'){ setTimeout(()=>{ fit(); const sh=e.target.closest('.sheet'); if(sh) sh.scrollTo({top:e.target.offsetTop-10,behavior:'smooth'}); },250); } });
   document.addEventListener('focusout',()=>setTimeout(fit,100));
 })();
+
+(function(){ const bar=document.createElement('div'); bar.id='savebar'; bar.innerHTML='<span></span><button type="button">Retry</button>'; document.body.appendChild(bar); bar.querySelector('button').onclick=()=>{ ['p1','p2'].forEach(w=>{ if(CLOUD.dirty[w]) schedulePush(w,0); }); if(!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); }; })();
