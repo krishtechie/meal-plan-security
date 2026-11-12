@@ -1053,7 +1053,7 @@ function allowed(it, d=S.day){ if(SEA.test(it.n)&&!PS().seafood) return false; i
 function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1})}; }); }
 // A day starts empty (it is a log). Today starts from the plan template so there is something to follow.
 function fresh(d){ return P().meals.map(m=>({name:m.name,time:m.time,items:[]})); }   // v15.4: nothing is logged by default; suggestions are shown, never stored
-function fillTemplate(d=S.day){ const ps=PS(); const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); ps.manual=ps.manual||{}; ps.manual[dayKeyFor(d)]=1; save(); render(); }
+function fillTemplate(d=S.day){ const ps=PS(); const plan=dayPlan(d); const t=template(d); plan.forEach((m,i)=>{ if(t[i]) m.items=t[i].items; }); save(); render(); }
 function dayKeyFor(d){ return ymd(weekDate(d)); }
 // v15.3: a day is stored under its date only. Veg / non-veg is a view on the day, not part of its identity,
 // so switching a day between veg and non-veg never loses what was logged. Older keys (date + 'v'/'n' + 'e'/'x') are merged once.
