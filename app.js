@@ -1015,13 +1015,15 @@ function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.ad
 async function cloudPull(){
   setStatus('Syncing…');
   try{
-    for(const who of ['p1','p2']){ const r=await api('get',who); if(r.data){ CLOUD.rev[who]=r.rev; if(!CLOUD.dirty[who]||(r.data.gen||0)>((S.people[who]||{}).gen||0)){ S.people[who]=r.data; CLOUD.dirty[who]=false; } } else if(S.people[who]){ CLOUD.dirty[who]=true; schedulePush(who,0); } }
+    for(const who of ['p1','p2']){ const r=await api('get',who); if(r.data){ fixMaps(r.data); CLOUD.rev[who]=r.rev; if(!CLOUD.dirty[who]||(r.data.gen||0)>((S.people[who]||{}).gen||0)){ S.people[who]=r.data; CLOUD.dirty[who]=false; } } else if(S.people[who]){ CLOUD.dirty[who]=true; schedulePush(who,0); } }
     loadAllCustoms(); saveLocal(); render(); setStatus('Synced','ok');
   }catch(e){ if(e.message==='auth'){ askKey('Wrong password. Try again.'); } else if(e.message==='locked'){ askKey('Too many wrong attempts. Wait 15 minutes.'); } else setStatus('Offline, saved on this device','warn'); }
 }
 function schedulePush(who,delay=700){ if(!CLOUD.on||!CLOUD.key||isLocked()) return; CLOUD.dirty[who]=true; clearTimeout(CLOUD.timer[who]); CLOUD.timer[who]=setTimeout(()=>cloudPush(who),delay); }
 // Merge a server copy into the local one. Local wins on the same key; everything else is kept from both sides.
-function mergeDoc(local,server){ if(!server) return local; if((server.gen||0)>(local.gen||0)) return server;   // a server-side restore (higher generation) replaces the local copy outright
+// A map that arrived as a list (empty object round-tripped through the server) would silently drop every key on save; repair it.
+function fixMaps(d){ if(!d) return d; ['days','log','wlog','manual'].forEach(k=>{ if(Array.isArray(d[k])) d[k]=Object.assign({},d[k]); }); return d; }
+function mergeDoc(local,server){ fixMaps(local); fixMaps(server); if(!server) return local; if((server.gen||0)>(local.gen||0)) return server;   // a server-side restore (higher generation) replaces the local copy outright
   const out=Object.assign({},server,local);
   ['days','log','wlog','manual'].forEach(k=>{ out[k]=Object.assign({},server[k]||{},local[k]||{}); });
   const byD={}; (server.weights||[]).forEach(w=>byD[w.d]=w); (local.weights||[]).forEach(w=>byD[w.d]=w); out.weights=Object.values(byD).sort((a,b)=>a.d<b.d?-1:1);
@@ -1030,7 +1032,7 @@ function mergeDoc(local,server){ if(!server) return local; if((server.gen||0)>(l
   return out; }
 async function cloudPush(who){ if(CLOUD.busy[who]){ schedulePush(who,500); return; } CLOUD.busy[who]=true; setStatus('Saving…');
   try{ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ const r=await api('get',who); if(r.data){ S.people[who]=mergeDoc(S.people[who],r.data); loadAllCustoms(); saveLocal(); render(); } }
-    const r=await api('put',who,{data:S.people[who]}); CLOUD.rev[who]=r.rev; CLOUD.dirty[who]=false; setStatus('Synced','ok'); }
+    fixMaps(S.people[who]); const r=await api('put',who,{data:S.people[who]}); CLOUD.rev[who]=r.rev; CLOUD.dirty[who]=false; setStatus('Synced','ok'); }
   catch(e){ if(e.message==='auth') askKey('Wrong password. Try again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes.'); else if(/^rejected/.test(e.message)){ setStatus('Not saved: server rejected the data','warn'); console.warn(e.message); } else { setStatus('Offline, will retry','warn'); setTimeout(()=>schedulePush(who,0),15000); } }
   finally{ CLOUD.busy[who]=false; } }
 // refresh from the server when the app comes back to the foreground (other phone may have changed things)
@@ -1043,7 +1045,7 @@ function saveLocal(){ try{ localStorage.setItem('kl-meal-v2',JSON.stringify({peo
 function save(){ saveLocal(); schedulePush(S.who); }
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
 function P(){ return PEOPLE[S.who]; }
-function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=(P().vegDays||[]).slice(); if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } if(!ps.days) ps.days={}; if(!Array.isArray(ps.weights)) ps.weights=[]; if(!ps.log) ps.log={}; if(!ps.m7) mergeDays(ps); if(!TIDIED.has(S.who)){ TIDIED.add(S.who); tidy(ps); } if(!ps.customs) ps.customs=[]; if(!ps.templates) ps.templates=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
+function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=(P().vegDays||[]).slice(); if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } fixMaps(ps); if(!ps.days) ps.days={}; if(!Array.isArray(ps.weights)) ps.weights=[]; if(!ps.log) ps.log={}; if(!ps.m7) mergeDays(ps); if(!TIDIED.has(S.who)){ TIDIED.add(S.who); tidy(ps); } if(!ps.customs) ps.customs=[]; if(!ps.templates) ps.templates=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
 function loadAllCustoms(){ Object.values(S.people).forEach(ps=>(ps.customs||[]).forEach(c=>{ if(!F[c.id]) F[c.id]=c; })); }
 function isVeg(d=S.day){ const ps=PS(); return ps.allVeg || (!ps.allNonVeg && ps.vegDays.includes(d)); }
 function toggleVegDay(d){ const ps=PS(); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=Array.isArray(ps.vegPrev)?ps.vegPrev.slice():[]; delete ps.vegPrev; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); save(); render(); }

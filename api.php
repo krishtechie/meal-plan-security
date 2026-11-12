@@ -208,6 +208,8 @@ if ($a === 'put') {
   if ($err) { audit('rejected', ['why' => $err]); http_response_code(422); echo json_encode(['ok' => false, 'error' => 'rejected: ' . $err]); exit; }
   $fp = fopen($file, 'c+'); flock($fp, LOCK_EX);
   $cur = stream_get_contents($fp); $curObj = $cur ? json_decode($cur, true) : null; $rev = ($curObj['rev'] ?? 0) + 1;
+  // PHP decodes an empty JSON object as an empty array and would write it back as []; keep maps as maps.
+  foreach (['days', 'log', 'wlog', 'manual'] as $mapField) { if (isset($in['data'][$mapField]) && $in['data'][$mapField] === []) { $in['data'][$mapField] = new stdClass(); } }
   $out = json_encode(['rev' => $rev, 'updated' => gmdate('c'), 'by' => $user, 'data' => $in['data']]);
   ftruncate($fp, 0); rewind($fp); fwrite($fp, $out); fflush($fp); flock($fp, LOCK_UN); fclose($fp);
   $bk = DATA_DIR . "/backup-$who-" . gmdate('Y-m-d') . '.json'; if (!file_exists($bk)) { copy($file, $bk); }
