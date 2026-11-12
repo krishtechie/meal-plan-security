@@ -32,7 +32,7 @@
 <link rel="apple-touch-startup-image" href="splash/750x1334-light.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: light)">
 <link rel="apple-touch-startup-image" href="splash/750x1334-dark.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=59">
+<link rel="stylesheet" href="app.css?v=60">
 </head>
 <body>
 <div class="app">
@@ -175,6 +175,13 @@
     <div class="gf" id="pfMsg"></div>
   </div>
 </div>
+<div class="ov" id="ovDev">
+  <div class="sheet ios">
+    <div class="shead"><span class="stitle">Devices</span><button class="sdone" id="devClose">Done</button></div>
+    <div class="gf top">Every phone or browser that signed in has its own session. Sessions end after 30 days without use, or when you remove them here. Removing one does not touch your data.</div>
+    <div class="grp" id="devList"></div>
+  </div>
+</div>
 <div class="ov" id="ovAudit">
   <div class="sheet ios">
     <div class="shead"><span class="stitle">Activity</span><button class="sdone" id="auClose">Done</button></div>
@@ -212,6 +219,7 @@
     <div class="gh">Sync</div>
     <div class="grp">
       <button class="row navr" id="syncNow"><div class="rl"><span class="rico c-green"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 0 1-13 5.1"/><path d="M4.5 12a7.5 7.5 0 0 1 13-5.1"/><path d="M17.5 3.5v3.6h-3.6M6.5 20.5v-3.6h3.6"/></svg></span><span>Sync now</span></div><span class="rv" id="syncState"></span><i class="chev"></i></button>
+      <button class="row navr" id="openDev"><div class="rl"><span class="rico c-green"><svg viewBox="0 0 24 24"><rect x="6.5" y="3" width="11" height="18" rx="2.5"/><path d="M11 17.5h2"/></svg></span><span>Signed-in devices</span></div><i class="chev"></i></button>
       <button class="row navr red" id="syncOut"><div class="rl"><span class="rico c-red"><svg viewBox="0 0 24 24"><path d="M9 4.5H5.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H9"/><path d="M13 8l4 4-4 4M17 12H8.5"/></svg></span><span>Sign out on this device</span></div><i class="chev"></i></button>
     </div>
     <div class="gf" id="syncInfo"></div>
@@ -224,10 +232,10 @@
     <div class="gh">Activity</div>
     <div class="grp"><button class="row navr" id="openAudit"><div class="rl"><span class="rico c-orange"><svg viewBox="0 0 24 24"><path d="M8 6.5h11M8 12h11M8 17.5h11"/><circle cx="4.8" cy="6.5" r=".9"/><circle cx="4.8" cy="12" r=".9"/><circle cx="4.8" cy="17.5" r=".9"/></svg></span><span>View activity log</span></div><i class="chev"></i></button></div>
     <div class="gf">Every sign-in, sync and save on the server, with the result and which device it came from.</div>
-    <div class="ver" id="appVer">Meal Planner v15.7</div>
+    <div class="ver" id="appVer">Meal Planner v15.8</div>
   </div>
 </div>
 
-<script src="app.js?v=59" defer></script>
+<script src="app.js?v=60" defer></script>
 </body>
 </html>

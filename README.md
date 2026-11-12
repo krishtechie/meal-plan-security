@@ -40,6 +40,7 @@ Live instance: private. The code is public; the people, targets and data are not
 | 7 | Per-account credentials and per-account lockout | A01 Broken Access Control | done |
 | 8 | Service worker never caches the API; `worker-src 'self'` in CSP | A05 Security Misconfiguration | done |
 | 9 | Personal data removed from the public code and reports; served from server config after sign-in | A01 Broken Access Control, A04 Insecure Design | done |
+| 10 | Session tokens: the password is sent once at sign-in and never stored on the device; sessions expire, are listed in the app and can be revoked per device | A07 Identification and Authentication Failures, A02 Cryptographic Failures | done |
 
 ## Results
 
@@ -118,10 +119,21 @@ Rejections return `422` with the reason and are logged as `rejected`. The client
 
 **Fix.**
 - `config.php` can hold `APP_USERS`, a bcrypt hash per account (`p1`, `p2`), or a single `APP_PASSWORD_HASH` shared by both. The server reports which mode is active and the client adapts.
-- Requests send `X-App-User` and `X-App-Key`. In per-account mode the hash looked up is the one for that account. A wrong pair never reveals which part was wrong.
+- Sign-in sends `X-App-User` and `X-App-Key` to `a=login`. In per-account mode the hash looked up is the one for that account. A wrong pair never reveals which part was wrong. Every later request carries the session token from fix 10 instead.
 - Lockout is two-layered: 5 failures per IP **and** 20 failures per account across all IPs, both for 15 minutes.
 - Each stored record carries `by`, the account that wrote it, which the audit log also records.
 - `gen.php` creates the hashes in one call and is deleted after use, as with fix 1.
+
+### Fix 10: session tokens instead of a stored password
+
+**Problem.** Until v15.7 the phone kept the password in local storage and sent it with every request. Anyone with the device, a backup of it, or a browser extension could read the password itself, and there was no way to sign one device out from another.
+
+**Fix.**
+- `POST api.php?a=login` verifies the password once and returns a 256-bit random token. The client stores only the token; the password field is cleared and never written anywhere.
+- Every other action requires `X-App-Token`. The server keeps only the SHA-256 of each token in `sessions.json` (mode 0600, outside the web root) with user, creation time, last use, IP and user agent.
+- Sessions expire after 30 idle days or 180 days total. A bad token counts toward the IP lockout like a bad password.
+- `a=sessions` lists every active session; `a=revoke` ends one by id; `a=logout` ends the current one. The app shows them under Settings, Signed-in devices, and Sign out also revokes the token server-side before wiping the device.
+- Devices that still held a password from an older build trade it for a token once, on first load, and delete it.
 
 ### Fix 8: service worker
 
@@ -161,7 +173,7 @@ The app has no names, targets or household rules baked in. To host your own copy
 
 ## Status
 
-All nine fixes done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live and readable in the app. Personal data served only after sign-in and editable in the app. Data stored outside the web root. One-time migration code removed in v15. Next: short-lived session tokens instead of the stored password.
+All ten fixes done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live and readable in the app. Personal data served only after sign-in and editable in the app. Data stored outside the web root. Sign-in by session token with per-device revocation. Next: passkeys (WebAuthn) so there is no password at all.
 
 ## Author
 

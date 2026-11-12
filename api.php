@@ -3,7 +3,10 @@
 // GET  api.php?a=ping                -> {ok:true, auth:bool, user:string}
 // GET  api.php?a=get&who=p1          -> stored JSON for that person
 // POST api.php?a=put&who=p1          -> body = {data:{...}}; returns {ok:true, rev:N}
-// Every request needs header X-App-Key: <that person's password> (optionally X-App-User: p1|p2)
+// Fix 10 (v15.8): sign in once with POST api.php?a=login + header X-App-Key: <password>; the reply carries a session token.
+// Every other request sends header X-App-Token: <token> (plus X-App-User: p1|p2). The password never travels again and is
+// never stored on the phone. Tokens live hashed in DATA_DIR/sessions.json, expire after 30 idle days or 180 days total,
+// and can be listed (a=sessions) and revoked (a=revoke, a=logout) from the app.
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 if (!file_exists(__DIR__ . '/config.php')) { http_response_code(503); echo json_encode(['ok' => false, 'error' => 'setup', 'hint' => 'open setup.php once to create config.php']); exit; }
@@ -29,12 +32,15 @@ $ua   = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 80);
 $a    = $_GET['a'] ?? '';
 $who  = strtolower($_GET['who'] ?? '');
 $key  = $_SERVER['HTTP_X_APP_KEY'] ?? '';
+$tok  = $_SERVER['HTTP_X_APP_TOKEN'] ?? '';
 $user = strtolower($_SERVER['HTTP_X_APP_USER'] ?? '');
-// No user header: the password itself identifies the person (each account has its own hash).
-if ($user === '' && $key !== '') { foreach ($USERS as $acct => $hash) { if (password_verify($key, $hash)) { $user = $acct; break; } } if ($user === '') { $user = 'invalid'; } }
 
 // Fix 5: strict input validation. Only known actions and known accounts.
-if (!in_array($a, ['ping', 'get', 'put', 'rev', 'audit', 'profiles_put'], true)) { $a = 'unknown'; }
+if (!in_array($a, ['ping', 'login', 'logout', 'sessions', 'revoke', 'get', 'put', 'rev', 'audit', 'profiles_put'], true)) { $a = 'unknown'; }
+if ($a !== 'login') { $key = ''; }                       // the password is only ever read by login
+if (!preg_match('/^[a-f0-9]{64}$/', $tok)) { $tok = ''; }
+// login without a user header: the password itself identifies the person (each account has its own hash).
+if ($a === 'login' && $user === '' && $key !== '') { foreach ($USERS as $acct => $hash) { if (password_verify($key, $hash)) { $user = $acct; break; } } if ($user === '') { $user = 'invalid'; } }
 if ($who !== '' && !array_key_exists($who, $USERS)) { $who = 'invalid'; }
 if ($user !== '' && !array_key_exists($user, $USERS)) { $user = 'invalid'; }
 if (strlen($key) > 200) { $key = ''; }
@@ -62,22 +68,62 @@ if ($ipFails >= 5 || ($user !== '' && $acFails >= 20)) {
   fail(429, 'locked', 'too many attempts, try again in 15 minutes');
 }
 
-// Fix 1: compare against a bcrypt hash, never the plain password
-$authed = ($key !== '') && $user !== '' && $user !== 'invalid' && password_verify($key, $USERS[$user]);
-if ($key !== '') {
-  if ($authed) { unset($rl[$ipKey], $rl[$acKey]); }
+// ---- Fix 10: sessions ----
+function sessFile() { return DATA_DIR . '/sessions.json'; }
+function loadSess(): array { $f = sessFile(); $s = file_exists($f) ? (json_decode(file_get_contents($f), true) ?: []) : []; $t = time(); $ch = false;
+  foreach ($s as $h => $v) { if ($t - ($v['last'] ?? 0) > 30 * 86400 || $t - ($v['created'] ?? 0) > 180 * 86400) { unset($s[$h]); $ch = true; } }
+  if ($ch) saveSess($s); return $s; }
+function saveSess(array $s): void { $tmp = sessFile() . '.tmp'; file_put_contents($tmp, json_encode($s), LOCK_EX); rename($tmp, sessFile()); @chmod(sessFile(), 0600); }
+$shared = count(array_unique(array_values($USERS))) === 1;   // one password for both: the app asks who is signing in
+$sess = loadSess(); $tokHash = $tok !== '' ? hash('sha256', $tok) : ''; $cur = $tokHash !== '' ? ($sess[$tokHash] ?? null) : null;
+
+if ($a === 'login') {
+  if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail(405, 'method', 'POST required');
+  // Fix 1: compare against a bcrypt hash, never the plain password
+  $ok = ($key !== '') && $user !== '' && $user !== 'invalid' && password_verify($key, $USERS[$user]);
+  if ($ok) { unset($rl[$ipKey], $rl[$acKey]); }
   else { $rl[$ipKey] = ['n' => $ipFails + 1, 't' => $now]; if ($user !== '') { $rl[$acKey] = ['n' => $acFails + 1, 't' => $now]; } }
   file_put_contents($rlFile, json_encode($rl), LOCK_EX);
+  if (!$ok) fail(401, $key === '' ? 'no_key' : 'bad_password', 'bad password');
+  $t = bin2hex(random_bytes(32)); $id = substr(bin2hex(random_bytes(4)), 0, 8);
+  $sess[hash('sha256', $t)] = ['id' => $id, 'user' => $shared ? '' : $user, 'created' => $now, 'last' => $now, 'ip' => $ip, 'ua' => $ua];
+  if (count($sess) > 40) { uasort($sess, fn($x, $y) => ($x['last'] ?? 0) <=> ($y['last'] ?? 0)); $sess = array_slice($sess, -40, null, true); }
+  saveSess($sess);
+  audit('ok', ['sid' => $id]);
+  $out = ['ok' => true, 'token' => $t, 'sid' => $id, 'user' => $shared ? null : $user, 'shared' => $shared];
+  $pr = loadProfiles(); if ($pr) { $out['profiles'] = $pr; }   // names and targets only after sign-in
+  echo json_encode($out); exit;
+}
+
+// Every other action: a valid, unexpired token. A bad token counts as a failed attempt for the lockout.
+$authed = $cur !== null;
+if ($tok !== '' && !$authed) { $rl[$ipKey] = ['n' => $ipFails + 1, 't' => $now]; file_put_contents($rlFile, json_encode($rl), LOCK_EX); }
+if ($authed) {
+  if ($cur['user'] !== '') { $user = $cur['user']; }                       // per-person password: the token decides who you are
+  elseif ($user === '' || $user === 'invalid') { $user = 'p1'; }           // shared password: the phone says which person
+  if ($now - ($cur['last'] ?? 0) > 3600) { $sess[$tokHash]['last'] = $now; $sess[$tokHash]['ip'] = $ip; saveSess($sess); }   // sliding expiry, written at most hourly
 }
 if ($a === 'ping') {
-  audit($authed ? 'ok' : ($key === '' ? 'no_key' : 'bad_password'));
-  $shared = count(array_unique(array_values($USERS))) === 1;   // one password for both: the app asks who is signing in
-  $out = ['ok' => true, 'auth' => $authed, 'user' => $authed ? $user : null, 'shared' => $shared];
+  audit($authed ? 'ok' : ($tok === '' ? 'no_key' : 'bad_token'));
+  $out = ['ok' => true, 'auth' => $authed, 'user' => $authed ? ($cur['user'] !== '' ? $cur['user'] : null) : null, 'shared' => $shared];
   if ($authed) { $pr = loadProfiles(); if ($pr) { $out['profiles'] = $pr; } }   // names and targets only after sign-in
   echo json_encode($out); exit;
 }
-if (!$authed) { fail(401, $key === '' ? 'no_key' : 'bad_password', 'bad password'); }
+if (!$authed) { fail(401, $tok === '' ? 'no_key' : 'bad_token', 'not signed in'); }
 if ($a === 'unknown') { fail(404, 'unknown_action', 'unknown action'); }
+if ($a === 'logout') { unset($sess[$tokHash]); saveSess($sess); audit('ok', ['sid' => $cur['id'] ?? '']); echo json_encode(['ok' => true]); exit; }
+if ($a === 'sessions') {
+  $list = []; foreach ($sess as $h => $v) { $list[] = ['id' => $v['id'] ?? '', 'user' => $v['user'] ?? '', 'created' => $v['created'] ?? 0, 'last' => $v['last'] ?? 0, 'ip' => $v['ip'] ?? '', 'ua' => $v['ua'] ?? '', 'current' => $h === $tokHash]; }
+  usort($list, fn($x, $y) => $y['last'] <=> $x['last']);
+  audit('ok'); echo json_encode(['ok' => true, 'sessions' => $list]); exit;
+}
+if ($a === 'revoke') {
+  if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail(405, 'method', 'POST required');
+  $body = json_decode(file_get_contents('php://input'), true); $id = (string)($body['id'] ?? '');
+  if (!preg_match('/^[a-f0-9]{8}$/', $id)) fail(400, 'bad_request', 'bad id');
+  $n = 0; foreach ($sess as $h => $v) { if (($v['id'] ?? '') === $id) { unset($sess[$h]); $n++; } }
+  saveSess($sess); audit('ok', ['sid' => $id, 'removed' => $n]); echo json_encode(['ok' => true, 'removed' => $n]); exit;
+}
 // v15: profiles (names, targets, notes) live in DATA_DIR/profiles.json and are editable in the app after sign-in.
 // APP_PROFILES in config.php is only the starting point for installs that predate this.
 function profilesFile() { return DATA_DIR . '/profiles.json'; }
