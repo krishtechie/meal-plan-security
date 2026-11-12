@@ -1260,7 +1260,7 @@ function recentFamilies(){ const ps=PS(); const y=new Set(), w=new Map(), ever=n
   return {y,w,ever}; }
 
 // Top picks for a meal slot given what is still missing today (protein gap first, then calories), varied by history
-function suggestFor(mi){ const plan=dayPlan(); const p=P(); const all=[]; plan.forEach(m=>all.push(...m.items)); const T=tot(all); const pGap=p.target.p-T.p, kGap=p.target.k-T.k; const used=new Set(all.map(x=>x.id)); const recent=recentFamilies(); const name=plan[mi].name.toLowerCase();
+function suggestFor(mi){ const plan=isFuture()?P().meals.map(m=>({name:m.name,time:m.time,items:[]})):dayPlan(); const p=P(); const all=[]; plan.forEach(m=>all.push(...m.items)); const T=tot(all); const pGap=p.target.p-T.p, kGap=p.target.k-T.k; const used=new Set(all.map(x=>x.id)); const recent=recentFamilies(); const name=plan[mi].name.toLowerCase();
   const snackSlot=/mid-morning|pre-gym|evening|snack|waking/.test(name);
   const cands=Object.values(F).filter(it=>allowed(it)&&!used.has(it.id)&&it.cat!=='gym'&&(snackSlot?['snack','fruit','prot','drink','bf'].includes(it.cat):['prot','carb','veg','side','bf'].includes(it.cat)))
     .map(it=>{ const fam=family(it.n); let sc=0; if(pGap>10) sc+=Math.abs(Math.min(it.p,pGap)-Math.min(35,pGap))*1.2 - (it.p>=15?8:0); else sc+=it.p*0.3; if(kGap<300) sc+=it.k/40; else sc+=Math.abs(it.k-Math.min(kGap,450))/60; sc+=(COST[it.id]||2)*3; if(recent.y.has(fam)) sc+=8; sc+=Math.min(8,(recent.w.get(fam)||0)*3); if(recent.ever.has(it.id)) sc-=5; if(REC.has(it.id)) sc-=3; sc+=hashStr(it.id+ymd(weekDate(S.day)))%5; return {it,fam,sc}; })
@@ -1281,7 +1281,7 @@ function renderWarnings(plan,T,tk,tp){
   const vegDishes=plan.reduce((n,m)=>n+m.items.filter(x=>F[x.id]&&((F[x.id].cat==='veg'&&!/salad/i.test(F[x.id].n))||/and veg|with veg|veg curry|veg stir|palak|bhendi|sorakaya|kale|spinach|mushroom|methi|gobi|cabbage/i.test(F[x.id].n))).length,0);
   if(vegDishes<2) amb(`Only ${vegDishes} vegetable dish today. Aim for 2 or more, they fill you up for almost no calories.`);
   const allItems=[]; plan.forEach(m=>allItems.push(...m.items)); const tToday=treatCount(allItems);
-  let tWeek=0; for(let i=0;i<7;i++){ const it=[]; dayPlan(i).forEach(m=>it.push(...m.items)); tWeek+=treatCount(it); }
+  let tWeek=0; for(let i=0;i<7;i++){ const it=[]; (PS().days[dayKeyFor(i)]||[]).forEach(m=>it.push(...m.items)); tWeek+=treatCount(it); }
   if(tToday>1) red(`${tToday} treat meals today. One treat meal a week is the plan, not two in a day.`);
   else if(tWeek>1) amb(`${tWeek} treat meals this week across your 7 days. The plan allows one. Fast fat loss means the other ${tWeek-1} go back to normal meals.`);
   const hasWhey=allItems.some(x=>/whey|casein/i.test(F[x.id]&&F[x.id].n||''));
