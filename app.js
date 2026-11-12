@@ -1046,8 +1046,7 @@ function P(){ return PEOPLE[S.who]; }
 function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=(P().vegDays||[]).slice(); if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } if(!ps.days) ps.days={}; if(!Array.isArray(ps.weights)) ps.weights=[]; if(!ps.log) ps.log={}; if(!ps.m7) mergeDays(ps); if(!TIDIED.has(S.who)){ TIDIED.add(S.who); tidy(ps); } if(!ps.customs) ps.customs=[]; if(!ps.templates) ps.templates=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
 function loadAllCustoms(){ Object.values(S.people).forEach(ps=>(ps.customs||[]).forEach(c=>{ if(!F[c.id]) F[c.id]=c; })); }
 function isVeg(d=S.day){ const ps=PS(); return ps.allVeg || (!ps.allNonVeg && ps.vegDays.includes(d)); }
-function retemplate(d,before){ const ps=PS(); const key=dayKeyFor(d); const plan=ps.days[key]; if(!plan) return; const after=template(d); plan.forEach((m,i)=>{ const b=before[i]&&JSON.stringify(before[i].items), a=after[i]&&after[i].items; if(a&&b&&m.items.length&&JSON.stringify(m.items)===b) m.items=a.map(x=>({id:x.id,q:x.q})); }); }
-function toggleVegDay(d){ const ps=PS(); const before=template(d); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=Array.isArray(ps.vegPrev)?ps.vegPrev.slice():[]; delete ps.vegPrev; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); retemplate(d,before); save(); render(); }
+function toggleVegDay(d){ const ps=PS(); if(ps.allVeg){ ps.allVeg=false; ps.vegDays=Array.isArray(ps.vegPrev)?ps.vegPrev.slice():[]; delete ps.vegPrev; } if(ps.allNonVeg){ ps.allNonVeg=false; ps.vegDays=[]; } const i=ps.vegDays.indexOf(d); if(i>=0) ps.vegDays.splice(i,1); else ps.vegDays.push(d); save(); render(); }
 const SEA=/fish|prawn|shrimp|basa|sardine|seafood/i;
 function allowed(it, d=S.day){ if(SEA.test(it.n)&&!PS().seafood) return false; if(!isVeg(d)) return true; const t=it.t; if(t==='n'||t==='tn') return false; if(t==='e'||t==='te') return PS().eggsVeg; return true; }
 function template(d){ const veg=isVeg(d); return P().meals.map(m=>{ let ids = veg ? ((!PS().eggsVeg && m.vNoEgg) ? m.vNoEgg : m.v) : m.nv; return {name:m.name,time:m.time,items:ids.map(x=>Array.isArray(x)?{id:x[0],q:x[1]}:{id:x,q:1})}; }); }
@@ -1564,14 +1563,13 @@ document.getElementById('guideClose').onclick=()=>document.getElementById('ovGui
 document.getElementById('ovGuide').onclick=e=>{ if(e.target.id==='ovGuide') document.getElementById('ovGuide').classList.remove('show'); };
 document.getElementById('setClose2').onclick=()=>document.getElementById('ovSet').classList.remove('show');
 document.getElementById('ovSet').onclick=e=>{ if(e.target.id==='ovSet') e.target.classList.remove('show'); };
-function withRetemplate(fn){ const ti=(new Date().getDay()+6)%7; const days=S.week===0?[...new Set([S.day,ti])]:[S.day]; const before=days.map(d=>template(d)); fn(); days.forEach((d,i)=>retemplate(d,before[i])); }
-document.getElementById('allVeg').onchange=e=>{ withRetemplate(()=>{ const ps=PS(); if(e.target.checked){ ps.vegPrev=ps.vegDays.slice(); ps.allVeg=true; ps.allNonVeg=false; } else { ps.allVeg=false; if(Array.isArray(ps.vegPrev)){ ps.vegDays=ps.vegPrev.slice(); delete ps.vegPrev; } else if(ps.vegDays.length===7){ ps.vegDays=[]; } } }); save(); render(); };
-document.getElementById('allNonVeg').onchange=e=>{ withRetemplate(()=>{ PS().allNonVeg=e.target.checked; if(e.target.checked) PS().allVeg=false; }); save(); render(); };
-document.getElementById('eggsVeg').onchange=e=>{ withRetemplate(()=>{ PS().eggsVeg=e.target.checked; }); save(); render(); };
+document.getElementById('allVeg').onchange=e=>{ { const ps=PS(); if(e.target.checked){ ps.vegPrev=ps.vegDays.slice(); ps.allVeg=true; ps.allNonVeg=false; } else { ps.allVeg=false; if(Array.isArray(ps.vegPrev)){ ps.vegDays=ps.vegPrev.slice(); delete ps.vegPrev; } else if(ps.vegDays.length===7){ ps.vegDays=[]; } } } save(); render(); };
+document.getElementById('allNonVeg').onchange=e=>{ PS().allNonVeg=e.target.checked; if(e.target.checked) PS().allVeg=false; save(); render(); };
+document.getElementById('eggsVeg').onchange=e=>{ PS().eggsVeg=e.target.checked; save(); render(); };
 document.getElementById('seafood').onchange=e=>{ PS().seafood=e.target.checked; save(); render(); };
 document.getElementById('rest').onchange=render;
-document.getElementById('resetDay').onclick=()=>{ const ps=PS(); Object.keys(ps.days).forEach(k=>{ if(k.startsWith(dayKeyFor(S.day))) delete ps.days[k]; }); save(); render(); document.getElementById('ovSet').classList.remove('show'); };
-document.getElementById('resetAll').onclick=()=>{ PS().days={}; save(); render(); document.getElementById('ovSet').classList.remove('show'); };
+document.getElementById('resetDay').onclick=()=>{ if(!confirm(`Clear everything logged for ${FULL[S.day]}? This cannot be undone.`)) return; const ps=PS(); Object.keys(ps.days).forEach(k=>{ if(k.startsWith(dayKeyFor(S.day))) delete ps.days[k]; }); save(); render(); document.getElementById('ovSet').classList.remove('show'); };
+document.getElementById('resetAll').onclick=()=>{ if(!confirm(`Clear every logged day for ${P().name}? Check-ins, weigh-ins and custom foods stay. This cannot be undone.`)) return; PS().days={}; save(); render(); document.getElementById('ovSet').classList.remove('show'); };
 function bkString(){ return JSON.stringify({app:'kl-meal-v2',exported:new Date().toISOString(),people:S.people}); }
 function bkMsg(t,ok){ const m=document.getElementById('bkMsg'); m.textContent=t?' '+t:''; m.style.color=ok?'var(--green)':'var(--rose)'; }
 // ---- Export: minimal XLSX writer (store-only zip, no library) ----
