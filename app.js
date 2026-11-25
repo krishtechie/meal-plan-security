@@ -1,10 +1,12 @@
 // ================= FOOD DATABASE =================
 // [id, name, portion, kcal, protein, carbs, fat, type] type: v veg, e egg, n non-veg, t treat(veg), tn treat non-veg, te treat egg
 const CATS = {
-  all:'All foods', custom:'Custom / what we ate', mine:'My foods', bf:'Breakfast', carb:'Rice, roti, millets', prot:'Protein', veg:'Vegetables', side:'Dal, rasam, sides', treat:'Treat meals', snack:'Snacks', fruit:'Fruit', drink:'Drinks & tablets', gym:'Gym'
+  all:'All foods', custom:'Custom / what we ate', mine:'My foods', bf:'Breakfast', carb:'Rice, roti, millets', prot:'Protein', veg:'Vegetables', side:'Dal, rasam, sides', treat:'Treat meals', snack:'Snacks', sweet:'Sweets', fruit:'Fruit', drink:'Drinks & tablets', gym:'Gym'
 };
 const RAW = {
 bf:[
+['b_smapple','Smoothie: apple, banana, 1 tbsp nut butter, 200 ml 3% milk','1 glass (400 ml)',330,12,46,12,'v'],
+['b_smberry','Smoothie: banana, berries, 1 tbsp peanut butter, 200 ml 3% milk','1 glass (400 ml)',320,12,42,12,'v'],
 ['b_idli2','Idli with sambar','2 idli + 150 g sambar',220,8,40,2,'v'],
 ['b_idli3','Idli with chutney','3 idli',260,7,48,4,'v'],
 ['b_dosa1','Plain dosa with chutney (1 tsp oil)','1 dosa',200,5,30,7,'v'],
@@ -78,6 +80,7 @@ bf:[
 ['b_wheyoatsbanana','Oats + whey + half banana shake (2 min, blender)','40 g + 30 g',330,30,48,4,'v'],
 ],
 carb:[
+['t_sambarrice_h','Sambar rice, home style: ghee, mixed veg, potato, cashews','1 bowl (350 g)',460,13,66,15,'v'],
 ['c_rice150','Rice, cooked (sona masoori / basmati)','150 g',195,4,43,0,'v'],
 ['c_rice100','Rice, cooked, small','100 g',130,3,29,0,'v'],
 ['c_brown','Brown rice, cooked','150 g',165,4,35,1,'v'],
@@ -286,6 +289,8 @@ side:[
 ['s_curd150','Curd, low-fat','150 g',90,6,7,3,'v'],
 ],
 treat:[
+['t_thaliveg','Veg thali: rice, dal, 2 curries, curd, pickle, papad','1 plate',650,20,100,18,'v'],
+['t_thalichk','Chicken thali: rice, chicken curry, dal, curry, curd, pickle','1 plate',760,38,95,22,'n'],
 ['t_chkbir','Chicken biryani','1 plate (350 g)',600,30,70,20,'tn'],
 ['t_mutbir','Mutton biryani','1 plate (350 g)',700,30,70,30,'tn'],
 ['t_eggbir','Egg biryani','1 plate',580,22,70,22,'te'],
@@ -390,6 +395,8 @@ drink:[
 ['d_casein','Casein or whey in water','30 g',120,24,3,1,'v'],
 ['d_skip','Skip','nothing',0,0,0,0,'v'],
 ],
+sweet:[
+],
 gym:[
 ['g_gym','1 hr workout. 500 ml water, nothing else needed','60 min, 500 ml water',0,0,0,0,'v'],
 ['g_gymcreat','Workout + 5 g creatine in water','60 min, 5 g creatine',5,0,0,0,'v'],
@@ -435,6 +442,7 @@ const ICON = {
   veg:'<svg viewBox="0 0 24 24"><path d="M5 19.5c0-8 5.5-13.5 14.5-14.5-.5 9-6 14.5-14.5 14.5z"/><path d="M5 19.5c2.8-4 6-7.2 9.5-9.5"/></svg>',
   side:'<svg viewBox="0 0 24 24"><path d="M3.5 12.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M9 9.5c0-1.5.8-2 .8-3.5M12.5 9.5c0-1.5.8-2 .8-3.5"/></svg>',
   fruit:'<svg viewBox="0 0 24 24"><path d="M12 8.5c-1.2-.9-2.6-1.2-4-.8C5 8.6 4 12 5.2 15.3 6.3 18.6 8.5 21 10.3 21c.6 0 1.1-.2 1.7-.5.6.3 1.1.5 1.7.5 1.8 0 4-2.4 5.1-5.7C20 12 19 8.6 16 7.7c-1.4-.4-2.8-.1-4 .8z"/><path d="M12 8.5c0-2 1-3.8 2.8-4.5"/></svg>',
+  sweet:'<svg viewBox="0 0 24 24"><path d="M12 3.5l1.8 4.2 4.5.4-3.4 3 1 4.4L12 13.2l-3.9 2.3 1-4.4-3.4-3 4.5-.4z"/><path d="M9 20.5h6"/></svg>',
   snack:'<svg viewBox="0 0 24 24"><rect x="3.5" y="7" width="17" height="10" rx="4"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',
   drink:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.8 6 11.2A6 6 0 0 1 6 14.2C6 9.8 12 3 12 3z"/><path d="M9 14.5a3 3 0 0 0 2 2.8"/></svg>',
   fat:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.8 6 11.2A6 6 0 0 1 6 14.2C6 9.8 12 3 12 3z"/></svg>',
@@ -448,11 +456,11 @@ const ICON = {
 const ic=(cat)=>`<span class="ico ${cat}">${ICON[cat]||ICON.mine}</span>`;
 const ALIAS = {
  pc_egg1:'boiled egg 1 whole egg guddu',pc_white1:'egg white 1',pc_om1:'omelette 1 egg omlette',pc_om2:'omelette 2 eggs omlette',pc_om3:'omelette 3 eggs omlette',pc_bread1:'bread slice 1 brown bread',pc_toast1:'toast butter slice',pc_choc80:'dark chocolate square 80',pc_choc70:'dark chocolate square 70',pc_roti1:'roti 1 phulka chapati',pc_cheese1:'cheese slice',pc_almond10:'almonds 10 badam',pc_date1:'date khajoor',pc_swcracker:'sweet potato cracker crackers rw garcia costco 3 seed',pc_falafel1:'falafel patty patties hannah chickpea costco',pc_crackerpizza:'cracker pizza mozzarella bell pepper capsicum salsa sriracha ranch',pc_sriracha:'sriracha hot sauce chilli sauce',bf_idli1:'idli idly 1 single',bf_dosa1:'dosa 1 single plain',bf_setdosa1:'set dosa sponge dosa',bf_uttapam1:'uttapam utappam onion tomato',bf_pesarattu1:'pesarattu 1 single moong dosa',bf_mlapesarattu:'mla pesarattu upma pesarattu',bf_vada1:'vada garelu medu vada garee',bf_punugulu:'punugulu bonda',bf_bonda1:'bonda batata vada aloo',bf_upma1:'upma rava 1 cup',bf_poha1:'poha atukulu 1 cup',bf_pongal1:'pongal ven pongal',bf_paratha1:'paratha plain',bf_alooparatha1:'aloo paratha potato',bf_puri1:'puri 1 single poori',bf_cereal1:'cereal cornflakes cheerios',bf_pancake1:'pancake 1',bf_waffle1:'waffle',bf_oatsplain:'oats plain water oatmeal',bf_chai1:'tea chai milk sugar',bf_coffeemilk1:'coffee milk sugar',bf_filtercoffee:'filter coffee kaapi',sd_peanutch1:'peanut chutney palli pachadi 1 tbsp',sd_coconutch1:'coconut chutney kobbari pachadi 1 tbsp',sd_gingerch1:'ginger chutney allam pachadi',sd_tomatoch1:'tomato chutney pachadi 1 tbsp',sd_idlipodi:'idli podi karam podi gunpowder',sd_sambarhalf:'sambar half cup',sd_butter1:'butter 1 tsp',sd_pb1:'peanut butter',sd_jam1:'jam',sd_honey1:'honey',sd_sugar1:'sugar 1 tsp',sd_maple1:'maple syrup',sd_nutella1:'nutella hazelnut spread',sd_ketchup1:'ketchup tomato sauce',sd_mayo1:'mayo mayonnaise',sd_soy1:'soy sauce',sd_hummus2:'hummus',sd_salsa2:'salsa',sd_guac2:'guacamole avocado dip',sd_sourcream1:'sour cream',sd_creamcheese1:'cream cheese',sd_onionraw:'onion raw ullipaya',sn_popair:'popcorn air popped light kirkland',bs_idli1:'idli 1 idly single',bs_pesarattu1:'pesarattu 1 pesara attu moong dosa',bs_setdosa1:'set dosa 1',bs_uttapam1:'uttapam onion 1',bs_vada1:'vada garelu medu vada 1',bs_upma1:'upma 1 cup rava',bs_pongal1:'pongal ven pongal 1 cup',bs_poha1:'poha 1 cup atukulu',bs_puri1:'puri 1 poori',bs_paratha1:'paratha plain 1',bs_alooparatha1:'aloo paratha 1',bs_chilla1:'chilla besan 1',bs_cornflakes:'cornflakes cereal',bs_oats40:'oats plain dry',sd_tomatochutney:'tomato chutney tomato pachadi',sd_mintchutney:'mint chutney coriander pudina kothimeera',sd_sambar1:'sambar 1 cup',sd_rasam1:'rasam 1 cup charu',sd_ghee1:'ghee 1 tsp neyyi',sd_oil1:'oil 1 tsp cooking oil',sd_butter1:'butter 1 tsp',sd_pb1:'peanut butter 1 tbsp',sd_mayo1:'mayo mayonnaise',sd_ketchup1:'ketchup tomato sauce',sd_pickle1:'pickle avakaya achar',sd_podi1:'podi karam kandi podi dry',sd_sugar1:'sugar 1 tsp',sd_jaggery1:'jaggery bellam gur',sd_honey1:'honey 1 tsp',cs_rice1cup:'rice 1 cup annam cooked',cs_rice05cup:'rice half cup annam',cs_chapati1:'chapati 1 roti single',sn_pop1cup:'popcorn 1 cup air popped',sn_popbutter1cup:'popcorn butter 1 cup microwave',sn_peanuts1tbsp:'peanuts 1 tbsp palli roasted',sn_popmw:'popcorn microwave butter orville',sn_popskinny:'popcorn skinnypop skinny pop',sn_popmovie:'popcorn cinema movie theatre',sn_chips:'chips lays potato crisps',sn_doritos:'doritos cheetos nacho chips',sn_tortilla:'tortilla chips corn chips',sn_pringles:'pringles chips',sn_veggiestraw:'veggie straws',sn_pretzel:'pretzels',sn_protchips:'quest protein chips',sn_mixture:'mixture chivda boondi namkeen karam',sn_bananachips:'banana chips arati',sn_khakra:'khakra',sn_samosa:'samosa',sn_pakora:'pakora pakoda bajji onion',sn_bhel:'bhel puri chaat',sn_panipuri:'pani puri gol gappa chaat',sn_chikki:'chikki peanut palli patti jaggery',sn_laddu:'laddu ladoo besan rava sweet',sn_mysorepak:'mysore pak sweet',sn_gulab:'gulab jamun sweet',sn_kulfi:'kulfi',sn_icecream:'ice cream',sn_parleg:'parle g biscuits',sn_marie:'marie biscuits',sn_digestive:'digestive biscuit',sn_oreo:'oreo cookies',sn_cookie:'cookie chocolate chip',sn_ricecake:'rice cake',sn_granola:'granola bar nature valley',sn_kind:'kind bar nut bar',sn_trail:'trail mix',sn_seaweed:'seaweed snack nori',sn_nachos:'nachos cheese',sn_hummuscr:'hummus crackers',pc_ranch:'ranch dressing dip sauce',
- c_tandoori:'tandoori chicken tikka grilled',c_grillbreast:'grilled chicken breast grill plain',c_breastcurry:'chicken breast curry kodi kura',c_thighcurry:'chicken thigh curry boneless',c_thighair1:'air fryer chicken thigh airfryer thigh boneless skinless',c_thighairskin1:'air fryer chicken thigh skin on airfryer',c_thighgrill:'grilled chicken thigh tandoori thigh',c_kebab1:'kebab seekh kabab chicken kebab skewer',c_tikka:'chicken tikka grilled pieces boti',c_wing1:'chicken wing single wings',c_drum1:'drumstick chicken leg single air fryer',c_shawarma:'shawarma chicken shawarma meat',c_strips:'grilled chicken strips chicken salad topping',c_popcornchk:'popcorn chicken nuggets air fryer',c_legs2:'chicken legs drumsticks leg piece',c_wings6:'chicken wings baked air fryer',c_wingsfried:'chicken wings fried restaurant',c_chk65:'chicken 65 pakoda pakora',c_keema:'chicken keema minced peas',c_pesarapappudal:'pesara pappu dal moong plain pesalu',c_pesarapappufry:'pesara pappu fry podi dry moong',
+ c_tandoori:'tandoori chicken tikka grilled',c_grillbreast:'grilled chicken breast grill plain',c_breastcurry:'chicken breast curry kodi kura',c_thighcurry:'chicken thigh curry boneless',c_legq1:'leg quarter chicken quarter air fryer bone in skin',c_legqskinless:'leg quarter skinless air fryer',p_soyasnack:'soya snack meal maker air fryer soya chunks snack',t_sambarrice_h:'sambar rice ghee veggies potato cashew home',t_thaliveg:'thali veg thali meals plate',t_thalichk:'chicken thali non veg thali meals plate',b_smapple:'smoothie apple banana nut butter almond butter milk',b_smberry:'smoothie banana berries peanut butter milk',sw_gulab1:'sweet dessert gulab jamun',sw_rasmalai1:'sweet dessert rasmalai',sw_kheer:'sweet dessert kheer payasam semiya',sw_jalebi:'sweet jalebi',sw_mysorepak:'sweet mysore pak',sw_dkm:'sweet double ka meetha bread pudding',sw_halwa:'sweet halwa gajar sooji',sw_bobbatlu:'sweet bobbatlu puran poli obbattu',sw_laddu_h:'sweet laddu ladoo motichoor',sw_barfi:'sweet barfi burfi kaju katli',sw_choc_bar:'chocolate bar candy kitkat snickers',sw_choc_fun:'candy halloween fun size chocolate',sw_candy_hard:'candy toffee hard candy',sw_candy_gummy:'candy gummy gummies',sw_cookie:'cookie biscuit dessert',sw_cake:'cake dessert pastry',sw_donut:'donut doughnut tim hortons',sw_icecream:'ice cream dessert scoop',c_thighair1:'air fryer chicken thigh airfryer thigh boneless skinless',c_thighairskin1:'air fryer chicken thigh skin on airfryer',c_thighgrill:'grilled chicken thigh tandoori thigh',c_kebab1:'kebab seekh kabab chicken kebab skewer',c_tikka:'chicken tikka grilled pieces boti',c_wing1:'chicken wing single wings',c_drum1:'drumstick chicken leg single air fryer',c_shawarma:'shawarma chicken shawarma meat',c_strips:'grilled chicken strips chicken salad topping',c_popcornchk:'popcorn chicken nuggets air fryer',c_legs2:'chicken legs drumsticks leg piece',c_wings6:'chicken wings baked air fryer',c_wingsfried:'chicken wings fried restaurant',c_chk65:'chicken 65 pakoda pakora',c_keema:'chicken keema minced peas',c_pesarapappudal:'pesara pappu dal moong plain pesalu',c_pesarapappufry:'pesara pappu fry podi dry moong',
  n_brazil:'brazil nut',n_chia:'chia seeds',n_sunflower:'sunflower seeds',n_pumpkin:'pumpkin seeds gummadi ginjalu',n_flax:'flax seeds avise alsi',n_sesame:'sesame til nuvvulu',n_anjeer:'anjeer dried fig figs',n_dates2:'dates khajur kharjuram',n_raisins:'raisins kismis endu draksha',n_almonds10:'almonds badam',n_mixseeds:'mixed seeds',n_trail30:'trail mix nuts mix',
  h_chikkudutomato:'chikkudu tomato chikkudukaya broad beans valor papdi',h_chikkudufry:'chikkudu fry chikkudukaya vepudu broad beans',h_munagatomato:'munagakaya tomato drumstick mulakkada',h_thotakura:'thotakura fry thota kura amaranth leafy',h_capsicumaloo:'capsicum aloo curry potato capsicum bell pepper',h_alookurma:'aloo kurma potato kurma korma',h_eggtomato:'egg tomato curry guddu tamata',
  h_khichdi:'khichdi kichidi kichdi rice moong pongal',h_pohaplain:'poha atukulu upma flattened rice',h_pulihora:'pulihora tamarind rice chitrannam',h_jeerarice:'jeera rice cumin rice',h_curdrice:'curd rice daddojanam perugu annam',
- h_eggbhurji:'egg bhurji scrambled eggs guddu',h_paneerbhurji:'paneer bhurji paneer scramble',h_tofu:'tofu plain pan fried',h_tofucurry:'tofu curry tofu gravy',
+ h_eggbhurji:'egg bhurji scrambled eggs guddu',h_paneerbhurji:'paneer bhurji paneer scramble',h_tofu:'tofu plain pan fried pan fry fried tofu',h_tofucurry:'tofu curry tofu gravy',
  h_muddapappu:'mudda pappu plain dal kandi pappu toor',h_methipappu:'methi pappu menthikura dal fenugreek',h_pesarapappu:'pesara pappu moong dal pesalu',h_senagapappu:'beerakaya senaga pappu ridge gourd chana dal berakaya',h_dosakayapappu:'dosakaya pappu cucumber dal',
  h_sambar:'sambar sambhar',h_chickencurry:'chicken curry kodi kura chicken gravy',h_chickencurry200:'chicken curry big kodi kura',h_chickenfry:'chicken fry kodi vepudu chicken 65 dry',h_mandi:'mandi chicken mandi arabic rice',h_mandihalf:'mandi half plate',
  h_paneerbm:'paneer butter masala paneer gravy',h_eggfry:'egg fry guddu vepudu egg bhurji omelette',h_eggcurry:'egg curry guddu kura egg masala',
@@ -749,8 +757,31 @@ const EXTRA = {
     ['c_shawarma','Chicken shawarma meat, no bread','100 g',180,22,3,9,'n'],
     ['c_strips','Grilled chicken strips, plain (salad or crackers)','100 g',165,30,0,4,'n'],
     ['c_popcornchk','Popcorn chicken / nuggets, air fryer','100 g',260,17,16,14,'tn'],
+    ['c_legq1','Chicken leg quarter, air fryer, bone in with skin','1 (250 g)',300,36,0,17,'n'],
+    ['c_legqskinless','Chicken leg quarter, air fryer, skin removed','1 (250 g)',230,35,0,10,'n'],
+    ['p_soyasnack','Soya chunks snack, air fryer with masala','30 g dry',115,15,9,2,'v'],
     ['c_pesarapappudal','Pesara pappu (moong dal) plain, no tadka','150 g',150,10,24,2,'v'],
     ['c_pesarapappufry','Pesara pappu podi / dry moong dal fry','100 g',170,11,22,5,'v'],
+  ],
+  sweet:[
+    ['sw_gulab1','Gulab jamun','1 piece with syrup (40 g)',150,2,25,5,'v'],
+    ['sw_rasmalai1','Rasmalai','1 piece with milk (60 g)',140,5,18,6,'v'],
+    ['sw_kheer','Kheer / payasam (rice or semiya)','1 small bowl (150 g)',240,6,38,7,'v'],
+    ['sw_jalebi','Jalebi','2 pieces (50 g)',200,1,36,6,'v'],
+    ['sw_mysorepak','Mysore pak','1 piece (40 g)',200,2,22,12,'v'],
+    ['sw_dkm','Double ka meetha','1 small bowl (120 g)',330,6,45,14,'v'],
+    ['sw_halwa','Carrot or sooji halwa','1 small bowl (100 g)',260,4,36,11,'v'],
+    ['sw_bobbatlu','Bobbatlu / puran poli','1 piece (80 g)',260,6,44,7,'v'],
+    ['sw_laddu_h','Laddu (motichoor, besan or rava)','1 piece (35 g)',150,3,20,7,'v'],
+    ['sw_barfi','Barfi (milk, kaju or pista)','1 piece (30 g)',120,3,15,5,'v'],
+    ['sw_choc_bar','Chocolate bar, regular','1 bar (45 g)',230,3,28,13,'v'],
+    ['sw_choc_fun','Chocolate, fun size (Halloween)','1 piece (17 g)',85,1,11,4,'v'],
+    ['sw_candy_hard','Hard candy / toffee','1 piece',20,0,5,0,'v'],
+    ['sw_candy_gummy','Gummy candy','5 pieces (20 g)',70,1,16,0,'v'],
+    ['sw_cookie','Cookie, bakery','1 (30 g)',140,2,19,6,'v'],
+    ['sw_cake','Cake slice with frosting','1 slice (80 g)',300,3,42,13,'v'],
+    ['sw_donut','Donut, glazed','1',250,3,30,13,'v'],
+    ['sw_icecream','Ice cream','1 scoop (70 g)',150,2,18,8,'v'],
   ],
   hyd_snack2:[
     ['n_brazil','Brazil nuts (2 a day max, selenium)','2 nuts (10 g)',66,1.5,1,7,'v'],
@@ -772,7 +803,8 @@ for(const c0 in EXTRA){ const c=c0==='pieces'?'snack':c0.replace('hyd_','').repl
 // and suggestions/templates are redirected to the visible row with the portion scaled (REDIR[id] = [visible id, q factor]).
 const REDIR={ k_gy:['p_gy170',1], k_gyberries:['b_gyberries',0.75], k_whey:['p_whey',1], s_curd100:['p_curd200',0.5], s_curd150:['p_curd200',0.75], d_curdbed:['p_curd200',0.5],
   p_milk300:['d_milk',1.5], c_roti2:['c_roti1',2], pc_roti1:['c_roti1',1], c_mroti2:['c_mroti1',2], p_eggc3:['p_eggc2',1.5], f_hbanana:['f_banana',0.5], n_almonds10:['k_almonds',0.67], pc_almond10:['k_almonds',0.67],
-  v_sorakaya:['h_sorakaya',1], v_carrotfry:['h_carrotfry',1.5], v_beansfry:['h_beansfry',1.5], s_avakaya:['h_avakaya',1], s_podi:['h_podi',1] };
+  v_sorakaya:['h_sorakaya',1], v_carrotfry:['h_carrotfry',1.5], v_beansfry:['h_beansfry',1.5], s_avakaya:['h_avakaya',1], s_podi:['h_podi',1],
+  sn_laddu:['sw_laddu_h',1], sn_mysorepak:['sw_mysorepak',1], sn_gulab:['sw_gulab1',1] };
 for(const id in REDIR){ if(F[id]) F[id].hidden=true; }
 function canon(x){ const r=REDIR[x.id]; return r&&F[r[0]] ? {id:r[0],q:+((x.q||1)*r[1]).toFixed(3)} : x; }
 // Every dish in the library is also searchable as an ingredient in the custom builder, converted to per 100 g (or per piece)
@@ -1018,7 +1050,7 @@ async function cloudInit(){
   CLOUD.on=true;
   if(!ping.auth){ forgetKey(); askKey(CLOUD.key?'':''); return; }
   applyProfiles(ping);
-  if(ping.shared&&!CLOUD.user){ askKey(''); document.getElementById('keyGo').click(); return; }
+  if(ping.shared&&!CLOUD.user){ askKey(''); pickWho(); return; }   // signed in, but this phone has not said whose it is
   await cloudPull();
 }
 
@@ -1230,12 +1262,12 @@ function toMin(t){ if(!t) return null; const [h,m]=t.split(':').map(Number); ret
 function fmtT(min){ min=((min%1440)+1440)%1440; const h=Math.floor(min/60), m=min%60; const ap=h>=12?'pm':'am'; const hh=h%12||12; return `${hh}:${String(m).padStart(2,'0')} ${ap}`; }
 
 // Apple-style time cell: value row + inline hour / minute / AM-PM wheels (native selects, so iOS shows its own picker wheel)
-function timeCell(id,label,val){ const has=!!val; const mins=has?toMin(val):null; const h24=has?Math.floor(mins/60):22, m=has?mins%60:30; const ap=h24>=12?'PM':'AM'; const h12=(h24%12)||12;
+function timeCell(id,label,val){ const has=!!val; const mins=has?toMin(val):null; const h24=has?Math.floor(mins/60):(/Wake/i.test(id)?6:22), m=has?mins%60:30; const ap=h24>=12?'PM':'AM'; const h12=(h24%12)||12;
   const opt=(arr,cur,fmt)=>arr.map(v=>`<option value="${v}"${v===cur?' selected':''}>${fmt?fmt(v):v}</option>`).join('');
   return `<button type="button" class="cell" id="${id}Cell" aria-expanded="false" aria-controls="${id}"><span class="cl">${label}</span><span class="cv"><b class="tv${has?'':' dim'}">${has?fmtT(mins):'Set'}</b></span></button>
   <div class="timepick" id="${id}" hidden><label><span>Hour</span><select class="th" aria-label="${label} hour">${opt([12,1,2,3,4,5,6,7,8,9,10,11],h12)}</select></label><label><span>Min</span><select class="tm" aria-label="${label} minutes">${opt([0,5,10,15,20,25,30,35,40,45,50,55],m,v=>String(v).padStart(2,'0'))}</select></label><label><span>&nbsp;</span><select class="tap" aria-label="${label} AM or PM">${opt(['AM','PM'],ap)}</select></label><button type="button" class="btn pri tdone">Done</button></div>`; }
 function renderCheckin(){
-  const el=document.getElementById('checkin'); if(!el) return; if(isFuture()){ el.innerHTML='<div class="note futck">Water, steps and sleep check-in opens on the day itself.</div>'; return; } const L=dlog(); const cups=8;
+  const el=document.getElementById('checkin'); if(!el) return; if(isFuture()){ el.innerHTML='<div class="note futck">Water, steps and sleep check-in opens on the day itself.</div>'; return; } const L=dlog(); const cups=10;
   const stepsT=P().steps||8000; const st=parseInt(L.steps)||0; const sPc=Math.min(100,Math.round(st/stepsT*100));
   let slp=null, bedSug='';
   const wake=toMin(L.wake||'06:30'); if(L.bed&&L.wake){ const b=toMin(L.bed); slp=((wake-b)+1440)%1440/60; }
@@ -1670,11 +1702,10 @@ document.getElementById('devClose').onclick=()=>document.getElementById('ovDev')
 document.getElementById('openSettings').addEventListener('click',()=>{ const ss=document.getElementById('syncState'); if(ss) ss.textContent=CLOUD.on&&CLOUD.key?CLOUD.status:'Off'; document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Signed in as '+(PEOPLE[CLOUD.user]?PEOPLE[CLOUD.user].name:PEOPLE.p1.name)+'. Saving to the server. Status: '+CLOUD.status+'. Every signed-in phone and browser sees the same data.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus')||{}; let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
 document.getElementById('wtAdd').onclick=()=>{ const d=document.getElementById('wtDate').value, w=parseFloat(document.getElementById('wtVal').value); if(!d||!w) return; if(d>ymd(new Date())){ alert('Weigh-ins cannot be in the future.'); return; } const ps=PS(); ps.weights=ps.weights.filter(x=>x.d!==d); ps.weights.push({d,w}); document.getElementById('wtVal').value=''; save(); render(); };
 document.getElementById('keyGo').onclick=async()=>{ const pw=document.getElementById('keyIn').value.trim(); CLOUD.user=''; if(!pw) return; try{ const p=await login(pw); document.getElementById('keyIn').value=''; applyProfiles(p);
-    if(p.shared){ // shared password: ask which person this phone belongs to, with the real names now that we are signed in
-      const wrap=document.getElementById('keyWhoWrap'); wrap.hidden=false; document.getElementById('keyIn').hidden=true; document.getElementById('keyGo').hidden=true; document.getElementById('keyMsg').textContent='';
-      document.querySelectorAll('#keyWho button').forEach(b=>{ b.textContent=PEOPLE[b.dataset.u].name; b.onclick=()=>{ CLOUD.user=b.dataset.u; S.who=b.dataset.u; try{ localStorage.setItem('kl-user',CLOUD.user); }catch(e){} wrap.hidden=true; document.getElementById('keyIn').hidden=false; document.getElementById('keyGo').hidden=false; document.getElementById('ovKey').classList.remove('show'); cloudPull(); }; });
-      return; }
+    if(p.shared){ pickWho(); return; }   // shared password: ask which person this phone belongs to, with the real names now that we are signed in
     if(p.user){ CLOUD.user=p.user; S.who=p.user; try{ localStorage.setItem('kl-user',p.user); }catch(e){} } }catch(e){ document.getElementById('keyMsg').textContent= e.message==='auth' ? 'Wrong password.' : e.message==='locked' ? 'Too many wrong attempts. Wait 15 minutes.' : 'Cannot reach the server.'; return; } document.getElementById('ovKey').classList.remove('show'); cloudPull(); };
+function pickWho(){ const wrap=document.getElementById('keyWhoWrap'); wrap.hidden=false; document.getElementById('keyIn').hidden=true; document.getElementById('keyGo').hidden=true; document.getElementById('keyMsg').textContent='';
+  document.querySelectorAll('#keyWho button').forEach(b=>{ b.textContent=PEOPLE[b.dataset.u].name; b.onclick=()=>{ CLOUD.user=b.dataset.u; S.who=b.dataset.u; try{ localStorage.setItem('kl-user',CLOUD.user); }catch(e){} wrap.hidden=true; document.getElementById('keyIn').hidden=false; document.getElementById('keyGo').hidden=false; document.getElementById('ovKey').classList.remove('show'); cloudPull(); }; }); }
 document.getElementById('keySkip').onclick=()=>{ if(!confirm('Use this device only? Nothing syncs and the names stay Person 1 and Person 2 until you sign in.')) return; document.getElementById('ovKey').classList.remove('show'); setStatus('This device only','warn'); };
 document.getElementById('keyIn').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('keyGo').click(); });
 render();
