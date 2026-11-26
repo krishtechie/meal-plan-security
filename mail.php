@@ -36,22 +36,24 @@ HTML;
 }
 function sendMail(string $to, string $subject, string $title, string $intro, string $btnText, string $btnUrl, string $outro = ''): bool {
   $name = brand('BRAND_NAME', 'Meal Planner'); $from = mailFrom(); $reply = brand('MAIL_REPLY', $from);
-  $text = "$title\n\n$intro\n\n$btnText: $btnUrl\n\n$outro\n\nSent by $name";
+  $host = preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
+  $text = "$title\n\n$intro\n\n$btnText:\n$btnUrl\n\n$outro\n\n$name, $host";
   $html = emailHtml($title, $intro, $btnText, $btnUrl, $outro);
   $b = 'b' . bin2hex(random_bytes(8));
-  $enc = fn($s) => '=?UTF-8?B?' . base64_encode($s) . '?=';
-  $headers = "From: " . $enc($name) . " <$from>\r\nReply-To: $reply\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"$b\"\r\nX-Mailer: MealPlanner\r\nAuto-Submitted: auto-generated";
-  $body = "--$b\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($text)) .
-          "--$b\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($html)) . "--$b--";
+  $safeName = preg_replace('/[^\w .\-]/u', '', $name);
+  // Plain 8-bit parts and ordinary headers: base64 bodies and missing Message-ID/Date are classic spam signals on shared-host relays.
+  $headers = "From: $safeName <$from>\r\nReply-To: $reply\r\nDate: " . date('r') . "\r\nMessage-ID: <" . bin2hex(random_bytes(12)) . "@$host>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"$b\"\r\nX-Mailer: MealPlanner\r\nAuto-Submitted: auto-generated\r\nPrecedence: bulk";
+  $body = "--$b\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n$text\r\n\r\n" .
+          "--$b\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n$html\r\n\r\n--$b--";
   if (defined('MAIL_SINK') && MAIL_SINK !== '') { @file_put_contents(MAIL_SINK, json_encode(['to' => $to, 'subject' => $subject, 'url' => $btnUrl, 'html' => $html]) . "\n", FILE_APPEND); return true; }   // test installs: write instead of send
-  return @mail($to, $enc($subject), $body, $headers, '-f' . $from);
+  return @mail($to, $subject, $body, $headers, '-f' . $from);
 }
 function mailVerify(string $to, string $name, string $token): bool {
-  return sendMail($to, 'Confirm your e-mail', "Hi $name, confirm your e-mail", "One tap and your account is confirmed. The link works for 24 hours.", 'Confirm e-mail', appUrl() . 'api.php?a=verify&t=' . $token);
+  return sendMail($to, 'Confirm your e-mail address', "Hi $name, please confirm your e-mail", "This confirms that $to belongs to you. The link works for 24 hours.", 'Confirm e-mail address', appUrl() . 'api.php?a=verify&t=' . $token);
 }
 function mailReset(string $to, string $name, string $token): bool {
-  return sendMail($to, 'Reset your password', "Hi $name, reset your password", "Someone asked to reset the password for this account. If it was you, choose a new one with the button below. The link works for one hour and once only.", 'Choose a new password', appUrl() . '?reset=' . $token, "If you did not ask for this, nothing changes; your current password still works.");
+  return sendMail($to, 'Your sign-in reset link', "Hi $name, here is your reset link", "You asked for a reset link for your account. Open it to choose a new sign-in. The link works for one hour and once only.", 'Open reset link', appUrl() . '?reset=' . $token, "If you did not ask for this, nothing changes and you can ignore this message.");
 }
 function mailInvite(string $to, string $name, string $byName, string $household, string $token): bool {
-  return sendMail($to, "$byName added you to $household", "Hi $name, you are in", "$byName added you to the household \"$household\". Set a password to start logging your meals, water, sleep and weight on your own phone. The link works for 7 days.", 'Set my password', appUrl() . '?invite=' . $token, "Your meals and targets are yours; $byName can see and edit them as the household owner.");
+  return sendMail($to, "$byName invited you to $household on " . brand('BRAND_NAME', 'Meal Planner'), "Hi $name, $byName added you", "$byName added you to the household \"$household\". Open the link to finish setting up your account and start logging meals, water, sleep and weight on your own phone. The link works for 7 days.", 'Finish setting up', appUrl() . '?invite=' . $token, "Your meals and targets are your own; $byName can see them as the household owner.");
 }
