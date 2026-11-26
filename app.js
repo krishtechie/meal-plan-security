@@ -1045,9 +1045,13 @@ function isLocked(){ return (CLOUD.lockedUntil||0)>Date.now(); }
 async function cloudInit(){
   if(!/^https?:/.test(location.protocol)) return;
   try{ CLOUD.key=localStorage.getItem('kl-token')||''; localStorage.removeItem('kl-key'); localStorage.removeItem('kl-user'); }catch(e){}
-  const qs=new URLSearchParams(location.search);
-  if(qs.get('verified')){ history.replaceState(null,'',location.pathname); setTimeout(()=>toast('E-mail confirmed'),800); }
-  const linkTok=qs.get('reset')||qs.get('invite'); if(linkTok){ history.replaceState(null,'',location.pathname); CLOUD.on=true; openReset(linkTok,!!qs.get('invite')); return; }
+  // Links from e-mails carry their token after # (never sent to the server, never logged, does not look like a tracking link)
+  const qs=new URLSearchParams(location.search); const hs=new URLSearchParams((location.hash||'').replace(/^#/,''));
+  const get=(k)=>hs.get(k)||qs.get(k);
+  if(get('verified')||get('verify')||get('reset')||get('invite')) history.replaceState(null,'',location.pathname);
+  if(get('verified')){ setTimeout(()=>toast('E-mail confirmed'),800); }
+  const linkTok=get('reset')||get('invite'); if(linkTok){ CLOUD.on=true; openReset(linkTok,!!get('invite')); return; }
+  const vt=get('verify'); if(vt){ try{ const j=await api('verify',null,{token:vt}); if(j.user) applyMe(j); setTimeout(()=>toast('E-mail confirmed'),800); }catch(e){ setTimeout(()=>toast(e.msg||'Confirmation link no longer valid'),800); } }
   let ping; try{ ping=await api('ping'); }catch(e){ if(!/^auth$|^locked$|^http 503$/.test(e.message)){ const sk=document.getElementById('keySkip'); if(sk) sk.hidden=false; }   // no api.php here: allow a local-only mode
     if(e.message==='http 503'){ CLOUD.on=false; setStatus('Not set up','warn'); document.getElementById('subtitle').textContent='The server has no config yet. Open setup.php on this site once to create it.'; return; } if(e.message==='auth'){ CLOUD.on=true; askKey('Password changed. Sign in again.'); } else if(e.message==='locked'){ CLOUD.on=true; askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } return; }   // other errors: no api.php here -> stay local
   CLOUD.on=true; CLOUD.canSignup=!!ping.signup;

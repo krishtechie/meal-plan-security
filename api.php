@@ -119,12 +119,12 @@ if ($a === 'reset') {   // also completes an invite: the token sets the first pa
   $s = newSession((int)$user['id']); audit('ok', ['sid' => $s['sid'], 'kind' => $r['kind']]);
   ok($s + meOut($user));
 }
-if ($a === 'verify') {   // from the e-mail link: GET, then back to the app
-  $t = (string)($_GET['t'] ?? ''); $r = useToken($t, ['verify']);
-  header('Content-Type: text/html; charset=utf-8');
-  if (!$r) { audit('bad_token'); http_response_code(400); echo '<!DOCTYPE html><meta charset="utf-8"><title>Link expired</title><p style="font:16px -apple-system,system-ui,sans-serif;padding:24px">This confirmation link is no longer valid. Open the app and tap <b>Resend confirmation</b> in Settings.</p>'; exit; }
+if ($a === 'verify') {   // the app posts the token from the e-mail link
+  $t = (string)($body['token'] ?? $_GET['t'] ?? ''); $r = useToken($t, ['verify']);
+  if (!$r) { bump($ipKey); fail(400, 'bad_token', 'This confirmation link is no longer valid. Tap Resend confirmation in Settings.'); }
   q('UPDATE users SET verified=1 WHERE id=?', [$r['user_id']]); burnToken($t); audit('ok');
-  header('Location: ' . appUrl() . '?verified=1', true, 302); exit;
+  if ($user && (int)$user['id'] === (int)$r['user_id']) { $user = row('SELECT * FROM users WHERE id=?', [$user['id']]); ok(meOut($user)); }
+  ok();
 }
 
 // ---- everything below needs a session ----
@@ -160,7 +160,7 @@ if ($a === 'invite') {
   else { q('INSERT INTO users(household_id,email,pass_hash,name,role,verified,created,profile) VALUES(?,?,"",?,"member",0,?,?)', [$hhId, $emailIn, $name, $now, json_encode(defaultProfile())]); $uid = (int)db()->lastInsertId(); }
   $hh = row('SELECT name FROM households WHERE id=?', [$hhId]);
   $t = makeToken($uid, 'invite', 7 * 86400); $sent = mailInvite($emailIn, $name, $user['name'], $hh['name'], $t);
-  audit('ok', ['member' => $uid, 'mail' => $sent ? 'sent' : 'failed']); ok(['sent' => $sent, 'link' => appUrl() . '?invite=' . $t] + meOut($user));   // the owner may pass the link on directly (WhatsApp, iMessage) when e-mail does not arrive
+  audit('ok', ['member' => $uid, 'mail' => $sent ? 'sent' : 'failed']); ok(['sent' => $sent, 'link' => appUrl() . '#invite=' . $t] + meOut($user));   // the owner may pass the link on directly (WhatsApp, iMessage) when e-mail does not arrive
 }
 if ($a === 'member_remove') {
   needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can remove members.');
