@@ -1000,14 +1000,18 @@ const PEOPLE = { guest: defaultPerson() };
 // v16.1: targets from body stats. Mifflin-St Jeor for resting energy, an activity factor for maintenance, a deficit or surplus from the
 // chosen pace (7700 kcal per kg), protein by body weight, fat at 25 percent of calories, carbs from what is left. All editable afterwards.
 const ACT={desk:1.2,light:1.375,active:1.55,athlete:1.725};
-function computeTargets(p){ const w=+p.kg||80, h=+p.height||170, a=+p.age||35, sex=p.sex||'x';
-  const bmr= sex==='m' ? 10*w+6.25*h-5*a+5 : sex==='f' ? 10*w+6.25*h-5*a-161 : 10*w+6.25*h-5*a-78;
-  const maint=Math.round(bmr*(ACT[p.activity]||1.375)/10)*10; const pace=+p.pace||0.5; const delta=Math.round(pace*7700/7);
-  let kcal= p.goalType==='gain' ? maint+Math.min(delta,400) : p.goalType==='maintain' ? maint : maint-delta;
-  const minK= sex==='f'?1200:1500; kcal=Math.max(minK,Math.round(kcal/10)*10);
-  const gpk= p.goalType==='lose' ? 1.8 : 1.6; const protein=Math.round(Math.min(220,Math.max(60,w*gpk))/5)*5;
+function bmrOf(p){ const w=+p.kg||80, h=+p.height||170, a=+p.age||35, sex=p.sex||'x'; return sex==='m' ? 10*w+6.25*h-5*a+5 : sex==='f' ? 10*w+6.25*h-5*a-161 : 10*w+6.25*h-5*a-78; }
+function maxPace(p){ const bmr=bmrOf(p), maint=bmr*(ACT[p.activity]||1.375); const minK=(p.sex||'x')==='f'?1200:1500; const room=maint-Math.max(bmr,minK,maint*0.8); return room*7/7700; }   // kg per week the cap allows
+function computeTargets(p){ const w=+p.kg||80, sex=p.sex||'x'; const bmr=bmrOf(p);
+  const maint=Math.round(bmr*(ACT[p.activity]||1.375)/10)*10; const pace=+p.pace||0.5; const minK= sex==='f'?1200:1500;
+  // Deficit is capped at 20 percent of maintenance and never goes below the resting rate; surplus is small so the gain is mostly muscle.
+  const delta=Math.round(pace*7700/7); const maxCut=Math.round(maint-Math.max(bmr,minK,maint*0.8)); const cut=Math.min(delta,Math.max(0,maxCut));
+  let kcal= p.goalType==='gain' ? maint+Math.min(delta,300) : p.goalType==='maintain' ? maint : maint-cut;
+  kcal=Math.max(minK,Math.round(kcal/10)*10);
+  // Protein per kg of a sensible reference weight (goal weight plus 10 kg, never above current), capped at 2 g per kg and 200 g.
+  const ref=Math.min(w, Math.max(+p.goal||w, 40)+10); const gpk= p.goalType==='lose' ? 1.8 : 1.6; const protein=Math.round(Math.min(200,Math.max(60,ref*gpk))/5)*5;
   const fatMax=Math.round(kcal*0.28/9/5)*5; const carbMax=Math.max(60,Math.round((kcal-protein*4-fatMax*9)/4/5)*5);
-  return {maint, kcal, floor:Math.max(minK,kcal-200), protein, pMin:Math.round(protein*0.8/5)*5, fatMax, carbMax, restCut:p.goalType==='gain'?0:100, steps: p.activity==='desk'?7000:p.activity==='light'?8000:10000}; }
+  return {maint, bmr:Math.round(bmr), kcal, cutCapped: p.goalType==='lose'&&cut<delta, weekly: p.goalType==='lose'?Math.round(cut*7/7700*100)/100:0, floor:Math.max(minK,kcal-200), protein, pMin:Math.round(protein*0.8/5)*5, fatMax, carbMax, restCut:p.goalType==='gain'?0:100, steps: p.activity==='desk'?7000:p.activity==='light'?8000:10000}; }
 function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function buildPerson(pr){ const P=defaultPerson(); P.id=String(pr.id); P.role=pr.role||'member'; P.email=pr.email||''; P.verified=!!pr.verified; P.hasPassword=pr.hasPassword!==false; if(pr.name) P.name=pr.name; if(pr.sex) P.sex=pr.sex;
   ['goal','steps','kg','floor','fatMax','carbMax','maint','pMin','restCut','age','height','pace','onboarded'].forEach(f=>{ if(pr[f]!=null) P[f]=+pr[f]; });
@@ -1338,6 +1342,9 @@ function weekDate(i){ const t=new Date(); const dow=(t.getDay()+6)%7; const d=ne
 function renderWeekNav(){ const a=weekDate(0), b=weekDate(6); const f=(d,o)=>d.toLocaleDateString(undefined,o); const same=a.getMonth()===b.getMonth();
   const lbl=document.getElementById('wkLbl'); lbl.textContent=(S.week===0?'This week · ':S.week===-1?'Last week · ':S.week===1?'Next week · ':'')+f(a,{day:'numeric',month:'short'})+' – '+f(b,same?{day:'numeric'}:{day:'numeric',month:'short'});
   document.getElementById('wkPrev').onclick=()=>{ S.week--; render(); }; document.getElementById('wkNext').onclick=()=>{ S.week++; render(); }; lbl.onclick=()=>{ S.week=0; S.day=(new Date().getDay()+6)%7; render(); }; }
+// Weekly sanity check: average rate of loss over the last 3 weeks of weigh-ins, flagged when it exceeds 1 percent of body weight a week.
+function lossTrend(){ const ws=(PS().weights||[]).filter(x=>x&&x.d&&x.w).slice().sort((a,b)=>a.d<b.d?-1:1); if(ws.length<3) return null; const last=ws[ws.length-1]; const cutoff=new Date(last.d); cutoff.setDate(cutoff.getDate()-21); const recent=ws.filter(x=>new Date(x.d)>=cutoff); if(recent.length<3) return null;
+  const first=recent[0]; const days=(new Date(last.d)-new Date(first.d))/86400000; if(days<7) return null; const perWeek=Math.round((first.w-last.w)/days*7*100)/100; const pct=Math.round(perWeek/last.w*1000)/10; return {perWeek, pct, tooFast: perWeek>0 && perWeek>last.w*0.01}; }
 function canWriteWho(k){ return !CLOUD.me || CLOUD.me.role==='owner' || String(CLOUD.me.id)===String(k); }
 function render(){
   document.body.classList.toggle('ro',!canWriteWho(S.who));
@@ -1378,7 +1385,8 @@ function renderPlan(){
   const n=document.getElementById('pnotes'); n.innerHTML=P().notes||''; n.style.display=P().notes?'block':'none';
   const wrap=document.getElementById('meals'); wrap.innerHTML=''; const all=[]; const fut=isFuture(); const todayIdx=(new Date().getDay()+6)%7; const isToday=S.week===0&&S.day===todayIdx;
   cb.style.display=fut?'none':'';
-  if(isToday){ const y=yesterdayPos(); const yItems=itemsOn(y.week,y.day); const dis=localStorage.getItem('kl-ydis')===ymd(new Date()); if(!yItems.length&&!dis){ const yd=new Date(); yd.setDate(yd.getDate()-1); wrap.innerHTML+=`<div class="ynote"><span>Yesterday (${yd.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}) has nothing logged.</span><button class="btn q" id="goY">Log yesterday</button><button class="btn q dim" id="disY" aria-label="Dismiss">×</button></div>`; }
+  if(isToday){ const tr=lossTrend(); if(tr&&tr.tooFast){ wrap.innerHTML+=`<div class="ynote warnnote"><span>Weight is dropping about ${tr.perWeek} kg a week (${tr.pct}% of body weight), faster than the 1% that keeps muscle. Consider adding 150 to 200 kcal a day, mostly protein and carbs.</span></div>`; }
+    const y=yesterdayPos(); const yItems=itemsOn(y.week,y.day); const dis=localStorage.getItem('kl-ydis')===ymd(new Date()); if(!yItems.length&&!dis){ const yd=new Date(); yd.setDate(yd.getDate()-1); wrap.innerHTML+=`<div class="ynote"><span>Yesterday (${yd.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}) has nothing logged.</span><button class="btn q" id="goY">Log yesterday</button><button class="btn q dim" id="disY" aria-label="Dismiss">×</button></div>`; }
     if(todayIdx===0){ const rv=reviewHtml(-1,'Last week in review'); if(rv) wrap.innerHTML+=rv; } }
   const dayP=plan.reduce((n,m)=>n+tot(m.items).p,0); const dayOK=dayP>=P().target.p-10;
   plan.forEach((m,mi)=>{
@@ -1910,29 +1918,41 @@ document.getElementById('keySkip').onclick=()=>{ if(!confirm('Use this device on
 const ONB={step:0, d:null, who:null};
 const ONB_STEPS=['About you','Your goal','How you eat','Cuisines','Your targets'];
 function onbOpen(who){ const k=String(who||CLOUD.me.id); const P=PEOPLE[k]; if(!P) return; ONB.who=k; ONB.step=0;
-  ONB.d={name:P.name, sex:P.sex||'x', age:P.age||'', height:P.height||'', kg:P.kg||'', goal:P.goal||'', goalType:P.goalType||'lose', pace:P.pace||0.5, activity:P.activity||'light', diet:P.diet||(S.people[k]&&S.people[k].allVeg?'veg':'nonveg'), vegDays:(S.people[k]&&S.people[k].vegDays)||P.vegDays||[], avoid:P.avoid||[], cuisines:P.cuisines||['in','ca'], t:null, notesTitle:P.notesTitle||'', notes:P.notesList||[], steps:P.steps};
+  ONB.d={units:(ONB.d&&ONB.d.units)||'metric', keepMaint:false, name:P.name, sex:P.sex||'x', age:P.age||'', height:P.height||'', kg:P.kg||'', goal:P.goal||'', goalType:P.goalType||'lose', pace:P.pace||0.5, activity:P.activity||'light', diet:P.diet||(S.people[k]&&S.people[k].allVeg?'veg':'nonveg'), vegDays:(S.people[k]&&S.people[k].vegDays)||P.vegDays||[], avoid:P.avoid||[], cuisines:P.cuisines||['in','ca'], t:null, notesTitle:P.notesTitle||'', notes:P.notesList||[], steps:P.steps};
   document.getElementById('ovOnb').classList.add('show'); onbRender(); }
 function onbRender(){ const d=ONB.d, st=ONB.step, b=document.getElementById('onbBody'); document.getElementById('onbTitle').textContent=ONB_STEPS[st]; document.getElementById('onbStep').textContent=(st+1)+' of 5'; document.getElementById('onbMsg').textContent=''; document.getElementById('onbBack').textContent=st?'Back':'Later'; document.getElementById('onbNext').textContent=st===4?'Finish':'Next';
   const fld=(id,label,unit,val,attrs='')=>`<div class="fld"><span>${label}</span><div><input id="${id}" type="number" inputmode="decimal" ${attrs} value="${val===''||val==null?'':val}"><small>${unit}</small></div></div>`;
   const cards=(key,opts,one)=>`<div class="opts${one?' one':''}">${opts.map(([v,t,sub])=>`<button type="button" class="opt-card${d[key]===v?' on':''}" data-k="${key}" data-v="${v}"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</button>`).join('')}</div>`;
   const multi=(key,opts)=>`<div class="opts">${opts.map(([v,t,sub])=>`<button type="button" class="opt-card${d[key].includes(v)?' on':''}" data-mk="${key}" data-v="${v}"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</button>`).join('')}</div>`;
-  if(st===0){ b.innerHTML=`<div class="onb-q">Used only to work out your calorie and protein targets. Everything can be changed later in Profiles.</div>
-    <div class="grp" style="margin-bottom:14px"><div class="fld"><span>Name</span><input id="onbName" type="text" maxlength="40" value="${esc(d.name)}" style="width:160px"></div>${fld('onbAge','Age','years',d.age,'min="18" max="110"')}${fld('onbH','Height','cm',d.height,'min="100" max="250"')}${fld('onbW','Weight now','kg',d.kg,'min="20" max="300" step="0.1"')}${fld('onbG','Goal weight','kg',d.goal,'min="20" max="300" step="0.1"')}</div>
-    <div class="onb-q">Body type for the formula</div>${cards('sex',[['f','Female'],['m','Male'],['x','Prefer not to say','uses an average']])}`; }
+  if(st===0){ const imp=d.units==='imp'; const toIn=(cm)=>cm?Math.round(cm/2.54):''; const toLb=(kg)=>kg?Math.round(kg*2.2046*10)/10:'';
+    b.innerHTML=`<div class="onb-q">Used only to work out your calorie and protein targets. Everything can be changed later in Profiles.</div>
+    <div class="daychips" style="margin-bottom:10px"><button type="button" data-u="metric" class="${imp?'':'on'}">cm · kg</button><button type="button" data-u="imp" class="${imp?'on':''}">ft in · lb</button></div>
+    <div class="grp" style="margin-bottom:14px"><div class="fld"><span>Name</span><input id="onbName" type="text" maxlength="40" value="${esc(d.name)}" style="width:160px"></div>${fld('onbAge','Age','years',d.age,'min="18" max="110"')}
+    ${imp?`<div class="fld"><span>Height</span><div><input id="onbHft" type="number" inputmode="numeric" min="3" max="8" value="${d.height?Math.floor(toIn(d.height)/12):''}" style="width:50px"><small>ft</small><input id="onbHin" type="number" inputmode="numeric" min="0" max="11" value="${d.height?toIn(d.height)%12:''}" style="width:50px"><small>in</small></div></div>${fld('onbW','Weight now','lb',toLb(d.kg),'min="44" max="660" step="0.1"')}${fld('onbG','Goal weight','lb',toLb(d.goal),'min="44" max="660" step="0.1"')}`
+        :`${fld('onbH','Height','cm',d.height,'min="100" max="250"')}${fld('onbW','Weight now','kg',d.kg,'min="20" max="300" step="0.1"')}${fld('onbG','Goal weight','kg',d.goal,'min="20" max="300" step="0.1"')}`}</div>
+    <div class="onb-q">Body type for the formula</div>${cards('sex',[['f','Female'],['m','Male'],['x','Prefer not to say','uses an average']])}`;
+    b.querySelectorAll('[data-u]').forEach(el=>el.onclick=()=>{ onbRead(); d.units=el.dataset.u; onbRender(); }); }
   if(st===1){ b.innerHTML=`<div class="onb-q">What are you here for?</div>${cards('goalType',[['lose','Lose fat'],['maintain','Stay here'],['gain','Build muscle']])}
-    ${d.goalType==='maintain'?'':`<div class="onb-q">${d.goalType==='gain'?'How fast':'How fast (slower keeps more muscle)'}</div>${cards('pace',[[0.25,'Gentle','0.25 kg a week'],[0.5,'Standard','0.5 kg a week'],[0.75,'Faster','0.75 kg a week']])}`}
+    ${d.goalType==='maintain'?'':(()=>{ const mp=maxPace(d); const opts=[[0.25,'Gentle','0.25 kg a week'],[0.5,'Standard','0.5 kg a week'],[0.75,'Faster','0.75 kg a week']].map(o=>d.goalType==='lose'&&o[0]>mp+0.02?[o[0],o[1],`not for your stats: it would go below ${Math.round(mp*100)/100>=0.25?'the safe floor':'a safe intake'}`,true]:o); if(d.goalType==='lose'&&d.pace>mp+0.02) d.pace=opts.filter(o=>!o[3]).map(o=>o[0]).pop()||0.25;
+      return `<div class="onb-q">${d.goalType==='gain'?'How fast':'How fast (slower keeps more muscle, and the cut never goes below your resting rate)'}</div><div class="opts">${opts.map(([v,t,sub,off])=>`<button type="button" class="opt-card${d.pace===v?' on':''}${off?' off':''}" ${off?'disabled':''} data-k="pace" data-v="${v}"><b>${t}</b><span>${sub}</span></button>`).join('')}</div>`; })()}
     <div class="onb-q">A normal day for you</div>${cards('activity',[['desk','Desk job','little walking'],['light','Lightly active','walks, 2 to 3 workouts'],['active','Active','on your feet or 4 to 5 workouts'],['athlete','Very active','physical job or daily training']])}`; }
   if(st===2){ const DN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; b.innerHTML=`<div class="onb-q">Suggestions and the food list follow this.</div>${cards('diet',[['nonveg','Non-veg','chicken, eggs, fish'],['veg','Vegetarian','no meat, no eggs'],['eggs','Veg + eggs','eggs on veg days too']])}
     ${d.diet==='veg'?'':`<div class="onb-q">Vegetarian days (tap to toggle)</div><div class="daychips">${DN.map((n,i)=>`<button type="button" data-day="${i}" class="${d.vegDays.includes(i)?'on':''}">${n}</button>`).join('')}</div>`}
     <div class="onb-q">Never show me</div>${multi('avoid',[['beef','Beef'],['pork','Pork'],['seafood','Seafood'],['dairy','Dairy'],['nuts','Nuts'],['gluten','Gluten']])}`; }
   if(st===3){ b.innerHTML=`<div class="onb-q">Pick one or both. The first one you pick leads the suggestions; the food list shows the rest too.</div>${multi('cuisines',[['in','Indian','South and North Indian home food'],['ca','Canadian and American','home cooking, grocery and chain items']])}`; }
-  if(st===4){ const t=d.t=computeTargets(d); b.innerHTML=`<div class="onb-q">${d.goalType==='lose'?`About ${Math.round((t.maint-t.kcal)/7700*7*100)/100} kg a week at this intake.`:d.goalType==='gain'?'A small surplus so most of the gain is muscle.':'Calories to hold your weight.'} Maintenance is about ${t.maint} kcal. Adjust anything you like.</div>
-    <div class="grp">${fld('onbKcal','Calories a day','kcal',t.kcal)}${fld('onbProt','Protein a day','g',t.protein)}${fld('onbCarb','Carbs max','g',t.carbMax)}${fld('onbFat','Fat max','g',t.fatMax)}${fld('onbSteps','Steps a day','',t.steps)}</div>`; }
+  if(st===4){ const t=d.t=computeTargets(d); const cur=PEOPLE[ONB.who]; const had=!!(cur&&(cur.onboarded||ONB.rerun||!(cur.target.k===1900&&cur.target.p===150))); const cmp=(a,b)=>had&&a!==b?` <small style="color:var(--muted)">(now ${a})</small>`:'';
+    b.innerHTML=`<div class="onb-q">Resting rate about ${t.bmr} kcal, maintenance about ${t.maint} kcal. ${d.goalType==='lose'?`At this intake you lose about ${t.weekly} kg a week${t.cutCapped?', the most that keeps you above your resting rate':''}.`:d.goalType==='gain'?'A small surplus so most of the gain is muscle.':'Calories to hold your weight.'} Adjust anything you like.</div>
+    <div class="grp"><div class="fld"><span>Calories a day${cmp(cur.target.k,t.kcal)}</span><div><input id="onbKcal" type="number" inputmode="decimal" value="${t.kcal}"><small>kcal</small></div></div><div class="fld"><span>Protein a day${cmp(cur.target.p,t.protein)}</span><div><input id="onbProt" type="number" inputmode="decimal" value="${t.protein}"><small>g</small></div></div>${fld('onbCarb','Carbs max','g',t.carbMax)}${fld('onbFat','Fat max','g',t.fatMax)}${fld('onbSteps','Steps a day','',t.steps)}</div>
+    ${had?`<button type="button" class="btn q" id="onbKeep" style="width:100%;margin-top:10px;color:var(--acc)">Keep my current targets (${cur.target.k} kcal, ${cur.target.p} g) and save the rest</button>`:''}
+    <div class="onb-q" style="margin-top:12px">These are estimates. Judge by the weekly weight trend, not single days, and raise calories if you lose faster than 1 percent of body weight a week. If you have a medical condition, are pregnant or breastfeeding, check targets with your doctor.</div>`;
+    const keep=document.getElementById('onbKeep'); if(keep) keep.onclick=()=>{ document.getElementById('onbKcal').value=cur.target.k; document.getElementById('onbProt').value=cur.target.p; document.getElementById('onbCarb').value=cur.carbMax; document.getElementById('onbFat').value=cur.fatMax; document.getElementById('onbSteps').value=cur.steps; d.keepMaint=true; document.getElementById('onbNext').click(); }; }
   b.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{ onbRead(); const v=el.dataset.v; d[el.dataset.k]=isNaN(+v)||el.dataset.k==='sex'||el.dataset.k==='diet'||el.dataset.k==='goalType'||el.dataset.k==='activity'?v:+v; onbRender(); });
   b.querySelectorAll('[data-mk]').forEach(el=>el.onclick=()=>{ const k=el.dataset.mk, v=el.dataset.v; const i=d[k].indexOf(v); if(i>=0) d[k].splice(i,1); else d[k].push(v); onbRender(); });
   b.querySelectorAll('[data-day]').forEach(el=>el.onclick=()=>{ const i=+el.dataset.day; const j=d.vegDays.indexOf(i); if(j>=0) d.vegDays.splice(j,1); else d.vegDays.push(i); onbRender(); }); }
 function onbRead(){ const d=ONB.d; const g=(id)=>{ const el=document.getElementById(id); return el?el.value.trim():null; }; const n=(id)=>{ const v=g(id); return v===null||v===''?'':+v; };
-  if(ONB.step===0){ d.name=g('onbName')||d.name; d.age=n('onbAge'); d.height=n('onbH'); d.kg=n('onbW'); d.goal=n('onbG'); }
+  if(ONB.step===0){ d.name=g('onbName')||d.name; d.age=n('onbAge');
+    if(d.units==='imp'){ const ft=n('onbHft'), inch=n('onbHin'); d.height=(ft!==''||inch!=='')?Math.round(((+ft||0)*12+(+inch||0))*2.54):''; d.kg=n('onbW')!==''?Math.round(n('onbW')/2.2046*10)/10:''; d.goal=n('onbG')!==''?Math.round(n('onbG')/2.2046*10)/10:''; }
+    else { d.height=n('onbH'); d.kg=n('onbW'); d.goal=n('onbG'); } }
   if(ONB.step===4&&d.t){ d.t.kcal=n('onbKcal')||d.t.kcal; d.t.protein=n('onbProt')||d.t.protein; d.t.carbMax=n('onbCarb')||d.t.carbMax; d.t.fatMax=n('onbFat')||d.t.fatMax; d.t.steps=n('onbSteps')||d.t.steps; } }
 function onbValid(){ const d=ONB.d, msg=document.getElementById('onbMsg');
   if(ONB.step===0){ if(!d.name){ msg.textContent='Name is required.'; return false; } if(!(d.age>=18&&d.age<=110)){ msg.textContent='This app is for adults: age must be 18 or over.'; return false; } if(!(d.height>=100&&d.height<=250)){ msg.textContent='Height in cm, 100 to 250.'; return false; } if(!(d.kg>=20&&d.kg<=300)){ msg.textContent='Weight in kg.'; return false; } if(!(d.goal>=20&&d.goal<=300)) d.goal=d.kg; }
@@ -1942,14 +1962,15 @@ function onbValid(){ const d=ONB.d, msg=document.getElementById('onbMsg');
 document.getElementById('onbBack').onclick=async()=>{ if(ONB.step===0){ document.getElementById('ovOnb').classList.remove('show'); const P=PEOPLE[ONB.who]; if(P&&!P.onboarded){ try{ applyMe(await api('profile_put',ONB.who,{profile:Object.assign(profOf(ONB.who),{onboarded:1,cuisines:P.cuisines,avoid:P.avoid,vegDays:P.vegDays||[]})})); }catch(e){} } return; } onbRead(); ONB.step--; onbRender(); };
 document.getElementById('onbNext').onclick=async()=>{ onbRead(); if(!onbValid()) return; if(ONB.step<4){ ONB.step++; onbRender(); return; }
   const d=ONB.d, t=d.t, msg=document.getElementById('onbMsg'); msg.textContent='Saving…';
-  const prof={name:d.name, sex:d.sex, age:d.age, height:d.height, kg:d.kg, goal:d.goal, goalType:d.goalType, pace:d.goalType==='maintain'?0:d.pace, activity:d.activity, diet:d.diet, vegDays:d.diet==='veg'?[]:d.vegDays.slice().sort(), avoid:d.avoid, cuisines:d.cuisines, onboarded:1, kcal:t.kcal, protein:t.protein, floor:t.floor, maint:t.maint, pMin:t.pMin, carbMax:t.carbMax, fatMax:t.fatMax, steps:t.steps, restCut:t.restCut};
+  const prof={name:d.name, sex:d.sex, age:d.age, height:d.height, kg:d.kg, goal:d.goal, goalType:d.goalType, pace:d.goalType==='maintain'?0:d.pace, activity:d.activity, diet:d.diet, vegDays:d.diet==='veg'?[]:d.vegDays.slice().sort(), avoid:d.avoid, cuisines:d.cuisines, onboarded:1, kcal:t.kcal, protein:t.protein, floor:Math.max(d.sex==='f'?1200:1500,t.kcal-200), maint:t.maint, pMin:Math.round(t.protein*0.8/5)*5, carbMax:t.carbMax, fatMax:t.fatMax, steps:t.steps, restCut:t.restCut};
+  if(d.keepMaint){ const cur=PEOPLE[ONB.who]; prof.floor=cur.floor; prof.pMin=cur.pMin; prof.restCut=cur.restCut; }
   if(d.notesTitle) prof.notesTitle=d.notesTitle; if(d.notes.length) prof.notes=d.notes;
   const cur=PEOPLE[ONB.who]; if(cur&&cur.meals&&cur.mealsCustom) prof.meals=cur.meals;
   try{ const j=await api('profile_put',ONB.who,{profile:prof}); applyMe(j);
     const prev=S.who; S.who=ONB.who; const ps=PS(); ps.allVeg=d.diet==='veg'; ps.allNonVeg=false; ps.eggsVeg=d.diet==='eggs'; ps.vegDays=prof.vegDays.slice(); ps.seafood=!d.avoid.includes('seafood'); save(); S.who=prev;
     document.getElementById('ovOnb').classList.remove('show'); document.getElementById('ovProf').classList.remove('show'); render(); toast('Targets set'); }
   catch(e){ msg.textContent=e.msg||(e.message==='auth'?'Sign in again.':'Could not reach the server.'); } };
-document.getElementById('pfOnb').onclick=()=>{ if(!CLOUD.me) return; onbOpen(CLOUD.me.id); };
+document.getElementById('pfOnb').onclick=()=>{ if(!CLOUD.me) return; ONB.rerun=true; onbOpen(CLOUD.me.id); };
 // ---- household sheet: members, invites, removal, name ----
 async function hhRender(){ const w=document.getElementById('hhList'); const me=CLOUD.me; const owner=me&&me.role==='owner'; const ids=memberIds();
   document.getElementById('hhName').value=CLOUD.household?CLOUD.household.name:''; document.getElementById('hhName').disabled=!owner; document.getElementById('hhNameSave').hidden=!owner; document.getElementById('hhInvite').hidden=!owner; document.getElementById('hhFoot').textContent=owner?'As the owner you can add up to 8 people, edit their profiles and see their logs. Members see the household but only edit their own data.':'Only the household owner can add or remove people.';

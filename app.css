@@ -914,3 +914,5 @@ body.ro #meals button,body.ro #meals .sugg,body.ro #checkin,body.ro #wtForm,body
 .daychips{display:flex;gap:6px;margin:4px 0 14px}.daychips button{flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--line);background:var(--grp);font:inherit;font-size:13px;font-weight:600;color:var(--text)}.daychips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .tg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #pfOnb{width:100%;margin-bottom:8px;color:var(--acc)}
+.opt-card.off{opacity:.5}
+.ynote.warnnote{background:var(--orange3);color:var(--orangeT)}
