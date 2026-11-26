@@ -24,7 +24,7 @@ $ADMINS = defined('ADMIN_EMAILS') && is_array(ADMIN_EMAILS) ? array_map('strtolo
 if (!in_array($a, $ACTIONS, true)) { $a = 'unknown'; }
 if (!preg_match('/^[a-f0-9]{64}$/', $tok)) { $tok = ''; }
 $body = [];
-if ($method === 'POST') { $raw = file_get_contents('php://input'); if ($a === 'photo_put') { $rawBin = $raw; $raw = '{}'; } if (strlen($raw) > 1000000) { http_response_code(413); echo json_encode(['ok' => false, 'error' => 'too large']); exit; } $body = json_decode($raw, true, 12); if (!is_array($body)) $body = []; }
+if ($method === 'POST') { $raw = file_get_contents('php://input'); if (strlen($raw) > 1000000) { http_response_code(413); echo json_encode(['ok' => false, 'error' => 'too large']); exit; } $body = json_decode($raw, true, 12); if (!is_array($body)) $body = []; }
 $user = null;   // the signed-in user row
 
 // Fix 4: audit log. One JSON line per request. Never logs passwords, tokens or data.
@@ -170,10 +170,11 @@ if ($a === 'photo_put' || $a === 'photo_del') {
   needPost(); $tgt = $who ? row('SELECT * FROM users WHERE id=? AND household_id=?', [$who, $hhId]) : $user; if (!$tgt) fail(400, 'bad_request', 'who must be a member of your household');
   if (!$isOwner && (int)$tgt['id'] !== (int)$user['id']) fail(403, 'forbidden', 'You can only change your own photo.');
   if ($a === 'photo_del') { q('UPDATE users SET photo=NULL, photo_v=photo_v+1 WHERE id=?', [$tgt['id']]); audit('ok'); ok(meOut(row('SELECT * FROM users WHERE id=?', [$user['id']]))); }
-  $bin = $rawBin ?? ''; $len = strlen($bin);
+  // The photo arrives as base64 in the JSON body (the phone already cropped and shrunk it), so no raw binary POST that a host firewall might block.
+  $b64 = (string)($body['jpeg'] ?? ''); $bin = base64_decode(preg_replace('#^data:image/jpeg;base64,#', '', $b64), true); $len = $bin === false ? 0 : strlen($bin);
   if ($len < 200 || $len > 300000) fail(422, 'rejected', 'Photo must be a JPEG under 300 KB.');
-  if (substr($bin, 0, 3) !== "\xFF\xD8\xFF") fail(422, 'rejected', 'Photo must be a JPEG.');
-  $info = @getimagesizefromstring($bin); if (!$info || $info[2] !== IMAGETYPE_JPEG || $info[0] > 1024 || $info[1] > 1024) fail(422, 'rejected', 'Photo must be a JPEG up to 1024 px.');
+  if (substr($bin, 0, 3) !== "\xFF\xD8\xFF" || substr($bin, -2) !== "\xFF\xD9") fail(422, 'rejected', 'Photo must be a JPEG.');
+  if (function_exists('getimagesizefromstring')) { $info = @getimagesizefromstring($bin); if (!$info || $info[2] !== IMAGETYPE_JPEG || $info[0] > 1024 || $info[1] > 1024) fail(422, 'rejected', 'Photo must be a JPEG up to 1024 px.'); }
   $st = db()->prepare('UPDATE users SET photo=?, photo_v=photo_v+1 WHERE id=?'); $st->bindValue(1, $bin, PDO::PARAM_LOB); $st->bindValue(2, $tgt['id'], PDO::PARAM_INT); $st->execute();
   audit('ok', ['bytes' => $len]); ok(meOut(row('SELECT * FROM users WHERE id=?', [$user['id']])));
 }
