@@ -954,3 +954,4 @@ body.ro #meals button,body.ro #meals .sugg,body.ro #checkin,body.ro #wtForm,body
 .cropmask{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at center,transparent 0 149px,rgba(0,0,0,.55) 150px)}
 .cropzoom{width:100%;accent-color:var(--acc);margin:4px 0 10px}
 .shead .sdone:first-child{margin-right:auto}
+.seg button .av.img,.seg button.on .av.img{background-size:cover!important;background-position:center!important;color:transparent}
