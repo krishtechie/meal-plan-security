@@ -45,6 +45,7 @@ function sendMail(string $to, string $subject, string $title, string $intro, str
   $body = "--$b\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n$text\r\n\r\n" .
           "--$b\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n$html\r\n\r\n--$b--";
   if (defined('MAIL_SINK') && MAIL_SINK !== '') { @file_put_contents(MAIL_SINK, json_encode(['to' => $to, 'subject' => $subject, 'url' => $btnUrl, 'html' => $html]) . "\n", FILE_APPEND); return true; }   // test installs: write instead of send
+  if (defined('BREVO_API_KEY') && BREVO_API_KEY !== '') { return brevoSend($to, $subject, $text, $html, $name, $from, $reply); }   // transactional API instead of the host's relay
   return @mail($to, $subject, $body, $headers, '-f' . $from);
 }
 function mailVerify(string $to, string $name, string $token): bool {
@@ -55,4 +56,22 @@ function mailReset(string $to, string $name, string $token): bool {
 }
 function mailInvite(string $to, string $name, string $byName, string $household, string $token): bool {
   return sendMail($to, "$byName invited you to $household on " . brand('BRAND_NAME', 'Meal Planner'), "Hi $name, $byName added you", "$byName added you to the household \"$household\". Open the link to finish setting up your account and start logging meals, water, sleep and weight on your own phone. The link works for 7 days.", 'Finish setting up', appUrl() . '#invite=' . $token, "Your meals and targets are your own; $byName can see them as the household owner.");
+}
+
+// Brevo (https://www.brevo.com) transactional e-mail over HTTPS. Set in config.php:
+//   define('BREVO_API_KEY', 'xkeysib-...');  define('MAIL_FROM', 'noreply@yourdomain.com');   (the sender must be verified in Brevo)
+function brevoSend(string $to, string $subject, string $text, string $html, string $name, string $from, string $reply): bool {
+  $payload = json_encode(['sender' => ['name' => $name, 'email' => $from], 'to' => [['email' => $to]], 'replyTo' => ['email' => $reply], 'subject' => $subject, 'htmlContent' => $html, 'textContent' => $text, 'tags' => ['mealplanner']]);
+  $url = defined('BREVO_URL') ? BREVO_URL : 'https://api.brevo.com/v3/smtp/email';
+  $headers = ['accept: application/json', 'content-type: application/json', 'api-key: ' . BREVO_API_KEY];
+  if (function_exists('curl_init')) {
+    $ch = curl_init($url); curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $payload, CURLOPT_HTTPHEADER => $headers, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15]);
+    $res = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); $err = curl_error($ch); curl_close($ch);
+  } else {
+    $ctx = stream_context_create(['http' => ['method' => 'POST', 'header' => implode("\r\n", $headers), 'content' => $payload, 'timeout' => 15, 'ignore_errors' => true]]);
+    $res = @file_get_contents($url, false, $ctx); $code = 0; foreach ($http_response_header ?? [] as $h) { if (preg_match('#^HTTP/\S+\s+(\d+)#', $h, $m)) $code = (int)$m[1]; } $err = $res === false ? 'request failed' : '';
+  }
+  $okSend = $code >= 200 && $code < 300;
+  if (!$okSend) { @file_put_contents(DATA_DIR . '/audit.log', json_encode(['ts' => gmdate('c'), 'action' => 'mail', 'outcome' => 'brevo_failed', 'code' => $code, 'err' => substr((string)($err ?: $res), 0, 200)]) . "\n", FILE_APPEND | LOCK_EX); }
+  return $okSend;
 }

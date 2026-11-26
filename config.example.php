@@ -10,6 +10,7 @@ define('SIGNUP_CLOSED', true);                           // true: only the owner
 // define('MAIL_REPLY', 'you@example.com');
 // define('APP_URL', 'https://meal.example.com/');       // used in e-mail links; derived from the request when unset
 // define('MAIL_SINK', '/path/to/mail.log');             // test installs only: write e-mails to a file instead of sending
+// define('BREVO_API_KEY', 'xkeysib-...');                 // send through Brevo's API instead of the host's mail relay (MAIL_FROM must be a sender verified in Brevo)
 // Left over from v15 (one shared password, profiles in profiles.json). setup.php reads these once to upgrade, then they are unused:
 // define('APP_PASSWORD_HASH', '$2y$10$...');
 // define('APP_USERS', ['p1' => '$2y$10$...', 'p2' => '$2y$10$...']);

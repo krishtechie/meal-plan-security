@@ -52,6 +52,17 @@ REQUIREMENTS
   config.php to use a real mailbox, and add an SPF record if mail lands
   in spam).
 
+E-MAIL DELIVERY
+  By default PHP mail() through the host. Shared hosts often reject or
+  spam-folder account e-mails; the reliable option is Brevo (free tier):
+    1. brevo.com -> Senders & Domains -> add and authenticate your domain
+       (add the DKIM and DMARC records it shows in cPanel Zone Editor).
+    2. SMTP & API -> API Keys -> create a key.
+    3. In config.php:
+         define('BREVO_API_KEY', 'xkeysib-...');
+         define('MAIL_FROM', 'noreply@yourdomain.com');
+  Every e-mail then goes over HTTPS to Brevo from your own domain.
+
 E-MAIL BRANDING
   Optional in config.php:
     define('BRAND_NAME', 'Meal Planner');
