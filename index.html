@@ -32,7 +32,7 @@
 <link rel="apple-touch-startup-image" href="splash/750x1334-light.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: light)">
 <link rel="apple-touch-startup-image" href="splash/750x1334-dark.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=72">
+<link rel="stylesheet" href="app.css?v=73">
 </head>
 <body>
 <div id="landing" hidden>
@@ -41,7 +41,7 @@
     <h1>Eat on target, as a household.</h1>
     <p class="ld-sub">Log meals, water, sleep and weight on your phone. A calorie and protein gauge for each person, meal suggestions that respect veg days, and one place where the family can see how everyone is doing.</p>
     <div class="ld-cta"><button class="btn pri" id="ldDemo">Try the demo</button><button class="btn" id="ldLogin">Sign in</button><button class="btn q" id="ldSignup">I have an invite</button></div>
-    <p class="ld-sub" style="font-size:14px;margin-top:-14px">Accounts are by invitation. Households run on their own server copy; the source is public if you want to host yours.</p>
+    <p class="ld-sub ld-note">Accounts are by invitation. Households run on their own server copy; the source is public if you want to host yours.</p>
     <div class="ld-cards">
       <div class="ld-card"><span class="rico c-green"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5 11-11"/></svg></span><b>Protein first</b><span>Every meal shows calories and protein against your own targets, with portion chips for pieces, cups and grams.</span></div>
       <div class="ld-card"><span class="rico c-orange"><svg viewBox="0 0 24 24"><path d="M12 3.5c-4 4-6 7-6 10a6 6 0 0 0 12 0c0-3-2-6-6-10z"/></svg></span><b>Veg days, your way</b><span>Mark the days you eat vegetarian and the suggestions follow: eggs, paneer, soya, tofu or chicken as the day allows.</span></div>
@@ -163,7 +163,7 @@
 
 <div class="ov" id="ovCrop">
   <div class="sheet ios">
-    <div class="shead"><button class="sdone" id="cropCancel" style="font-weight:400">Cancel</button><span class="stitle">Move and scale</span><button class="sdone" id="cropSave">Save</button></div>
+    <div class="shead"><button class="sdone plain" id="cropCancel">Cancel</button><span class="stitle">Move and scale</span><button class="sdone" id="cropSave">Save</button></div>
     <div class="cropwrap"><canvas id="cropCv" width="300" height="300"></canvas><div class="cropmask"></div></div>
     <input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" class="cropzoom">
     <div class="gf" id="cropMsg">Drag to move, slide to zoom. The saved photo is a 256 px square, about 20 KB.</div>
@@ -335,10 +335,10 @@
     <div class="gh">Activity</div>
     <div class="grp"><button class="row navr" id="openAudit"><div class="rl"><span class="rico c-orange"><svg viewBox="0 0 24 24"><path d="M8 6.5h11M8 12h11M8 17.5h11"/><circle cx="4.8" cy="6.5" r=".9"/><circle cx="4.8" cy="12" r=".9"/><circle cx="4.8" cy="17.5" r=".9"/></svg></span><span>View activity log</span></div><i class="chev"></i></button></div>
     <div class="gf">Every sign-in, sync and save on the server, with the result and which device it came from.</div>
-    <div class="ver" id="appVer">Meal Planner v16.3.3</div>
+    <div class="ver" id="appVer">Meal Planner v16.3.4</div>
   </div>
 </div>
 
-<script src="app.js?v=72" defer></script>
+<script src="app.js?v=73" defer></script>
 </body>
 </html>

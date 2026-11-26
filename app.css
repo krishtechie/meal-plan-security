@@ -955,3 +955,10 @@ body.ro #meals button,body.ro #meals .sugg,body.ro #checkin,body.ro #wtForm,body
 .cropzoom{width:100%;accent-color:var(--acc);margin:4px 0 10px}
 .shead .sdone:first-child{margin-right:auto}
 .seg button .av.img,.seg button.on .av.img{background-size:cover!important;background-position:center!important;color:transparent}
+/* v16.3.4: no inline style attributes (blocked by CSP style-src 'self') */
+.muted{color:var(--muted)}.mb10{margin-bottom:10px}.mb14{margin-bottom:14px}.mt12{margin-top:12px}.w160{width:160px}.w50{width:50px}
+.rico .avl{font-size:13px}.rico .avl.s12{font-size:12px}
+.ipn{margin-left:auto;color:var(--muted)}.ipn.hot{color:var(--red)}
+.keepbtn{width:100%;margin-top:10px;color:var(--acc)}
+.ld-note{font-size:14px;margin-top:-14px}
+.sdone.plain{font-weight:400}
