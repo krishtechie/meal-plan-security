@@ -32,13 +32,13 @@
 <link rel="apple-touch-startup-image" href="splash/750x1334-light.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: light)">
 <link rel="apple-touch-startup-image" href="splash/750x1334-dark.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=61">
+<link rel="stylesheet" href="app.css?v=62">
 </head>
 <body>
 <div class="app">
   <header class="hdr">
     <div class="brand"><div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h22a11 11 0 0 1-22 0z"/><path d="M16 17V9"/><path d="M16 9c-4.5 0-6.5-3-6.5-5.5 3 0 6.5 1.5 6.5 5.5z"/><path d="M16 9c4.5 0 6.5-3 6.5-5.5-3 0-6.5 1.5-6.5 5.5z"/></svg></div><div><h1 id="greet">Meal Planner</h1><small id="today"></small></div></div>
-    <div class="seg"><button class="who" data-who="p1"><span class="av" data-s="s1">1</span><span class="nm">Person 1</span></button><button class="who" data-who="p2"><span class="av" data-s="s2">2</span><span class="nm">Person 2</span></button></div>
+    <div class="seg"><button class="who on" data-who="guest"><span class="av">G</span><span class="nm">Guest</span></button></div>
     <span class="sync" id="sync"></span><button class="icon" id="openSettings" title="Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </header>
 
@@ -79,7 +79,7 @@
 
   <section id="vWeight" hidden>
     <div class="title"><h2 id="wtTitle"></h2></div>
-    <div class="note">Weigh in the morning after the bathroom, before food. Synced for both of you.</div>
+    <div class="note">Weigh in the morning after the bathroom, before food. Synced to every device in the household.</div>
     <div class="card form" id="wtForm">
       <label class="cell"><span class="cl">Date</span><span class="cv picker"><b id="wtDateLbl">Today</b><input type="date" id="wtDate" aria-label="Date"></span></label>
       <label class="cell"><span class="cl">Weight</span><span class="cv"><input type="number" step="0.1" inputmode="decimal" autocomplete="off" name="weight-kg" id="wtVal" placeholder="0.0" aria-label="Weight in kg"><em>kg</em></span></label>
@@ -103,12 +103,33 @@
 
 <div class="ov" id="ovKey">
   <div class="sheet" data-s="s8">
-    <h3>Sign in to sync</h3>
-    <div class="sub">Enter the app password. You do this once per phone or browser.</div>
-    <input class="search" id="keyIn" type="password" placeholder="Password" autocomplete="current-password" data-s="s13">
-    <div id="keyWhoWrap" hidden><div class="sub">Password accepted. Who is this phone?</div><div class="theme" id="keyWho"><button type="button" data-u="p1">Person 1</button><button type="button" data-u="p2">Person 2</button></div></div>
+    <h3 id="keyTitle">Sign in</h3>
+    <div class="sub" id="keySub">Use the e-mail and password of your account.</div>
+    <input class="search" id="keyName" type="text" placeholder="Your name" autocomplete="name" maxlength="40" data-m="signup" hidden>
+    <input class="search" id="keyEmail" type="email" placeholder="E-mail" autocomplete="email" inputmode="email" autocapitalize="off" data-m="login signup forgot">
+    <input class="search" id="keyIn" type="password" placeholder="Password" autocomplete="current-password" data-m="login signup reset" data-s="s13">
+    <input class="search" id="keyIn2" type="password" placeholder="Repeat password" autocomplete="new-password" data-m="signup reset" hidden>
+    <input class="search" id="keyHh" type="text" placeholder="Household name (optional)" maxlength="40" data-m="signup" hidden>
     <div class="sub" id="keyMsg" data-s="s9"></div>
-    <button class="btn pri" id="keyGo">Sign in</button><button class="btn q" id="keySkip" hidden>Use this device only</button>
+    <button class="btn pri" id="keyGo">Sign in</button>
+    <div class="authlinks"><button class="btn q" id="keyToForgot" type="button">Forgot password?</button><button class="btn q" id="keyToSignup" type="button" hidden>Create account</button><button class="btn q" id="keyToLogin" type="button" hidden>Back to sign in</button></div>
+    <button class="btn q" id="keySkip" hidden>Use this device only</button>
+  </div>
+</div>
+
+<div class="ov" id="ovHh">
+  <div class="sheet ios">
+    <div class="shead"><span class="stitle">Household</span><button class="sdone" id="hhClose">Done</button></div>
+    <div class="gh">Name</div>
+    <div class="grp"><div class="row"><input class="hhin" id="hhName" type="text" maxlength="40" placeholder="Home"><button class="btn q" id="hhNameSave">Save</button></div></div>
+    <div class="gh">People</div>
+    <div class="grp" id="hhList"></div>
+    <div class="gf" id="hhFoot"></div>
+    <div id="hhInvite" hidden>
+      <div class="gh">Add someone</div>
+      <div class="grp"><div class="row"><input class="hhin" id="hhNewName" type="text" maxlength="40" placeholder="Their name"></div><div class="row"><input class="hhin" id="hhEmail" type="email" inputmode="email" autocapitalize="off" placeholder="Their e-mail"></div><button class="row navr" id="hhInviteGo"><div class="rl"><span class="rico c-blue"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>Send invite</span></div></button></div>
+      <div class="gf" id="hhMsg">They get an e-mail with a link to set their own password. Their meals, water, sleep and weight are their own; you can see and edit them as the owner.</div>
+    </div>
   </div>
 </div>
 
@@ -213,29 +234,34 @@
       <button class="row navr" id="resetDay"><div class="rl"><span class="rico c-gray"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/></svg></span><span>Reset this day to the plan</span></div><i class="chev"></i></button>
       <button class="row navr red" id="resetAll"><div class="rl"><span class="rico c-red"><svg viewBox="0 0 24 24"><path d="M5 7h14M9.5 7V4.8h5V7M7 7l.8 12h8.4L17 7"/></svg></span><span>Reset all days</span></div><i class="chev"></i></button>
     </div>
+    <div class="gh">Household</div>
+    <div class="grp"><button class="row navr" id="openHh"><div class="rl"><span class="rico c-blue"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M14.5 18.5c.4-2.2 1.6-3.6 3.3-3.8 1.3-.1 2.4.6 3 1.8"/></svg></span><span>People and invites</span></div><i class="chev"></i></button></div>
+    <div class="gf" id="accInfo"></div>
     <div class="gh">Profiles</div>
     <div class="grp"><button class="row navr" id="openProf"><div class="rl"><span class="rico c-blue"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c.8-3.8 3.9-6 7.5-6s6.7 2.2 7.5 6"/></svg></span><span>Edit profiles</span></div><i class="chev"></i></button></div>
-    <div class="gf">Names, calorie and protein targets, weight and step goals, and notes for both people. Saved on the server, shown only after sign-in.</div>
+    <div class="gf">Names, calorie and protein targets, weight and step goals, and notes. Saved on the server, shown only after sign-in.</div>
     <div class="gh">Sync</div>
     <div class="grp">
       <button class="row navr" id="syncNow"><div class="rl"><span class="rico c-green"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 0 1-13 5.1"/><path d="M4.5 12a7.5 7.5 0 0 1 13-5.1"/><path d="M17.5 3.5v3.6h-3.6M6.5 20.5v-3.6h3.6"/></svg></span><span>Sync now</span></div><span class="rv" id="syncState"></span><i class="chev"></i></button>
       <button class="row navr" id="openDev"><div class="rl"><span class="rico c-green"><svg viewBox="0 0 24 24"><rect x="6.5" y="3" width="11" height="18" rx="2.5"/><path d="M11 17.5h2"/></svg></span><span>Signed-in devices</span></div><i class="chev"></i></button>
+      <button class="row navr" id="resendVerify" hidden><div class="rl"><span class="rico c-orange"><svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M4 7l8 6 8-6"/></svg></span><span>Resend confirmation e-mail</span></div></button>
       <button class="row navr red" id="syncOut"><div class="rl"><span class="rico c-red"><svg viewBox="0 0 24 24"><path d="M9 4.5H5.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H9"/><path d="M13 8l4 4-4 4M17 12H8.5"/></svg></span><span>Sign out on this device</span></div><i class="chev"></i></button>
     </div>
     <div class="gf" id="syncInfo"></div>
+    <div class="grp"><button class="row navr red" id="accDelete"><div class="rl"><span class="rico c-red"><svg viewBox="0 0 24 24"><path d="M5 7h14M9.5 7V4.5h5V7M7 7l.8 12.5h8.4L17 7"/></svg></span><span>Delete account and data</span></div></button></div>
     <div class="gh">Export</div>
     <div class="grp">
       <button class="row navr" id="xlsExport"><div class="rl"><span class="rico c-green"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M9.5 12h5M9.5 15.5h5"/></svg></span><span>Export to Excel</span></div><i class="chev"></i></button>
       <button class="row navr" id="csvExport"><div class="rl"><span class="rico c-gray"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M9.5 12h5M9.5 15.5h5"/></svg></span><span>Export CSV</span></div><i class="chev"></i></button>
     </div>
-    <div class="gf">Food log, check-ins, weight history and workouts for both people. Opens in Excel, Numbers and Google Sheets.<span id="bkMsg" data-s="s13"></span></div>
+    <div class="gf">Food log, check-ins, weight history and workouts for everyone in the household. Opens in Excel, Numbers and Google Sheets.<span id="bkMsg" data-s="s13"></span></div>
     <div class="gh">Activity</div>
     <div class="grp"><button class="row navr" id="openAudit"><div class="rl"><span class="rico c-orange"><svg viewBox="0 0 24 24"><path d="M8 6.5h11M8 12h11M8 17.5h11"/><circle cx="4.8" cy="6.5" r=".9"/><circle cx="4.8" cy="12" r=".9"/><circle cx="4.8" cy="17.5" r=".9"/></svg></span><span>View activity log</span></div><i class="chev"></i></button></div>
     <div class="gf">Every sign-in, sync and save on the server, with the result and which device it came from.</div>
-    <div class="ver" id="appVer">Meal Planner v15.9</div>
+    <div class="ver" id="appVer">Meal Planner v16.0</div>
   </div>
 </div>
 
-<script src="app.js?v=61" defer></script>
+<script src="app.js?v=62" defer></script>
 </body>
 </html>

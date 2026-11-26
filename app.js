@@ -818,9 +818,10 @@ function canon(x){ const r=REDIR[x.id]; return r&&F[r[0]] ? {id:r[0],q:+((x.q||1
 
 // ================= PEOPLE & TEMPLATES =================
 // template meal: {name,time,nv:[ids],v:[ids]}
-const PEOPLE = {
-  p1:{ name:'Person 1', sex:'m', goal:80, steps:9000, target:{k:1900,p:165}, floor:1700, fatMax:75, carbMax:230, maint:2550, pMin:150, restCut:100, eggsVegDefault:false, kg:88,
-    meals:[
+// v16: people are the members of the signed-in household (api ping/login → members). Each one is built from these
+// defaults plus their server profile. Before sign-in there is a single guest so the screens can render.
+const BASE_MEALS=[
+
       {name:'On waking', time:'7:00 am', nv:['d_limewater'], v:['d_limewater']},
       {name:'Breakfast', time:'8:00 am', nv:['b_eggs2','b_oatsmilkchia'], v:['b_eggs2','b_oatswheychia'], vNoEgg:['b_oatswheychia']},
       {name:'Mid-morning', time:'11:00 am', nv:['k_gychia'], v:['k_gychia']},
@@ -828,20 +829,16 @@ const PEOPLE = {
       {name:'Pre-gym', time:'4:00 pm', nv:['k_whey','f_banana'], v:['k_whey','f_banana']},
       {name:'Gym', time:'5:00 to 6:00 pm', nv:['g_gym'], v:['g_gym']},
       {name:'Dinner (post-gym)', time:'7:00 pm', nv:['c_rice100','p_chkmush'], v:['c_rice100',['p_tofuveg',1.5]]},
-    ],
-    notes:null },
-  p2:{ name:'Person 2', sex:'f', goal:75, steps:8000, target:{k:1550,p:130}, floor:1350, fatMax:60, carbMax:170, maint:2200, pMin:115, restCut:80, eggsVegDefault:false, kg:85,
-    meals:[
-      {name:'On waking (tablet)', time:'7:00 am', nv:['d_tablet'], v:['d_tablet']},
-      {name:'Breakfast', time:'8:00 am', nv:['b_eggs2',['b_oatsmilkchia',0.5]], v:['b_oatswheychia'], vNoEgg:['b_oatswheychia']},
-      {name:'Mid-morning', time:'11:00 am', nv:['k_gychia'], v:['k_gychia']},
-      {name:'Lunch', time:'1:00 pm', nv:['c_rice100','p_chkveg120'], v:['c_rice100','p_soyaveg']},
-      {name:'Pre-gym', time:'4:00 pm', nv:['k_whey','f_hbanana'], v:['k_whey','f_hbanana']},
-      {name:'Gym', time:'5:00 to 6:00 pm', nv:['g_gym'], v:['g_gym']},
-      {name:'Dinner (post-gym)', time:'7:00 pm', nv:['c_rice100','p_chkmush'], v:['p_tofuveg','v_bigsalad']},
-    ],
-    notes:null }
-};
+    ];
+function defaultPerson(){ return { name:'Guest', sex:'x', goal:75, steps:8000, target:{k:1900,p:150}, floor:1700, fatMax:75, carbMax:230, maint:2500, pMin:130, restCut:100, eggsVegDefault:false, kg:80, meals:BASE_MEALS.map(m=>Object.assign({},m)), notes:null, role:'member', id:'guest' }; }
+const PEOPLE = { guest: defaultPerson() };
+function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function buildPerson(pr){ const P=defaultPerson(); P.id=String(pr.id); P.role=pr.role||'member'; P.email=pr.email||''; P.verified=!!pr.verified; P.hasPassword=pr.hasPassword!==false; if(pr.name) P.name=pr.name; if(pr.sex) P.sex=pr.sex;
+  ['goal','steps','kg','floor','fatMax','carbMax','maint','pMin','restCut'].forEach(f=>{ if(pr[f]!=null) P[f]=+pr[f]; }); if(pr.kcal) P.target.k=+pr.kcal; if(pr.protein) P.target.p=+pr.protein; if(Array.isArray(pr.vegDays)) P.vegDays=pr.vegDays.slice();
+  if(Array.isArray(pr.meals)&&pr.meals.length) P.meals=pr.meals.map(m=>({name:m.name,time:m.time,nv:m.nv||[],v:m.v||[],vNoEgg:(m.vNoEgg&&m.vNoEgg.length)?m.vNoEgg:undefined}));
+  P.notesTitle=pr.notesTitle||''; P.notesList=Array.isArray(pr.notes)?pr.notes.slice():[]; P.notes=P.notesList.length?`<h3>${esc(pr.notesTitle||pr.name)}</h3><ul>${P.notesList.map(n=>'<li>'+esc(n)+'</li>').join('')}</ul>`:null; return P; }
+function memberIds(){ return Object.keys(PEOPLE).filter(k=>k!=='guest'); }
+function setMembers(list){ memberIds().forEach(k=>delete PEOPLE[k]); (list||[]).forEach(pr=>{ PEOPLE[String(pr.id)]=buildPerson(pr); }); if(memberIds().length&&(S.who==='guest'||!PEOPLE[S.who])) S.who=(CLOUD.me&&PEOPLE[String(CLOUD.me.id)])?String(CLOUD.me.id):memberIds()[0]; try{ localStorage.setItem('kl-members',JSON.stringify(list||[])); }catch(e){} renderNames(); }
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], FULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const VEG_DAYS=new Set([1,4,5]); // Tue, Fri, Sat
 
@@ -991,9 +988,9 @@ function wlogHtml(name){ const ps=PS(); const cur=((ps.wlog||{})[ymd(new Date())
   const hint=prev?`Last ${new Date(prev.d+'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}: <b>${prev.w} kg × ${prev.r}</b>${prev.s?' × '+prev.s:''}${prev.w&&cur.w&&cur.w>prev.w?' · <em class="up">+'+(cur.w-prev.w).toFixed(1)+' kg</em>':''}`:'First time: pick a weight you can do for the top of the range with 2 reps left';
   return `<div class="wlog" data-ex="${name.replace(/"/g,'&quot;')}"><div class="wlin"><label><span>kg</span><input class="lw" type="number" inputmode="decimal" step="0.5" min="0" value="${cur.w||''}" placeholder="0" autocomplete="off" name="log-kg"></label><label><span>reps</span><input class="lr" type="number" inputmode="numeric" min="0" value="${cur.r||''}" placeholder="0" autocomplete="off" name="log-reps"></label><label><span>sets</span><input class="ls" type="number" inputmode="numeric" min="0" value="${cur.s||''}" placeholder="0" autocomplete="off" name="log-sets"></label><span class="ldone${cur.w&&cur.r?' on':''}" aria-hidden="true">✓</span></div><div class="wlhint">${hint}</div></div>`; }
 function wlogLast(name){ const prev=wlogPrev(name); return prev?`<div class="wlhint">Last: <b>${prev.w} kg × ${prev.r}</b>${prev.s?' × '+prev.s:''} on ${new Date(prev.d+'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}</div>`:''; }
-const nm=(t)=>String(t).replace(/\{p1\}/g,PEOPLE.p1.name).replace(/\{p2\}/g,PEOPLE.p2.name);
+const nm=(t)=>{ const ids=memberIds(); const n=(i)=>PEOPLE[ids[i]]?PEOPLE[ids[i]].name:('Person '+(i+1)); return String(t).replace(/\{p1\}/g,n(0)).replace(/\{p2\}/g,n(1)); };
 function renderWorkout(){
-  const k=S.who==='p1';
+  const k=P().sex!=='f';
   document.getElementById('woTitle').textContent=P().name+' · weekly split';
   document.getElementById('woSub').textContent = k ? 'Goal: build muscle while cutting. Heavy compound lifts, 6 to 10 reps, add weight every week you hit the top of the range. 60 min, 5 days.' : 'Goal: strong and toned. Same lifts, 10 to 15 reps, lighter weight, glutes and back as priority. 60 min, 5 days. If a week feels flat, drop one set from each exercise, do not skip the day.';
   const w=document.getElementById('woDays'); w.innerHTML='';
@@ -1022,56 +1019,60 @@ function renderWorkout(){
 }
 
 // ================= STATE =================
-let S={who:'p1', day:(new Date().getDay()+6)%7, view:'plan', people:{}};
-try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'null'); if(o&&o.people){ S.people=o.people; S.who=o.who||'p1'; } }catch(e){}
-// Older builds keyed people by first name; move them to p1/p2 (first legacy key becomes p1, second p2)
-(()=>{ const legacy=Object.keys(S.people).filter(k=>!/^p[12]$/.test(k)); legacy.forEach((k,i)=>{ const nk='p'+(i+1); if(!S.people[nk]) S.people[nk]=S.people[k]; delete S.people[k]; }); if(!/^p[12]$/.test(S.who)) S.who='p'+Math.max(1,legacy.indexOf(S.who)+1); try{ const u=localStorage.getItem('kl-user'); if(u&&!/^p[12]$/.test(u)) localStorage.setItem('kl-user','p'+Math.max(1,legacy.indexOf(u)+1)); }catch(e){} })();
+let S={who:'guest', day:(new Date().getDay()+6)%7, view:'plan', people:{}};
+try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'null'); if(o&&o.people&&o.v16){ S.people=o.people; S.who=o.who||'guest'; } }catch(e){}   // v16: cache is keyed by member id; older caches are ignored (the server has the data)
+try{ const m=JSON.parse(localStorage.getItem('kl-members')||'null'); if(Array.isArray(m)&&m.length){ m.forEach(pr=>{ PEOPLE[String(pr.id)]=buildPerson(pr); }); if(!PEOPLE[S.who]) S.who=String(m[0].id); } }catch(e){}
 loadAllCustoms();
 let storeOK=true;
 // ---------- CLOUD SYNC (api.php on your own hosting) ----------
-const CLOUD={on:false, key:'', user:'', status:'local', rev:{}, timer:{}, busy:{}, dirty:{}};
+const CLOUD={on:false, key:'', me:null, household:null, canSignup:false, status:'local', rev:{}, timer:{}, busy:{}, dirty:{}};
 function setStatus(t,c){ CLOUD.status=t; const el=document.getElementById('sync'); if(el){ el.textContent=t; el.className='sync '+(c||''); }
   const bar=document.getElementById('savebar'); if(bar){ const bad=/^Not saved|^Offline/.test(t); bar.classList.toggle('show',bad); if(bad) bar.querySelector('span').textContent=t.replace('Offline, will retry','Offline. Your entries are kept on this phone and will be saved when it reconnects.').replace('Not saved: server rejected the data','Not saved: the server refused this change. Tap Retry; if it keeps failing, check the Activity log in Settings.'); }
   if(c==='ok'&&t==='Synced'&&CLOUD.pendingToast){ CLOUD.pendingToast=false; toast('Saved '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})); } }
 let _toastT=null; function toast(msg){ let el=document.getElementById('toast'); if(!el){ el=document.createElement('div'); el.id='toast'; document.body.appendChild(el); } el.textContent=msg; el.classList.add('show'); clearTimeout(_toastT); _toastT=setTimeout(()=>el.classList.remove('show'),1600); }
 function apiUrl(){ return 'api.php'; }
 // v15.8 (fix 10): CLOUD.key holds a session token, not the password. The password is sent once, to a=login, and never stored.
-async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who='+who:''),{method:body?'POST':'GET',headers:{'X-App-Token':CLOUD.key,'X-App-User':CLOUD.user||'p1','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'}); if(r.status===401){ forgetKey(); throw new Error('auth'); } if(r.status===429){ CLOUD.lockedUntil=Date.now()+15*60*1000; throw new Error('locked'); } if(r.status===422){ let j={}; try{ j=await r.json(); }catch(e){} throw new Error('rejected: '+(j.error||'')); } if(r.status===429) throw new Error('locked'); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
-function forgetKey(){ CLOUD.key=''; try{ localStorage.removeItem('kl-token'); localStorage.removeItem('kl-key'); }catch(e){} }
-async function login(password){ const r=await fetch(apiUrl()+'?a=login',{method:'POST',headers:{'X-App-Key':password,'X-App-User':CLOUD.user||'','Content-Type':'application/json'},body:'{}',cache:'no-store'}); if(r.status===401) throw new Error('auth'); if(r.status===429){ CLOUD.lockedUntil=Date.now()+15*60*1000; throw new Error('locked'); } if(!r.ok) throw new Error('http '+r.status); const j=await r.json(); CLOUD.key=j.token; try{ localStorage.setItem('kl-token',j.token); localStorage.removeItem('kl-key'); }catch(e){} return j; }
+// v16: accounts. The session token is the only credential kept on the device. Errors carry the server's message where there is one.
+async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who='+who:''),{method:body?'POST':'GET',headers:{'X-App-Token':CLOUD.key,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'});
+  if(r.status===401){ let j={}; try{ j=await r.json(); }catch(e){} if(a!=='login'&&a!=='account_delete') forgetKey(); const e=new Error('auth'); e.msg=j.error||''; throw e; }
+  if(r.status===429){ CLOUD.lockedUntil=Date.now()+15*60*1000; throw new Error('locked'); }
+  if(r.status===422||r.status===403||r.status===409||r.status===400){ let j={}; try{ j=await r.json(); }catch(e){} const e=new Error('rejected: '+(j.error||'')); e.msg=j.error||''; throw e; }
+  if(!r.ok) throw new Error('http '+r.status); return r.json(); }
+function forgetKey(){ CLOUD.key=''; CLOUD.me=null; try{ localStorage.removeItem('kl-token'); localStorage.removeItem('kl-key'); }catch(e){} }
+function applyMe(j){ if(!j||!j.user) return; CLOUD.me=j.user; CLOUD.household=j.household||null; setMembers(j.members||[]); }
+async function signIn(email,password){ const j=await api('login',null,{email,password}); CLOUD.key=j.token; try{ localStorage.setItem('kl-token',j.token); }catch(e){} applyMe(j); return j; }
 function isLocked(){ return (CLOUD.lockedUntil||0)>Date.now(); }
 async function cloudInit(){
   if(!/^https?:/.test(location.protocol)) return;
-  let oldPw=''; try{ CLOUD.key=localStorage.getItem('kl-token')||''; oldPw=localStorage.getItem('kl-key')||''; CLOUD.user=localStorage.getItem('kl-user')||''; }catch(e){}
-  if(CLOUD.user&&S.people[CLOUD.user]) S.who=CLOUD.user;
-  if(!CLOUD.key&&oldPw){ try{ await login(oldPw); }catch(e){} try{ localStorage.removeItem('kl-key'); }catch(e){} }   // one-time: trade the password an older build stored for a token, then drop it
+  try{ CLOUD.key=localStorage.getItem('kl-token')||''; localStorage.removeItem('kl-key'); localStorage.removeItem('kl-user'); }catch(e){}
+  const qs=new URLSearchParams(location.search);
+  if(qs.get('verified')){ history.replaceState(null,'',location.pathname); setTimeout(()=>toast('E-mail confirmed'),800); }
+  const linkTok=qs.get('reset')||qs.get('invite'); if(linkTok){ history.replaceState(null,'',location.pathname); CLOUD.on=true; openReset(linkTok,!!qs.get('invite')); return; }
   let ping; try{ ping=await api('ping'); }catch(e){ if(!/^auth$|^locked$|^http 503$/.test(e.message)){ const sk=document.getElementById('keySkip'); if(sk) sk.hidden=false; }   // no api.php here: allow a local-only mode
     if(e.message==='http 503'){ CLOUD.on=false; setStatus('Not set up','warn'); document.getElementById('subtitle').textContent='The server has no config yet. Open setup.php on this site once to create it.'; return; } if(e.message==='auth'){ CLOUD.on=true; askKey('Password changed. Sign in again.'); } else if(e.message==='locked'){ CLOUD.on=true; askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } return; }   // other errors: no api.php here -> stay local
-  CLOUD.on=true;
-  if(!ping.auth){ forgetKey(); askKey(CLOUD.key?'':''); return; }
-  applyProfiles(ping);
-  if(ping.shared&&!CLOUD.user){ askKey(''); pickWho(); return; }   // signed in, but this phone has not said whose it is
+  CLOUD.on=true; CLOUD.canSignup=!!ping.signup;
+  if(!ping.auth){ forgetKey(); askKey(''); return; }
+  applyMe(ping);
   await cloudPull();
 }
 
-// Names and personal targets live in config.php on the server, never in this repo. Applied after a successful sign-in.
-function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function applyProfiles(ping){ if(!ping||!ping.profiles) return; for(const k of ['p1','p2']){ const pr=ping.profiles[k]; if(!pr) continue; const P=PEOPLE[k]; if(pr.name) P.name=pr.name; ['goal','steps','kg','floor','fatMax','carbMax','maint','pMin'].forEach(f=>{ if(pr[f]!=null) P[f]=+pr[f]; }); if(pr.kcal) P.target.k=+pr.kcal; if(pr.protein) P.target.p=+pr.protein; if(pr.restCut!=null) P.restCut=+pr.restCut; if(Array.isArray(pr.vegDays)) P.vegDays=pr.vegDays.slice(); P.notesTitle=pr.notesTitle||''; P.notesList=Array.isArray(pr.notes)?pr.notes.slice():[]; P.notes=P.notesList.length?`<h3>${esc(pr.notesTitle||pr.name)}</h3><ul>${P.notesList.map(n=>'<li>'+esc(n)+'</li>').join('')}</ul>`:null; }
-  if(ping.user&&PEOPLE[ping.user]) CLOUD.user=ping.user; renderNames(); }
+// Profiles: every member's name, targets and notes. The owner edits anyone; a member edits only themselves.
 const PF_FIELDS=[['name','Name','text'],['kcal','Calories a day','number'],['protein','Protein g a day','number'],['floor','Calorie floor','number'],['maint','Maintenance kcal','number'],['pMin','Protein minimum g','number'],['carbMax','Carbs max g','number'],['fatMax','Fat max g','number'],['kg','Current kg','number'],['goal','Goal kg','number'],['steps','Steps goal','number'],['restCut','Rest-day cut kcal','number']];
-function profOf(k){ const P=PEOPLE[k]; return {name:P.name,kcal:P.target.k,protein:P.target.p,floor:P.floor,maint:P.maint,pMin:P.pMin,carbMax:P.carbMax,fatMax:P.fatMax,kg:P.kg,goal:P.goal,steps:P.steps,restCut:P.restCut,notesTitle:P.notesTitle||'',notes:P.notesList||[]}; }
-function renderProf(){ const w=document.getElementById('pfForm'); w.innerHTML=['p1','p2'].map(k=>{ const p=profOf(k); return `<div class="pfcard" data-k="${k}"><h4>${k==='p1'?'Person 1':'Person 2'}</h4><div class="pfgrid">${PF_FIELDS.map(([f,l,t])=>`<label class="pff${f==='name'?' wide':''}"><span>${l}</span><input type="${t}" ${t==='number'?'inputmode="numeric" step="1" min="0"':'maxlength="40"'} data-f="${f}" value="${String(p[f]??'').replace(/"/g,'&quot;')}"></label>`).join('')}</div><label class="pff wide"><span>Notes title</span><input type="text" maxlength="60" data-f="notesTitle" value="${p.notesTitle.replace(/"/g,'&quot;')}" placeholder="Notes for ${p.name}"></label><label class="pff wide"><span>Notes, one per line (shown on the Plan tab)</span><textarea data-f="notes" rows="4" placeholder="Walk 10 minutes after dinner.">${p.notes.join('\n').replace(/</g,'&lt;')}</textarea></label></div>`; }).join(''); document.getElementById('pfMsg').textContent=''; }
-function readProf(){ const out={}; document.querySelectorAll('#pfForm .pfcard').forEach(c=>{ const k=c.dataset.k; const o={}; c.querySelectorAll('[data-f]').forEach(i=>{ const f=i.dataset.f; if(f==='notes'){ o.notes=i.value.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,12); } else if(f==='name'||f==='notesTitle'){ o[f]=i.value.trim(); } else if(i.value!==''){ o[f]=+i.value; } }); if(!o.notesTitle) delete o.notesTitle; out[k]=o; }); return out; }
-document.getElementById('openProf').onclick=()=>{ if(!CLOUD.key){ alert('Sign in first; profiles are stored on the server.'); return; } renderProf(); document.getElementById('ovSet').classList.remove('show'); document.getElementById('ovProf').classList.add('show'); };
+function profOf(k){ const P=PEOPLE[k]; return {name:P.name,kcal:P.target.k,protein:P.target.p,floor:P.floor,maint:P.maint,pMin:P.pMin,carbMax:P.carbMax,fatMax:P.fatMax,kg:P.kg,goal:P.goal,steps:P.steps,restCut:P.restCut,sex:P.sex||'x',notesTitle:P.notesTitle||'',notes:P.notesList||[]}; }
+function canEdit(k){ return !!CLOUD.me&&(CLOUD.me.role==='owner'||String(CLOUD.me.id)===String(k)); }
+function renderProf(){ const w=document.getElementById('pfForm'); const ids=memberIds().filter(canEdit); w.innerHTML=ids.map(k=>{ const p=profOf(k); const P=PEOPLE[k]; return `<div class="pfcard" data-k="${k}"><h4>${esc(P.name)}${P.role==='owner'?' · owner':''}</h4><div class="pfgrid">${PF_FIELDS.map(([f,l,t])=>`<label class="pff${f==='name'?' wide':''}"><span>${l}</span><input type="${t}" ${t==='number'?'inputmode="numeric" step="1" min="0"':'maxlength="40"'} data-f="${f}" value="${String(p[f]??'').replace(/"/g,'&quot;')}"></label>`).join('')}<label class="pff"><span>Workout plan</span><select data-f="sex"><option value="m"${p.sex==='m'?' selected':''}>Build muscle</option><option value="f"${p.sex==='f'?' selected':''}>Strong and toned</option><option value="x"${p.sex==='x'?' selected':''}>Default</option></select></label></div><label class="pff wide"><span>Notes title</span><input type="text" maxlength="60" data-f="notesTitle" value="${p.notesTitle.replace(/"/g,'&quot;')}" placeholder="Notes for ${esc(p.name)}"></label><label class="pff wide"><span>Notes, one per line (shown on the Plan tab)</span><textarea data-f="notes" rows="4" placeholder="Walk 10 minutes after dinner.">${p.notes.join('\n').replace(/</g,'&lt;')}</textarea></label></div>`; }).join('')||'<div class="gf">Sign in to edit profiles.</div>'; document.getElementById('pfMsg').textContent=''; }
+function readProf(){ const out={}; document.querySelectorAll('#pfForm .pfcard').forEach(c=>{ const k=c.dataset.k; const o={}; c.querySelectorAll('[data-f]').forEach(i=>{ const f=i.dataset.f; if(f==='notes'){ o.notes=i.value.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,12); } else if(f==='name'||f==='notesTitle'||f==='sex'){ o[f]=i.value.trim(); } else if(i.value!==''){ o[f]=+i.value; } }); if(!o.notesTitle) delete o.notesTitle; out[k]=o; }); return out; }
+document.getElementById('openProf').onclick=()=>{ if(!CLOUD.key){ askKey('Sign in first; profiles are stored on the server.'); return; } renderProf(); document.getElementById('ovSet').classList.remove('show'); document.getElementById('ovProf').classList.add('show'); };
 document.getElementById('pfCancel').onclick=()=>document.getElementById('ovProf').classList.remove('show');
-document.getElementById('pfSave').onclick=async()=>{ const msg=document.getElementById('pfMsg'); const p=readProf(); for(const k of ['p1','p2']){ if(!p[k].name){ msg.textContent='Both names are required.'; return; } if(!(p[k].kcal>=800&&p[k].protein>=30)){ msg.textContent='Calories (800+) and protein (30+) are required for both.'; return; } }
-  msg.textContent='Saving…'; try{ const r=await api('profiles_put',null,{profiles:p}); applyProfiles({profiles:r.profiles}); save(); document.getElementById('ovProf').classList.remove('show'); render(); }catch(e){ msg.textContent= e.message.startsWith('rejected')?'Not saved: '+e.message.replace('rejected: ','') : e.message==='auth'?'Sign in again.':'Could not reach the server.'; } };
-function renderNames(){ document.querySelectorAll('.seg .who').forEach(b=>{ const k=b.dataset.who; const P=PEOPLE[k]; if(!P) return; b.querySelector('.av').textContent=P.name.slice(0,1).toUpperCase(); const n=b.querySelector('.nm'); if(n) n.textContent=P.name; }); document.title=(PEOPLE.p1.name!=='Person 1'?PEOPLE.p1.name+' & '+PEOPLE.p2.name+' ':'')+'Meal Planner'; }
-function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.add('show'); document.getElementById('keyMsg').textContent=msg||''; setStatus('Not signed in','warn'); }
+document.getElementById('pfSave').onclick=async()=>{ const msg=document.getElementById('pfMsg'); const p=readProf(); for(const k in p){ if(!p[k].name){ msg.textContent='Every name is required.'; return; } if(!(p[k].kcal>=800&&p[k].protein>=30)){ msg.textContent='Calories (800+) and protein (30+) are required.'; return; } }
+  msg.textContent='Saving…'; try{ let last=null; for(const k in p){ const cur=PEOPLE[k]; const body=Object.assign({},p[k]); if(cur&&Array.isArray(cur.vegDays)) body.vegDays=cur.vegDays; if(cur&&cur.meals&&cur.mealsCustom) body.meals=cur.meals; last=await api('profile_put',k,{profile:body}); } if(last) applyMe(last); save(); document.getElementById('ovProf').classList.remove('show'); render(); }catch(e){ msg.textContent= e.msg||(e.message==='auth'?'Sign in again.':'Could not reach the server.'); } };
+function renderNames(){ const seg=document.querySelector('.seg'); if(!seg) return; const ids=memberIds(); const list=ids.length?ids:['guest']; seg.innerHTML=list.map(k=>{ const P=PEOPLE[k]; return `<button class="who${k===S.who?' on':''}" data-who="${k}"><span class="av">${esc(P.name.slice(0,1).toUpperCase())}</span><span class="nm">${esc(P.name)}</span></button>`; }).join(''); seg.classList.toggle('many',list.length>2); seg.querySelectorAll('.who').forEach(b=>b.onclick=()=>{ S.who=b.dataset.who; save(); render(); });
+  document.title=(CLOUD.household&&CLOUD.household.name&&CLOUD.household.name!=='Home'?CLOUD.household.name+' ':'')+'Meal Planner'; }
+function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.add('show'); authMode('login'); document.getElementById('keyMsg').textContent=msg||''; setStatus('Not signed in','warn'); }
 async function cloudPull(){
   setStatus('Syncing…');
   try{
-    for(const who of ['p1','p2']){ const r=await api('get',who); if(r.data){ fixMaps(r.data); CLOUD.rev[who]=r.rev; if(!CLOUD.dirty[who]||(r.data.gen||0)>((S.people[who]||{}).gen||0)){ S.people[who]=r.data; CLOUD.dirty[who]=false; } } else if(S.people[who]){ CLOUD.dirty[who]=true; schedulePush(who,0); } }
+    for(const who of memberIds()){ const r=await api('get',who); if(r.data){ fixMaps(r.data); CLOUD.rev[who]=r.rev; if(!CLOUD.dirty[who]||(r.data.gen||0)>((S.people[who]||{}).gen||0)){ S.people[who]=r.data; CLOUD.dirty[who]=false; } } else if(S.people[who]){ CLOUD.dirty[who]=true; schedulePush(who,0); } }
     loadAllCustoms(); saveLocal(); render(); setStatus('Synced','ok');
   }catch(e){ if(e.message==='auth'){ askKey('Wrong password. Try again.'); } else if(e.message==='locked'){ askKey('Too many wrong attempts. Wait 15 minutes.'); } else setStatus('Offline, saved on this device','warn'); }
 }
@@ -1096,11 +1097,11 @@ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==
 window.addEventListener('focus',()=>{ if(CLOUD.on&&CLOUD.key&&!isLocked()&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
 // Live: every 20 s while the page is visible, ask the server for the revision numbers and pull only if the other phone changed something
 setInterval(async()=>{ if(document.visibilityState!=='visible'||!CLOUD.on||!CLOUD.key||isLocked()||Object.values(CLOUD.dirty).some(Boolean)||Object.values(CLOUD.busy).some(Boolean)) return;
-  try{ for(const who of ['p1','p2']){ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ await cloudPull(); break; } } }catch(e){ if(e.message==='auth') askKey('Password changed. Sign in again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } },20000);
-function saveLocal(){ try{ localStorage.setItem('kl-meal-v2',JSON.stringify({people:S.people,who:S.who,savedAt:new Date().toISOString()})); storeOK=true; }catch(e){ storeOK=false; } }
-function save(){ saveLocal(); CLOUD.pendingToast=true; schedulePush(S.who); if(!CLOUD.on||!CLOUD.key) toast('Saved on this phone only'); }
+  try{ for(const who of memberIds()){ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ await cloudPull(); break; } } }catch(e){ if(e.message==='auth') askKey('Password changed. Sign in again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } },20000);
+function saveLocal(){ try{ localStorage.setItem('kl-meal-v2',JSON.stringify({v16:1,people:S.people,who:S.who,savedAt:new Date().toISOString()})); storeOK=true; }catch(e){ storeOK=false; } }
+function save(){ if(!canWriteWho(S.who)){ toast('View only: '+P().name+'\'s log'); CLOUD.dirty[S.who]=false; return; } saveLocal(); CLOUD.pendingToast=true; schedulePush(S.who); if(!CLOUD.on||!CLOUD.key) toast('Saved on this phone only'); }
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
-function P(){ return PEOPLE[S.who]; }
+function P(){ return PEOPLE[S.who]||PEOPLE[memberIds()[0]]||PEOPLE.guest; }
 function PS(){ if(!S.people[S.who]) S.people[S.who]={eggsVeg:P().eggsVegDefault, allVeg:false, days:{}, weights:[]}; const ps=S.people[S.who]; if(!ps.vegDays) ps.vegDays=(P().vegDays||[]).slice(); if(!ps.m2){ ps.eggsVeg=false; ps.m2=1; } fixMaps(ps); if(!ps.days) ps.days={}; if(!Array.isArray(ps.weights)) ps.weights=[]; if(!ps.log) ps.log={}; if(!ps.m7) mergeDays(ps); if(!TIDIED.has(S.who)){ TIDIED.add(S.who); tidy(ps); } if(!ps.customs) ps.customs=[]; if(!ps.templates) ps.templates=[]; ps.customs.forEach(c=>{ if(!F[c.id]) F[c.id]=c; }); return ps; }
 function loadAllCustoms(){ Object.values(S.people).forEach(ps=>(ps.customs||[]).forEach(c=>{ if(!F[c.id]) F[c.id]=c; })); }
 function isVeg(d=S.day){ const ps=PS(); return ps.allVeg || (!ps.allNonVeg && ps.vegDays.includes(d)); }
@@ -1155,7 +1156,9 @@ function weekDate(i){ const t=new Date(); const dow=(t.getDay()+6)%7; const d=ne
 function renderWeekNav(){ const a=weekDate(0), b=weekDate(6); const f=(d,o)=>d.toLocaleDateString(undefined,o); const same=a.getMonth()===b.getMonth();
   const lbl=document.getElementById('wkLbl'); lbl.textContent=(S.week===0?'This week · ':S.week===-1?'Last week · ':S.week===1?'Next week · ':'')+f(a,{day:'numeric',month:'short'})+' – '+f(b,same?{day:'numeric'}:{day:'numeric',month:'short'});
   document.getElementById('wkPrev').onclick=()=>{ S.week--; render(); }; document.getElementById('wkNext').onclick=()=>{ S.week++; render(); }; lbl.onclick=()=>{ S.week=0; S.day=(new Date().getDay()+6)%7; render(); }; }
+function canWriteWho(k){ return !CLOUD.me || CLOUD.me.role==='owner' || String(CLOUD.me.id)===String(k); }
 function render(){
+  document.body.classList.toggle('ro',!canWriteWho(S.who));
   // Tabs remember their own scroll position (like iOS). Re-render in place keeps it; switching restores the tab's last spot.
   S.scroll=S.scroll||{}; if(_lastView) S.scroll[_lastView+(_lastView==='plan'?S.day:'')]=window.scrollY;
   const same=(_lastView===S.view&&_lastDay===S.day); const _sy=same?window.scrollY:(S.scroll[S.view+(S.view==='plan'?S.day:'')]||0); _lastView=S.view; _lastDay=S.day;
@@ -1186,7 +1189,7 @@ function openSet(){ const k=S.who+'|'+dayKeyFor(S.day); if(!OPENM[k]) OPENM[k]=n
 function renderPlan(){
   const ps=PS(); const plan=isFuture()?P().meals.map(m=>({name:m.name,time:m.time,items:[]})):dayPlan();   // future days: empty meals with suggestions, never stored
   document.getElementById('title').textContent=FULL[S.day]+', '+weekDate(S.day).toLocaleDateString(undefined,{day:'numeric',month:'short'});   // v15.7: the person is already shown in the header
-  const other=S.who==='p1'?'p2':'p1'; const cb=document.getElementById('copyDay'); cb.textContent='Copy'; cb.title='Give '+PEOPLE[other].name+' the same meals, scaled to their portions';
+  const ids=memberIds(); const other=ids.length>1?ids[(ids.indexOf(S.who)+1)%ids.length]:null; const cb=document.getElementById('copyDay'); cb.textContent='Copy'; cb.hidden=!other; cb.title=other?'Give '+PEOPLE[other].name+' the same meals, scaled to their portions':'';
   cb.onclick=()=>{ if(!confirm(`Replace ${PEOPLE[other].name}'s ${FULL[S.day]} with what ${P().name} ate, portions scaled to ${PEOPLE[other].name}'s target? Non-veg and eggs are dropped on ${PEOPLE[other].name}'s veg days.`)) return; const n=copyDayTo(other); schedulePush(other); alert(`${n} items copied to ${PEOPLE[other].name}. Tap ${PEOPLE[other].name} at the top to review.`); };
   const sw=document.getElementById('daySwitch'); sw.className='daysw'+(isVeg()?' veg':''); sw.textContent = isVeg() ? 'Veg' : 'Non-veg'; sw.title=isVeg()?'Veg day, tap for non-veg':'Non-veg day, tap for veg'; sw.setAttribute('aria-label',sw.title); sw.onclick=()=>toggleVegDay(S.day);
   document.getElementById('subtitle').textContent='';
@@ -1480,12 +1483,13 @@ function renderWeight(){
   renderWeightChart(ws);
   const st=document.getElementById('wtStats'); const start=P().kg;
   if(ws.length){ const last=ws[ws.length-1].w; const first=ws[0].w; st.innerHTML=`<div class="kpi"><div class="k">Latest</div><div class="v">${last}</div><div class="t">${ws[ws.length-1].d}</div></div><div class="kpi"><div class="k">7-day avg</div><div class="v">${avg7(ws.length-1)}</div><div class="t">judge by this</div></div><div class="kpi"><div class="k">Change</div><div class="v">${(last-first)>0?'+':''}${(last-first).toFixed(1)}</div><div class="t">since ${ws[0].d}</div></div>`; }
-  else st.innerHTML=`<div class="kpi"><div class="k">Start</div><div class="v">${start}</div><div class="t">kg, Nov 2026</div></div><div class="kpi"><div class="k">Goal</div><div class="v">${S.who==='p1'?80:75}</div><div class="t">first milestone</div></div><div class="kpi"><div class="k">Pace</div><div class="v">0.5</div><div class="t">kg per week</div></div>`;
+  else st.innerHTML=`<div class="kpi"><div class="k">Start</div><div class="v">${start}</div><div class="t">kg, Nov 2026</div></div><div class="kpi"><div class="k">Goal</div><div class="v">${P().goal}</div><div class="t">goal</div></div><div class="kpi"><div class="k">Pace</div><div class="v">0.5</div><div class="t">kg per week</div></div>`;
 }
 
 // ================= ACTIONS =================
 function action(a,mi,ii){
   if(isFuture()) return;
+  if(!canWriteWho(S.who)){ toast('View only: '+P().name+'\'s log'); return; }
   if(mi>=0) openSet().add(mi);
   const plan=dayPlan();
   if(a==='sugg'){ const sg=(template(S.day)[mi]||{}).items||[]; const x=sg[ii]; if(x){ plan[mi].items.push({id:x.id,q:x.q}); save(); render(); } return; }
@@ -1667,7 +1671,7 @@ function xlsx(sheets){ const files=[];
   return zipStore(files); }
 function exportRows(){ const me=S.who; const food=[['Date','Day','Person','Veg day','Meal','Item','Eat','Qty x','kcal','Protein g','Carbs g','Fat g']];
   const ck=[['Date','Person','Water ml','Steps','Bedtime (night before)','Wake up (that morning)','Sleep h']]; const wt=[['Date','Person','kg']]; const wl=[['Date','Person','Exercise','kg','Reps','Sets']];
-  ['p1','p2'].forEach(who=>{ S.who=who; const ps=PS(); const name=PEOPLE[who].name;
+  memberIds().forEach(who=>{ S.who=who; const ps=PS(); const name=PEOPLE[who].name;
     tidy(ps); Object.keys(ps.days).sort().forEach(k=>{ const date=k.slice(0,10); if(!/^\d{4}-\d\d-\d\d/.test(date)) return; const dn=new Date(date+'T12:00').toLocaleDateString(undefined,{weekday:'short'}); const di=(new Date(date+'T12:00').getDay()+6)%7; const veg=ps.allVeg||(!ps.allNonVeg&&(ps.vegDays||[]).includes(di));
       ps.days[k].forEach(m=>m.items.forEach(x=>{ const it=F[x.id]; if(!it) return; food.push([date,dn,name,veg?'Veg':'Non-veg',m.name,it.n,fmtG(it,x.q)||it.g,x.q,Math.round(it.k*x.q),Math.round(it.p*x.q),Math.round(it.c*x.q),Math.round(it.f*x.q)]); })); });
     Object.keys(ps.log||{}).sort().forEach(d=>{ const L=ps.log[d]; let h=''; if(L.bed&&L.wake){ h=+((((toMin(L.wake)-toMin(L.bed))+1440)%1440)/60).toFixed(1); } ck.push([d,name,(L.water||0)*250,L.steps?+L.steps:'',L.bed||'',L.wake||'',h]); });
@@ -1688,7 +1692,7 @@ document.querySelectorAll('.ov').forEach(ov=>{ const sh=ov.querySelector('.sheet
 document.getElementById('syncNow').onclick=()=>{ if(!CLOUD.on) return; if(!CLOUD.key) askKey(); else { Object.keys(S.people).forEach(w=>{ if(CLOUD.dirty[w]) cloudPush(w); }); cloudPull(); } };
 document.getElementById('syncOut').onclick=()=>{ if(Object.values(CLOUD.dirty).some(Boolean)&&!confirm('Some changes have not reached the server yet. Sign out anyway and discard them on this device?')) return;
   if(!confirm('Sign out on this device? Everything stored on this phone is removed; your data stays on the server and comes back when you sign in.')) return;
-  const done=()=>{ CLOUD.key=''; CLOUD.user=''; try{ ['kl-token','kl-key','kl-user','kl-meal-v2','kl-theme','kl-ydis'].forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  const done=()=>{ CLOUD.key=''; CLOUD.me=null; try{ ['kl-token','kl-key','kl-user','kl-members','kl-meal-v2','kl-theme','kl-ydis'].forEach(k=>localStorage.removeItem(k)); }catch(e){}
     if('caches' in window){ caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{}); }
     location.replace(location.pathname); };
   if(CLOUD.key){ api('logout').catch(()=>{}).finally(done); } else done(); };   // the server forgets this device's token too
@@ -1699,15 +1703,39 @@ async function devLoad(){ const l=document.getElementById('devList'); l.innerHTM
   }catch(e){ l.innerHTML='<div class="gf">Could not load sessions. '+(e.message==='auth'?'Sign in again.':'')+'</div>'; } }
 document.getElementById('openDev').onclick=()=>{ if(!CLOUD.key){ askKey(); return; } document.getElementById('ovSet').classList.remove('show'); document.getElementById('ovDev').classList.add('show'); devLoad(); };
 document.getElementById('devClose').onclick=()=>document.getElementById('ovDev').classList.remove('show');
-document.getElementById('openSettings').addEventListener('click',()=>{ const ss=document.getElementById('syncState'); if(ss) ss.textContent=CLOUD.on&&CLOUD.key?CLOUD.status:'Off'; document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key?'Signed in as '+(PEOPLE[CLOUD.user]?PEOPLE[CLOUD.user].name:PEOPLE.p1.name)+'. Saving to the server. Status: '+CLOUD.status+'. Every signed-in phone and browser sees the same data.':'Server found but not signed in. Tap Sync now to enter the password.') : 'No server on this address, data stays on this device only. Use the hosted copy for sync.'; const st=document.getElementById('storeStatus')||{}; let when=''; try{ const o=JSON.parse(localStorage.getItem('kl-meal-v2')||'{}'); if(o.savedAt) when=' Last saved '+new Date(o.savedAt).toLocaleString()+'.'; }catch(e){} st.textContent=(storeOK?'Saved in this browser.':'Warning: this browser is blocking storage, changes will not survive closing the app.')+' Survives closing and app updates, not clearing browser data or switching browsers. Back up once a week.'+when; });
+document.getElementById('openSettings').addEventListener('click',()=>{ const ss=document.getElementById('syncState'); if(ss) ss.textContent=CLOUD.on&&CLOUD.key?CLOUD.status:'Off'; document.getElementById('syncInfo').textContent = CLOUD.on ? (CLOUD.key&&CLOUD.me?'Signed in as '+CLOUD.me.name+' ('+CLOUD.me.email+')'+(CLOUD.me.verified?'':' · e-mail not confirmed yet')+'. Changes save to the server as you make them.':'Not signed in. Sign in to sync with the server.') : 'No server on this site; data stays on this device.'; const acc=document.getElementById('accInfo'); if(acc) acc.textContent=CLOUD.me?(CLOUD.household?CLOUD.household.name+' · ':'')+memberIds().length+' member'+(memberIds().length>1?'s':''):''; const rs=document.getElementById('resendVerify'); if(rs) rs.hidden=!(CLOUD.me&&!CLOUD.me.verified); });
 document.getElementById('wtAdd').onclick=()=>{ const d=document.getElementById('wtDate').value, w=parseFloat(document.getElementById('wtVal').value); if(!d||!w) return; if(d>ymd(new Date())){ alert('Weigh-ins cannot be in the future.'); return; } const ps=PS(); ps.weights=ps.weights.filter(x=>x.d!==d); ps.weights.push({d,w}); document.getElementById('wtVal').value=''; save(); render(); };
-document.getElementById('keyGo').onclick=async()=>{ const pw=document.getElementById('keyIn').value.trim(); CLOUD.user=''; if(!pw) return; try{ const p=await login(pw); document.getElementById('keyIn').value=''; applyProfiles(p);
-    if(p.shared){ pickWho(); return; }   // shared password: ask which person this phone belongs to, with the real names now that we are signed in
-    if(p.user){ CLOUD.user=p.user; S.who=p.user; try{ localStorage.setItem('kl-user',p.user); }catch(e){} } }catch(e){ document.getElementById('keyMsg').textContent= e.message==='auth' ? 'Wrong password.' : e.message==='locked' ? 'Too many wrong attempts. Wait 15 minutes.' : 'Cannot reach the server.'; return; } document.getElementById('ovKey').classList.remove('show'); cloudPull(); };
-function pickWho(){ const wrap=document.getElementById('keyWhoWrap'); wrap.hidden=false; document.getElementById('keyIn').hidden=true; document.getElementById('keyGo').hidden=true; document.getElementById('keyMsg').textContent='';
-  document.querySelectorAll('#keyWho button').forEach(b=>{ b.textContent=PEOPLE[b.dataset.u].name; b.onclick=()=>{ CLOUD.user=b.dataset.u; S.who=b.dataset.u; try{ localStorage.setItem('kl-user',CLOUD.user); }catch(e){} wrap.hidden=true; document.getElementById('keyIn').hidden=false; document.getElementById('keyGo').hidden=false; document.getElementById('ovKey').classList.remove('show'); cloudPull(); }; }); }
-document.getElementById('keySkip').onclick=()=>{ if(!confirm('Use this device only? Nothing syncs and the names stay Person 1 and Person 2 until you sign in.')) return; document.getElementById('ovKey').classList.remove('show'); setStatus('This device only','warn'); };
-document.getElementById('keyIn').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('keyGo').click(); });
+// ---- auth sheet: sign in, create account, forgot password, set password (reset or invite link) ----
+function authMode(m,opts={}){ const ov=document.getElementById('ovKey'); ov.dataset.mode=m; ov.querySelectorAll('[data-m]').forEach(el=>{ el.hidden=!el.dataset.m.split(' ').includes(m); }); document.getElementById('keyMsg').textContent='';
+  document.getElementById('keyTitle').textContent={login:'Sign in',signup:'Create your account',forgot:'Reset password',reset:opts.invite?'Welcome, set your password':'Choose a new password'}[m];
+  document.getElementById('keySub').textContent={login:'Use the e-mail and password of your account.',signup:'You become the owner of a new household and can add family from Settings.',forgot:'We will e-mail you a link that works for one hour.',reset:opts.invite?'Pick a password of at least 10 characters. You will use it with your e-mail to sign in.':'At least 10 characters. Every other device will be signed out.'}[m];
+  document.getElementById('keyGo').textContent={login:'Sign in',signup:'Create account',forgot:'Send reset link',reset:'Save password'}[m];
+  document.getElementById('keyToSignup').hidden=!(m==='login'&&CLOUD.canSignup); document.getElementById('keyToLogin').hidden=(m==='login'); document.getElementById('keyToForgot').hidden=(m!=='login'); document.getElementById('keySkip').hidden=true; }
+function openReset(token,invite){ CLOUD.resetToken=token; document.getElementById('ovKey').classList.add('show'); authMode('reset',{invite}); setStatus('Not signed in','warn'); }
+document.getElementById('keyToSignup').onclick=()=>authMode('signup'); document.getElementById('keyToLogin').onclick=()=>authMode('login'); document.getElementById('keyToForgot').onclick=()=>authMode('forgot');
+document.getElementById('keyGo').onclick=async()=>{ const m=document.getElementById('ovKey').dataset.mode||'login'; const msg=document.getElementById('keyMsg'); const v=(id)=>document.getElementById(id).value.trim(); const email=v('keyEmail').toLowerCase(), pw=document.getElementById('keyIn').value, pw2=document.getElementById('keyIn2').value;
+  const fail=(e)=>{ msg.textContent= e.message==='locked' ? 'Too many wrong attempts. Wait 15 minutes.' : e.msg || (e.message==='auth' ? 'Wrong e-mail or password.' : 'Cannot reach the server.'); };
+  const finish=(j)=>{ CLOUD.key=j.token; try{ localStorage.setItem('kl-token',j.token); }catch(e){} applyMe(j); document.getElementById('keyIn').value=''; document.getElementById('keyIn2').value=''; document.getElementById('ovKey').classList.remove('show'); CLOUD.on=true; cloudPull(); };
+  try{
+    if(m==='login'){ if(!email||!pw){ msg.textContent='Enter your e-mail and password.'; return; } msg.textContent='Signing in…'; finish(await signIn(email,pw)); }
+    else if(m==='signup'){ const name=v('keyName'); if(!name||!email||!pw){ msg.textContent='Name, e-mail and password are required.'; return; } if(pw.length<10){ msg.textContent='Password must be at least 10 characters.'; return; } if(pw!==pw2){ msg.textContent='Passwords do not match.'; return; } msg.textContent='Creating…'; const j=await api('signup',null,{name,email,password:pw,household:v('keyHh')}); finish(j); setTimeout(()=>toast(j.mail?'Check your e-mail to confirm the address':'Account created'),600); }
+    else if(m==='forgot'){ if(!email){ msg.textContent='Enter your e-mail.'; return; } msg.textContent='Sending…'; await api('forgot',null,{email}); msg.textContent='If that address has an account, a reset link is on its way. Check spam too.'; }
+    else if(m==='reset'){ if(pw.length<10){ msg.textContent='Password must be at least 10 characters.'; return; } if(pw!==pw2){ msg.textContent='Passwords do not match.'; return; } msg.textContent='Saving…'; const j=await api('reset',null,{token:CLOUD.resetToken,password:pw}); CLOUD.resetToken=''; finish(j); setTimeout(()=>toast('Password saved'),600); }
+  }catch(e){ fail(e); } };
+document.getElementById('keySkip').onclick=()=>{ if(!confirm('Use this device only? Nothing syncs until you sign in.')) return; document.getElementById('ovKey').classList.remove('show'); setStatus('This device only','warn'); };
+// ---- household sheet: members, invites, removal, name ----
+async function hhRender(){ const w=document.getElementById('hhList'); const me=CLOUD.me; const owner=me&&me.role==='owner'; const ids=memberIds();
+  document.getElementById('hhName').value=CLOUD.household?CLOUD.household.name:''; document.getElementById('hhName').disabled=!owner; document.getElementById('hhNameSave').hidden=!owner; document.getElementById('hhInvite').hidden=!owner; document.getElementById('hhFoot').textContent=owner?'As the owner you can add up to 8 people, edit their profiles and see their logs. Members see the household but only edit their own data.':'Only the household owner can add or remove people.';
+  w.innerHTML=ids.map(k=>{ const P=PEOPLE[k]; const mine=String(me.id)===k; return `<div class="row dev"><div class="rl"><span class="rico ${P.role==='owner'?'c-blue':'c-green'}"><b style="font-size:14px">${esc(P.name.slice(0,1).toUpperCase())}</b></span><div class="devt"><b>${esc(P.name)}${mine?' (you)':''}</b><span>${P.role==='owner'?'Owner':'Member'} · ${esc(P.email||'')}${P.hasPassword?'':' · invite pending'}${P.hasPassword&&!P.verified?' · e-mail not confirmed':''}</span></div></div>${owner&&!mine?`<button class="btn q devrm" data-id="${k}" data-n="${esc(P.name)}" data-e="${esc(P.email||'')}" data-p="${P.hasPassword?1:0}">${P.hasPassword?'Remove':'Resend'}</button>`:''}</div>`; }).join('');
+  w.querySelectorAll('.devrm').forEach(b=>b.onclick=async()=>{ if(b.dataset.p==='1'){ if(!confirm(`Remove ${b.dataset.n} from the household? Their logs, weights and profile are deleted from the server. This cannot be undone.`)) return; try{ applyMe(await api('member_remove',null,{id:+b.dataset.id})); }catch(e){ alert(e.msg||'Could not remove.'); } }
+    else { try{ const j=await api('invite',null,{email:b.dataset.e,name:b.dataset.n}); applyMe(j); toast(j.sent?'Invite sent again':'Mail could not be sent'); }catch(e){ alert(e.msg||'Could not send.'); } } hhRender(); }); }
+document.getElementById('openHh').onclick=()=>{ if(!CLOUD.key){ askKey(); return; } document.getElementById('ovSet').classList.remove('show'); document.getElementById('ovHh').classList.add('show'); hhRender(); };
+document.getElementById('hhClose').onclick=()=>document.getElementById('ovHh').classList.remove('show');
+document.getElementById('hhNameSave').onclick=async()=>{ try{ applyMe(await api('household_put',null,{name:document.getElementById('hhName').value.trim()})); toast('Saved'); hhRender(); }catch(e){ alert(e.msg||'Could not save.'); } };
+document.getElementById('hhInviteGo').onclick=async()=>{ const email=document.getElementById('hhEmail').value.trim().toLowerCase(), name=document.getElementById('hhNewName').value.trim(); const msg=document.getElementById('hhMsg'); if(!email||!name){ msg.textContent='Name and e-mail are required.'; return; } msg.textContent='Sending…'; try{ const j=await api('invite',null,{email,name}); applyMe(j); msg.textContent=j.sent?`Invite sent to ${email}. The link works for 7 days.`:'Added, but the e-mail could not be sent. Check the server mail settings and use Resend.'; document.getElementById('hhEmail').value=''; document.getElementById('hhNewName').value=''; hhRender(); }catch(e){ msg.textContent=e.msg||(e.message==='auth'?'Sign in again.':'Could not reach the server.'); } };
+document.getElementById('resendVerify').onclick=async()=>{ try{ const j=await api('resend'); toast(j.sent?'Confirmation e-mail sent':'Could not send'); }catch(e){ toast(e.msg||'Could not send'); } };
+document.getElementById('accDelete').onclick=async()=>{ const owner=CLOUD.me&&CLOUD.me.role==='owner'; const pw=prompt(owner?'Delete the whole household, every member and all data? Type your password to confirm.':'Delete your account and all your data? Type your password to confirm.'); if(pw===null||pw==='') return; try{ await api('account_delete',null,{password:pw}); CLOUD.key=''; CLOUD.me=null; try{ ['kl-token','kl-members','kl-meal-v2'].forEach(k=>localStorage.removeItem(k)); }catch(e){} location.replace(location.pathname); }catch(e){ alert(e.msg||'Could not delete.'); } };
+['keyIn','keyIn2','keyEmail','keyName','keyHh'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('keyGo').click(); }));
 render();
 cloudInit();
 
@@ -1763,4 +1791,4 @@ document.getElementById('auCsv').onclick=()=>{ const esc=v=>'"'+String(v??'').re
   document.addEventListener('focusout',()=>setTimeout(fit,100));
 })();
 
-(function(){ const bar=document.createElement('div'); bar.id='savebar'; bar.innerHTML='<span></span><button type="button">Retry</button>'; document.body.appendChild(bar); bar.querySelector('button').onclick=()=>{ ['p1','p2'].forEach(w=>{ if(CLOUD.dirty[w]) schedulePush(w,0); }); if(!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); }; })();
+(function(){ const bar=document.createElement('div'); bar.id='savebar'; bar.innerHTML='<span></span><button type="button">Retry</button>'; document.body.appendChild(bar); bar.querySelector('button').onclick=()=>{ memberIds().forEach(w=>{ if(CLOUD.dirty[w]) schedulePush(w,0); }); if(!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); }; })();

@@ -1,15 +1,14 @@
 # Meal Planner Security Hardening
 
-A real web app I built and use daily, a two-person meal, check-in and workout planner with a small PHP JSON API on shared hosting, used as a hands-on security project. Version 1 worked but was written for function, not defence. This repo documents taking it from an unhardened baseline to a reasonably secure deployment, one change at a time, with evidence.
+A real web app I built and use daily, a household meal, check-in and workout planner with a small PHP API and SQLite on shared hosting, used as a hands-on security project. Version 1 worked but was written for function, not defence. This repo documents taking it from an unhardened baseline to a reasonably secure deployment, one change at a time, with evidence.
 
 Live instance: private. The code is public; the people, targets and data are not.
 
 ## What's here
 
-- `index.html`, `app.js`, `app.css`, `sw.js`, `api.php`, `.htaccess`, `manifest.json`, `fonts/`, `splash/`, icons: the application
-- `setup.php`: first-run page. Creates `config.php` and the two profiles, then deletes itself
+- `index.html`, `app.js`, `app.css`, `sw.js`, `api.php`, `db.php`, `mail.php`, `.htaccess`, `manifest.json`, `fonts/`, `splash/`, icons: the application
+- `setup.php`: first-run page. Creates `config.php`, the SQLite database and the first account (or upgrades a v15 install), then deletes itself
 - `config.example.php`: structure of the server config for a manual install. The real `config.php` holds the password hash and the data path and is never committed
-- `gen.php`: one-shot bcrypt hash generator. Uploaded, run once, deleted. Not deployed by `.cpanel.yml`
 - `data/.htaccess`: blocks web access to the data folder. The data files themselves are git-ignored
 - `reports/`: OWASP ZAP and securityheaders.com results, before and after each phase. Embedded response bodies have been removed from the HTML reports because they contained application source (see fix 9)
 - `SETUP.md`: how to deploy on cPanel shared hosting
@@ -19,9 +18,10 @@ Live instance: private. The code is public; the people, targets and data are not
 ## The app
 
 - Front end: HTML, vanilla JS, self-hosted fonts, installable PWA with service worker, offline shell, iOS splash screens, light and dark theme
-- Back end: `api.php`, four actions (`ping`, `get`, `put`, `rev`), one JSON file per person, revision-checked merges so two phones never overwrite each other
-- Auth: password sent as a request header, verified against a bcrypt hash. One shared password or one per person, both supported
-- Identity: the code knows only `p1` and `p2`. Names, calorie and protein targets and personal notes live in `profiles.json` inside the data folder, are edited in the app (Settings → Profiles) and are returned by `ping` only after a correct password
+- Back end: `api.php` over SQLite (`db.php`). Accounts (e-mail + bcrypt password), households, one JSON document per person with revision-checked merges so two phones never overwrite each other, session tokens, e-mail tokens for verify, reset and invite
+- Auth (v16): sign up or sign in by e-mail and password; the password is sent once to `a=login` and a 256-bit session token does the rest. Forgot-password and invite links are one-time tokens that expire
+- Households: the first account owns a household and invites family by e-mail (up to 8). The owner can see and edit everyone's logs and profiles; members only their own. Every data request is checked against the caller's household
+- Identity: the code knows no one. Names, targets, notes and meal schedules live in the database and are returned only to a signed-in member of the same household
 - Hosting: LiteSpeed on cPanel shared hosting, HTTPS via AutoSSL, deployed from this repo with cPanel Git Version Control
 
 ## Fixes, in order
@@ -165,15 +165,15 @@ The app shell (HTML, JS, CSS, fonts, icons, splash images) is cached for offline
 
 The app has no names, targets or household rules baked in. To host your own copy:
 
-1. Fork or clone this repo and deploy the app files to any PHP 7.4+ host with HTTPS (cPanel's Git Version Control works with the included `.cpanel.yml`; edit the deploy path).
-2. Upload `setup.php` and open it once in a browser. It asks for a shared password, two names and starting targets, writes `config.php` and `profiles.json`, and deletes itself.
-3. Open the app, sign in, pick who you are on each phone. Everything else (targets, notes, veg days, theme) is editable in Settings.
+1. Fork or clone this repo and deploy the app files to any PHP 8+ host with HTTPS and `pdo_sqlite` (cPanel's Git Version Control works with the included `.cpanel.yml`; edit the deploy path).
+2. Upload `setup.php` and open it once in a browser. It asks for your name, e-mail and password, creates `config.php`, the database and your account, and deletes itself. (On a v15 install it offers the upgrade instead.)
+3. Open the app and sign in. Add family under Settings → People and invites; they get an e-mail link to set their own password. Everything else (targets, notes, veg days, theme) is editable in Settings.
 
 `SETUP.md` has the longer version. Nothing personal ever goes into git: `config.php` and the data folder are ignored, and the data folder sits above the web root.
 
 ## Status
 
-All ten fixes done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live and readable in the app. Personal data served only after sign-in and editable in the app. Data stored outside the web root. Sign-in by session token with per-device revocation. Next: passkeys (WebAuthn) so there is no password at all.
+v16 moved the app from two fixed people to accounts and households on SQLite, with branded verify, reset and invite e-mails. All ten fixes done. securityheaders.com F to A+. ZAP 8 alerts to 3 informational. Audit log live and readable in the app. Personal data served only after sign-in and editable in the app. Data stored outside the web root. Sign-in by session token with per-device revocation. Next: passkeys (WebAuthn) so there is no password at all.
 
 ## Author
 

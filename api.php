@@ -1,194 +1,236 @@
 <?php
-// Meal Planner – tiny JSON store. No database needed.
-// GET  api.php?a=ping                -> {ok:true, auth:bool, user:string}
-// GET  api.php?a=get&who=p1          -> stored JSON for that person
-// POST api.php?a=put&who=p1          -> body = {data:{...}}; returns {ok:true, rev:N}
-// Fix 10 (v15.8): sign in once with POST api.php?a=login + header X-App-Key: <password>; the reply carries a session token.
-// Every other request sends header X-App-Token: <token> (plus X-App-User: p1|p2). The password never travels again and is
-// never stored on the phone. Tokens live hashed in DATA_DIR/sessions.json, expire after 30 idle days or 180 days total,
-// and can be listed (a=sessions) and revoked (a=revoke, a=logout) from the app.
+// Meal Planner API, v16 (accounts). JSON in, JSON out.
+// Sign-up and sign-in are by e-mail + password. Every other request carries header X-App-Token: <session token>.
+// Who you are acting for is ?who=<member id>; it must be a member of your own household.
+// Data per person is still one JSON document (same shape as before), now in SQLite at DATA_DIR/app.db.
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
-if (!file_exists(__DIR__ . '/config.php')) { http_response_code(503); echo json_encode(['ok' => false, 'error' => 'setup', 'hint' => 'open setup.php once to create config.php']); exit; }
+if (!file_exists(__DIR__ . '/config.php')) { http_response_code(503); echo json_encode(['ok' => false, 'error' => 'setup', 'hint' => 'open setup.php once']); exit; }
 require __DIR__ . '/config.php';
-
+require __DIR__ . '/db.php';
+require __DIR__ . '/mail.php';
 if (!is_dir(DATA_DIR)) { mkdir(DATA_DIR, 0700, true); }
-// Fix 6: data lives outside the web root. If DATA_DIR was moved, carry the old files over once (never the .htaccess).
-$oldDir = __DIR__ . '/data';
-if (is_dir($oldDir) && realpath($oldDir) !== realpath(DATA_DIR)) {
-  foreach (glob($oldDir . '/*.{json,log}', GLOB_BRACE) as $f) { $b = basename($f); if (is_file($f) && !file_exists(DATA_DIR . "/$b")) { @rename($f, DATA_DIR . "/$b"); } }
-}
-
-// Fix 7: one password per person. Accounts are p1 and p2; names and targets live in config.php (APP_PROFILES), never in this repo.
-$USERS = defined('APP_USERS') && is_array(APP_USERS) ? APP_USERS
-       : ['p1' => APP_PASSWORD_HASH, 'p2' => APP_PASSWORD_HASH];
-// Data files from older builds were named after the person; move them once (mapping is private, in config.php).
-if (defined('APP_LEGACY_FILES') && is_array(APP_LEGACY_FILES)) {
-  foreach (APP_LEGACY_FILES as $acct => $old) { $o = DATA_DIR . "/$old.json"; $n = DATA_DIR . "/$acct.json"; if (file_exists($o) && !file_exists($n)) { @rename($o, $n); } }
-}
+if (!dbReady()) { http_response_code(503); echo json_encode(['ok' => false, 'error' => 'setup', 'hint' => 'open setup.php once to create the database']); exit; }
 
 $ip   = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $ua   = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 80);
 $a    = $_GET['a'] ?? '';
-$who  = strtolower($_GET['who'] ?? '');
-$key  = $_SERVER['HTTP_X_APP_KEY'] ?? '';
+$who  = (int)($_GET['who'] ?? 0);
 $tok  = $_SERVER['HTTP_X_APP_TOKEN'] ?? '';
-$user = strtolower($_SERVER['HTTP_X_APP_USER'] ?? '');
-
-// Fix 5: strict input validation. Only known actions and known accounts.
-if (!in_array($a, ['ping', 'login', 'logout', 'sessions', 'revoke', 'get', 'put', 'rev', 'audit', 'profiles_put'], true)) { $a = 'unknown'; }
-if ($a !== 'login') { $key = ''; }                       // the password is only ever read by login
+$now  = time();
+$method = $_SERVER['REQUEST_METHOD'];
+$ACTIONS = ['ping','signup','login','logout','forgot','reset','verify','resend','sessions','revoke','get','put','rev','profile_put','household_put','invite','member_remove','audit','account_delete'];
+if (!in_array($a, $ACTIONS, true)) { $a = 'unknown'; }
 if (!preg_match('/^[a-f0-9]{64}$/', $tok)) { $tok = ''; }
-// login without a user header: the password itself identifies the person (each account has its own hash).
-if ($a === 'login' && $user === '' && $key !== '') { foreach ($USERS as $acct => $hash) { if (password_verify($key, $hash)) { $user = $acct; break; } } if ($user === '') { $user = 'invalid'; } }
-if ($who !== '' && !array_key_exists($who, $USERS)) { $who = 'invalid'; }
-if ($user !== '' && !array_key_exists($user, $USERS)) { $user = 'invalid'; }
-if (strlen($key) > 200) { $key = ''; }
+$body = [];
+if ($method === 'POST') { $raw = file_get_contents('php://input'); if (strlen($raw) > 1000000) { http_response_code(413); echo json_encode(['ok' => false, 'error' => 'too large']); exit; } $body = json_decode($raw, true, 12); if (!is_array($body)) $body = []; }
+$user = null;   // the signed-in user row
 
-// Fix 4: audit log. One JSON line per request. Never logs passwords or data.
+// Fix 4: audit log. One JSON line per request. Never logs passwords, tokens or data.
 function audit(string $outcome, array $extra = []): void {
   global $ip, $ua, $a, $who, $user;
-  $line = ['ts' => gmdate('c'), 'ip' => $ip, 'user' => $user, 'action' => $a, 'who' => $who, 'outcome' => $outcome, 'ua' => $ua] + $extra;
+  $line = ['ts' => gmdate('c'), 'ip' => $ip, 'user' => $user ? (int)$user['id'] : '', 'action' => $a, 'who' => $who ?: '', 'outcome' => $outcome, 'ua' => $ua] + $extra;
   @file_put_contents(DATA_DIR . '/audit.log', json_encode($line) . "\n", FILE_APPEND | LOCK_EX);
 }
-function fail(int $code, string $outcome, string $msg): void {
-  audit($outcome); http_response_code($code);
-  echo json_encode(['ok' => false, 'error' => $msg]); exit;
-}
+function fail(int $code, string $outcome, string $msg): void { audit($outcome); http_response_code($code); echo json_encode(['ok' => false, 'error' => $msg]); exit; }
+function ok(array $o = []): void { echo json_encode(['ok' => true] + $o); exit; }
+function needPost(): void { global $method; if ($method !== 'POST') fail(405, 'method', 'POST required'); }
 
-// Fix 2 + 7: lockout per IP (5 tries) AND per account (20 tries across all IPs), 15 minutes.
-$rlFile = DATA_DIR . '/attempts.json';
-$rl = file_exists($rlFile) ? (json_decode(file_get_contents($rlFile), true) ?: []) : [];
-$now = time();
-foreach ($rl as $k => $v) { if ($now - ($v['t'] ?? 0) > 900) unset($rl[$k]); }
-$ipKey = 'ip:' . $ip; $acKey = 'acct:' . $user;
-$ipFails = $rl[$ipKey]['n'] ?? 0; $acFails = $rl[$acKey]['n'] ?? 0;
-if ($ipFails >= 5 || ($user !== '' && $acFails >= 20)) {
-  header('Retry-After: 900');
-  fail(429, 'locked', 'too many attempts, try again in 15 minutes');
-}
+// Fix 2: lockout. 5 failures per IP, 20 per account, 15 minutes. Stored in the attempts table.
+q('DELETE FROM attempts WHERE t<?', [$now - 900]);
+$emailIn = strtolower(trim((string)($body['email'] ?? '')));
+if (strlen($emailIn) > 120 || ($emailIn !== '' && !filter_var($emailIn, FILTER_VALIDATE_EMAIL))) { $emailIn = ''; }
+$ipKey = 'ip:' . $ip; $acKey = $emailIn !== '' ? 'acct:' . $emailIn : '';
+$fails = fn($k) => $k === '' ? 0 : (int)(row('SELECT n FROM attempts WHERE key=?', [$k])['n'] ?? 0);
+function bump(string $k): void { global $now; if ($k === '') return; q('INSERT INTO attempts(key,n,t) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET n=n+1, t=excluded.t', [$k, $now]); }
+function clearAttempts(array $ks): void { foreach ($ks as $k) { if ($k !== '') q('DELETE FROM attempts WHERE key=?', [$k]); } }
+if ($fails($ipKey) >= 5 || $fails($acKey) >= 20) { header('Retry-After: 900'); fail(429, 'locked', 'too many attempts, try again in 15 minutes'); }
 
-// ---- Fix 10: sessions ----
-function sessFile() { return DATA_DIR . '/sessions.json'; }
-function loadSess(): array { $f = sessFile(); $s = file_exists($f) ? (json_decode(file_get_contents($f), true) ?: []) : []; $t = time(); $ch = false;
-  foreach ($s as $h => $v) { if ($t - ($v['last'] ?? 0) > 30 * 86400 || $t - ($v['created'] ?? 0) > 180 * 86400) { unset($s[$h]); $ch = true; } }
-  if ($ch) saveSess($s); return $s; }
-function saveSess(array $s): void { $tmp = sessFile() . '.tmp'; file_put_contents($tmp, json_encode($s), LOCK_EX); rename($tmp, sessFile()); @chmod(sessFile(), 0600); }
-$shared = count(array_unique(array_values($USERS))) === 1;   // one password for both: the app asks who is signing in
-$sess = loadSess(); $tokHash = $tok !== '' ? hash('sha256', $tok) : ''; $cur = $tokHash !== '' ? ($sess[$tokHash] ?? null) : null;
-
-if ($a === 'login') {
-  if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail(405, 'method', 'POST required');
-  // Fix 1: compare against a bcrypt hash, never the plain password
-  $ok = ($key !== '') && $user !== '' && $user !== 'invalid' && password_verify($key, $USERS[$user]);
-  if ($ok) { unset($rl[$ipKey], $rl[$acKey]); }
-  else { $rl[$ipKey] = ['n' => $ipFails + 1, 't' => $now]; if ($user !== '') { $rl[$acKey] = ['n' => $acFails + 1, 't' => $now]; } }
-  file_put_contents($rlFile, json_encode($rl), LOCK_EX);
-  if (!$ok) fail(401, $key === '' ? 'no_key' : 'bad_password', 'bad password');
-  $t = bin2hex(random_bytes(32)); $id = substr(bin2hex(random_bytes(4)), 0, 8);
-  $sess[hash('sha256', $t)] = ['id' => $id, 'user' => $shared ? '' : $user, 'created' => $now, 'last' => $now, 'ip' => $ip, 'ua' => $ua];
-  if (count($sess) > 40) { uasort($sess, fn($x, $y) => ($x['last'] ?? 0) <=> ($y['last'] ?? 0)); $sess = array_slice($sess, -40, null, true); }
-  saveSess($sess);
-  audit('ok', ['sid' => $id]);
-  $out = ['ok' => true, 'token' => $t, 'sid' => $id, 'user' => $shared ? null : $user, 'shared' => $shared];
-  $pr = loadProfiles(); if ($pr) { $out['profiles'] = $pr; }   // names and targets only after sign-in
-  echo json_encode($out); exit;
+// ---- sessions (fix 10) ----
+q('DELETE FROM sessions WHERE last<? OR created<?', [$now - 30 * 86400, $now - 180 * 86400]);
+$sess = null;
+if ($tok !== '') {
+  $sess = row('SELECT s.*, u.household_id FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?', [hash('sha256', $tok)]);
+  if (!$sess) { bump($ipKey); }
+  else { $user = row('SELECT * FROM users WHERE id=?', [$sess['user_id']]); if ($now - (int)$sess['last'] > 3600) { q('UPDATE sessions SET last=?, ip=? WHERE id=?', [$now, $ip, $sess['id']]); } }
 }
+function newSession(int $uid): array { global $now, $ip, $ua; $t = bin2hex(random_bytes(32)); $id = substr(bin2hex(random_bytes(4)), 0, 8);
+  q('INSERT INTO sessions(id,user_id,token_hash,created,last,ip,ua) VALUES(?,?,?,?,?,?,?)', [$id, $uid, hash('sha256', $t), $now, $now, $ip, $ua]);
+  $n = (int)row('SELECT COUNT(*) c FROM sessions WHERE user_id=?', [$uid])['c']; if ($n > 20) { q('DELETE FROM sessions WHERE user_id=? AND id IN (SELECT id FROM sessions WHERE user_id=? ORDER BY last ASC LIMIT ?)', [$uid, $uid, $n - 20]); }
+  return ['token' => $t, 'sid' => $id]; }
+function meOut(array $u): array { $hh = row('SELECT * FROM households WHERE id=?', [$u['household_id']]); return ['user' => userProfile($u), 'household' => ['id' => (int)$hh['id'], 'name' => $hh['name']], 'members' => members((int)$u['household_id'])]; }
+function validPassword(string $p): ?string { if (strlen($p) < 10) return 'Password must be at least 10 characters.'; if (strlen($p) > 200) return 'Password too long.'; return null; }
+function cleanName($n): string { $n = trim(strip_tags((string)$n)); return mb_substr($n, 0, 40); }
 
-// Every other action: a valid, unexpired token. A bad token counts as a failed attempt for the lockout.
-$authed = $cur !== null;
-if ($tok !== '' && !$authed) { $rl[$ipKey] = ['n' => $ipFails + 1, 't' => $now]; file_put_contents($rlFile, json_encode($rl), LOCK_EX); }
-if ($authed) {
-  if ($cur['user'] !== '') { $user = $cur['user']; }                       // per-person password: the token decides who you are
-  elseif ($user === '' || $user === 'invalid') { $user = 'p1'; }           // shared password: the phone says which person
-  if ($now - ($cur['last'] ?? 0) > 3600) { $sess[$tokHash]['last'] = $now; $sess[$tokHash]['ip'] = $ip; saveSess($sess); }   // sliding expiry, written at most hourly
-}
+// ---- public actions ----
 if ($a === 'ping') {
-  audit($authed ? 'ok' : ($tok === '' ? 'no_key' : 'bad_token'));
-  $out = ['ok' => true, 'auth' => $authed, 'user' => $authed ? ($cur['user'] !== '' ? $cur['user'] : null) : null, 'shared' => $shared];
-  if ($authed) { $pr = loadProfiles(); if ($pr) { $out['profiles'] = $pr; } }   // names and targets only after sign-in
-  echo json_encode($out); exit;
+  audit($user ? 'ok' : ($tok === '' ? 'no_key' : 'bad_token'));
+  if (!$user) ok(['auth' => false, 'signup' => !(defined('SIGNUP_CLOSED') && SIGNUP_CLOSED)]);
+  ok(['auth' => true] + meOut($user));
 }
-if (!$authed) { fail(401, $tok === '' ? 'no_key' : 'bad_token', 'not signed in'); }
+if ($a === 'signup') {
+  needPost();
+  if (defined('SIGNUP_CLOSED') && SIGNUP_CLOSED) fail(403, 'closed', 'Sign-up is closed on this server.');
+  $name = cleanName($body['name'] ?? ''); $hhName = cleanName($body['household'] ?? '') ?: 'Home'; $pw = (string)($body['password'] ?? '');
+  if ($emailIn === '') fail(422, 'rejected', 'Enter a valid e-mail address.');
+  if ($name === '') fail(422, 'rejected', 'Enter your name.');
+  if ($e = validPassword($pw)) fail(422, 'rejected', $e);
+  if (row('SELECT id FROM users WHERE email=?', [$emailIn])) { bump($ipKey); fail(409, 'exists', 'That e-mail already has an account. Sign in or reset the password.'); }
+  db()->beginTransaction();
+  q('INSERT INTO households(name,created) VALUES(?,?)', [$hhName, $now]); $hh = (int)db()->lastInsertId();
+  q('INSERT INTO users(household_id,email,pass_hash,name,role,verified,created,profile) VALUES(?,?,?,?,"owner",0,?,?)', [$hh, $emailIn, password_hash($pw, PASSWORD_BCRYPT), $name, $now, json_encode(defaultProfile())]);
+  $uid = (int)db()->lastInsertId();
+  db()->commit();
+  $user = row('SELECT * FROM users WHERE id=?', [$uid]);
+  $vt = makeToken($uid, 'verify', 86400); $sent = mailVerify($emailIn, $name, $vt);
+  $s = newSession($uid); audit('ok', ['sid' => $s['sid'], 'mail' => $sent ? 'sent' : 'failed']);
+  ok($s + meOut($user) + ['mail' => $sent]);
+}
+if ($a === 'login') {
+  needPost();
+  $pw = (string)($body['password'] ?? '');
+  $u = $emailIn !== '' ? row('SELECT * FROM users WHERE email=?', [$emailIn]) : null;
+  $okp = $u && $u['pass_hash'] !== '' && password_verify($pw, $u['pass_hash']);
+  if (!$okp) { bump($ipKey); bump($acKey); fail(401, 'bad_password', 'Wrong e-mail or password.'); }
+  clearAttempts([$ipKey, $acKey]);
+  if (password_needs_rehash($u['pass_hash'], PASSWORD_BCRYPT)) { q('UPDATE users SET pass_hash=? WHERE id=?', [password_hash($pw, PASSWORD_BCRYPT), $u['id']]); }
+  $user = $u; $s = newSession((int)$u['id']); audit('ok', ['sid' => $s['sid']]);
+  ok($s + meOut($u));
+}
+if ($a === 'forgot') {
+  needPost();
+  if ($emailIn === '') fail(422, 'rejected', 'Enter a valid e-mail address.');
+  bump($ipKey);   // forgot counts toward the IP limit so it cannot be used to spam a mailbox
+  $u = row('SELECT * FROM users WHERE email=?', [$emailIn]);
+  if ($u) { $t = makeToken((int)$u['id'], 'reset', 3600); mailReset($emailIn, $u['name'], $t); }
+  audit('ok', ['known' => $u ? 1 : 0]);
+  ok(['sent' => true]);   // same answer whether or not the address exists
+}
+if ($a === 'reset') {   // also completes an invite: the token sets the first password
+  needPost();
+  $t = (string)($body['token'] ?? ''); $pw = (string)($body['password'] ?? '');
+  $r = useToken($t, ['reset', 'invite']);
+  if (!$r) { bump($ipKey); fail(400, 'bad_token', 'This link is no longer valid. Ask for a new one.'); }
+  if ($e = validPassword($pw)) fail(422, 'rejected', $e);
+  q('UPDATE users SET pass_hash=?, verified=1 WHERE id=?', [password_hash($pw, PASSWORD_BCRYPT), $r['user_id']]);
+  q('DELETE FROM sessions WHERE user_id=?', [$r['user_id']]);   // every other device has to sign in again
+  burnToken($t);
+  $user = row('SELECT * FROM users WHERE id=?', [$r['user_id']]); clearAttempts(['acct:' . $user['email']]);
+  $s = newSession((int)$user['id']); audit('ok', ['sid' => $s['sid'], 'kind' => $r['kind']]);
+  ok($s + meOut($user));
+}
+if ($a === 'verify') {   // from the e-mail link: GET, then back to the app
+  $t = (string)($_GET['t'] ?? ''); $r = useToken($t, ['verify']);
+  header('Content-Type: text/html; charset=utf-8');
+  if (!$r) { audit('bad_token'); http_response_code(400); echo '<!DOCTYPE html><meta charset="utf-8"><title>Link expired</title><p style="font:16px -apple-system,system-ui,sans-serif;padding:24px">This confirmation link is no longer valid. Open the app and tap <b>Resend confirmation</b> in Settings.</p>'; exit; }
+  q('UPDATE users SET verified=1 WHERE id=?', [$r['user_id']]); burnToken($t); audit('ok');
+  header('Location: ' . appUrl() . '?verified=1', true, 302); exit;
+}
+
+// ---- everything below needs a session ----
+if (!$user) { fail(401, $tok === '' ? 'no_key' : 'bad_token', 'not signed in'); }
 if ($a === 'unknown') { fail(404, 'unknown_action', 'unknown action'); }
-if ($a === 'logout') { unset($sess[$tokHash]); saveSess($sess); audit('ok', ['sid' => $cur['id'] ?? '']); echo json_encode(['ok' => true]); exit; }
+$hhId = (int)$user['household_id']; $isOwner = $user['role'] === 'owner';
+if ($a === 'logout') { q('DELETE FROM sessions WHERE id=?', [$sess['id']]); audit('ok', ['sid' => $sess['id']]); ok(); }
+if ($a === 'resend') { if ((int)$user['verified']) ok(['sent' => false]); bump($ipKey); $t = makeToken((int)$user['id'], 'verify', 86400); $sent = mailVerify($user['email'], $user['name'], $t); audit('ok'); ok(['sent' => $sent]); }
 if ($a === 'sessions') {
-  $list = []; foreach ($sess as $h => $v) { $list[] = ['id' => $v['id'] ?? '', 'user' => $v['user'] ?? '', 'created' => $v['created'] ?? 0, 'last' => $v['last'] ?? 0, 'ip' => $v['ip'] ?? '', 'ua' => $v['ua'] ?? '', 'current' => $h === $tokHash]; }
-  usort($list, fn($x, $y) => $y['last'] <=> $x['last']);
-  audit('ok'); echo json_encode(['ok' => true, 'sessions' => $list]); exit;
+  $list = []; foreach (rows('SELECT s.*, u.name FROM sessions s JOIN users u ON u.id=s.user_id WHERE u.household_id=? ORDER BY s.last DESC', [$hhId]) as $v) {
+    if (!$isOwner && (int)$v['user_id'] !== (int)$user['id']) continue;   // members see their own devices, the owner sees the household's
+    $list[] = ['id' => $v['id'], 'user' => (int)$v['user_id'], 'name' => $v['name'], 'created' => (int)$v['created'], 'last' => (int)$v['last'], 'ip' => $v['ip'], 'ua' => $v['ua'], 'current' => $v['id'] === $sess['id']]; }
+  audit('ok'); ok(['sessions' => $list]);
 }
 if ($a === 'revoke') {
-  if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail(405, 'method', 'POST required');
-  $body = json_decode(file_get_contents('php://input'), true); $id = (string)($body['id'] ?? '');
-  if (!preg_match('/^[a-f0-9]{8}$/', $id)) fail(400, 'bad_request', 'bad id');
-  $n = 0; foreach ($sess as $h => $v) { if (($v['id'] ?? '') === $id) { unset($sess[$h]); $n++; } }
-  saveSess($sess); audit('ok', ['sid' => $id, 'removed' => $n]); echo json_encode(['ok' => true, 'removed' => $n]); exit;
+  needPost(); $id = (string)($body['id'] ?? ''); if (!preg_match('/^[a-f0-9]{8}$/', $id)) fail(400, 'bad_request', 'bad id');
+  $n = $isOwner ? q('DELETE FROM sessions WHERE id=? AND user_id IN (SELECT id FROM users WHERE household_id=?)', [$id, $hhId])->rowCount() : q('DELETE FROM sessions WHERE id=? AND user_id=?', [$id, $user['id']])->rowCount();
+  audit('ok', ['sid' => $id, 'removed' => $n]); ok(['removed' => $n]);
 }
-// v15: profiles (names, targets, notes) live in DATA_DIR/profiles.json and are editable in the app after sign-in.
-// APP_PROFILES in config.php is only the starting point for installs that predate this.
-function profilesFile() { return DATA_DIR . '/profiles.json'; }
-function loadProfiles() {
-  $f = profilesFile();
-  if (file_exists($f)) { $j = json_decode(file_get_contents($f), true); if (is_array($j)) return $j; }
-  if (defined('APP_PROFILES') && is_array(APP_PROFILES)) return APP_PROFILES;
-  return null;
+if ($a === 'household_put') {
+  needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can do that.');
+  $n = cleanName($body['name'] ?? ''); if ($n === '') fail(422, 'rejected', 'Enter a household name.');
+  q('UPDATE households SET name=? WHERE id=?', [$n, $hhId]); audit('ok'); ok(meOut($user));
 }
-function validateProfiles($p) {
-  if (!is_array($p)) return 'profiles must be an object';
-  $num = ['kcal' => [800, 6000], 'protein' => [30, 400], 'floor' => [600, 6000], 'fatMax' => [10, 300], 'carbMax' => [20, 800], 'maint' => [1000, 7000], 'pMin' => [20, 400], 'kg' => [20, 300], 'goal' => [20, 300], 'steps' => [0, 50000], 'restCut' => [0, 500]];
-  foreach (['p1', 'p2'] as $k) {
-    if (!isset($p[$k]) || !is_array($p[$k])) return "missing $k";
-    foreach ($p[$k] as $f => $v) {
-      if ($f === 'name') { if (!is_string($v) || trim($v) === '' || mb_strlen($v) > 40) return "bad name for $k"; continue; }
-      if ($f === 'notesTitle') { if (!is_string($v) || mb_strlen($v) > 60) return "bad notes title for $k"; continue; }
-      if ($f === 'notes') { if (!is_array($v) || count($v) > 12) return "too many notes for $k"; foreach ($v as $n) { if (!is_string($n) || mb_strlen($n) > 200) return "bad note for $k"; } continue; }
-      if ($f === 'vegDays') { if (!is_array($v) || count($v) > 7) return "bad veg days for $k"; foreach ($v as $d) { if (!is_int($d) || $d < 0 || $d > 6) return "bad veg day for $k"; } continue; }
-      if ($f === 'sex') { if (!in_array($v, ['m', 'f', 'x'], true)) return "bad sex for $k"; continue; }
-      if (isset($num[$f])) { if (!is_numeric($v) || $v < $num[$f][0] || $v > $num[$f][1]) return "$f out of range for $k"; continue; }
-      return "unknown profile field $f";
-    }
-    if (!isset($p[$k]['name'])) return "name required for $k";
-  }
-  return null;
+if ($a === 'invite') {
+  needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can add members.');
+  if (!(int)$user['verified']) fail(403, 'unverified', 'Confirm your own e-mail first (Settings).');
+  $name = cleanName($body['name'] ?? ''); if ($emailIn === '') fail(422, 'rejected', 'Enter a valid e-mail address.'); if ($name === '') fail(422, 'rejected', 'Enter their name.');
+  if ((int)row('SELECT COUNT(*) c FROM users WHERE household_id=?', [$hhId])['c'] >= 8) fail(422, 'rejected', 'A household can have up to 8 members.');
+  $ex = row('SELECT * FROM users WHERE email=?', [$emailIn]);
+  if ($ex && ((int)$ex['household_id'] !== $hhId || $ex['pass_hash'] !== '')) fail(409, 'exists', 'That e-mail already belongs to an account.');
+  if ($ex) { $uid = (int)$ex['id']; q('UPDATE users SET name=? WHERE id=?', [$name, $uid]); }   // re-invite: same row, new link
+  else { q('INSERT INTO users(household_id,email,pass_hash,name,role,verified,created,profile) VALUES(?,?,"",?,"member",0,?,?)', [$hhId, $emailIn, $name, $now, json_encode(defaultProfile())]); $uid = (int)db()->lastInsertId(); }
+  $hh = row('SELECT name FROM households WHERE id=?', [$hhId]);
+  $t = makeToken($uid, 'invite', 7 * 86400); $sent = mailInvite($emailIn, $name, $user['name'], $hh['name'], $t);
+  audit('ok', ['member' => $uid, 'mail' => $sent ? 'sent' : 'failed']); ok(['sent' => $sent] + meOut($user));
 }
-if ($a === 'profiles_put') {
-  if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail(405, 'method', 'POST required');
-  $body = json_decode(file_get_contents('php://input'), true);
-  $p = $body['profiles'] ?? null;
-  $err = validateProfiles($p);
-  if ($err) { audit('rejected'); fail(422, 'rejected', $err); }
-  $clean = [];
-  foreach (['p1', 'p2'] as $k) { $clean[$k] = []; foreach ($p[$k] as $f => $v) { if ($f === 'notes') { $clean[$k][$f] = array_values(array_map(fn($n) => trim(strip_tags($n)), $v)); } elseif (is_string($v)) { $clean[$k][$f] = trim(strip_tags($v)); } elseif ($f === 'vegDays') { $clean[$k][$f] = array_values($v); } else { $clean[$k][$f] = +$v; } } }
-  $tmp = profilesFile() . '.tmp'; file_put_contents($tmp, json_encode($clean, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX); rename($tmp, profilesFile());
-  audit('ok');
-  echo json_encode(['ok' => true, 'profiles' => $clean]); exit;
+if ($a === 'member_remove') {
+  needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can remove members.');
+  $id = (int)($body['id'] ?? 0); if ($id === (int)$user['id']) fail(422, 'rejected', 'The owner cannot remove themselves. Delete the account instead.');
+  $n = q('DELETE FROM users WHERE id=? AND household_id=?', [$id, $hhId])->rowCount();   // cascades to docs, sessions, tokens
+  audit('ok', ['member' => $id, 'removed' => $n]); ok(meOut($user));
 }
-// Fix 4b: read the audit log through the API (signed in only). The file itself stays blocked from the web.
+if ($a === 'account_delete') {   // owner: whole household. member: just themselves.
+  needPost(); $pw = (string)($body['password'] ?? '');
+  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(401, 'bad_password', 'Wrong password.'); }
+  if ($isOwner) q('DELETE FROM households WHERE id=?', [$hhId]); else q('DELETE FROM users WHERE id=?', [$user['id']]);
+  audit('ok', ['household' => $isOwner ? $hhId : '']); ok();
+}
 if ($a === 'audit') {
+  if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can read the log.');
   $n = max(20, min(500, (int)($_GET['n'] ?? 300)));
   $lf = DATA_DIR . '/audit.log'; $lines = [];
   if (file_exists($lf)) {
-    $fh = fopen($lf, 'r'); $pos = filesize($lf); $buf = ''; $chunk = 8192;   // read from the end, only as much as needed
-    while ($pos > 0 && substr_count($buf, "\n") <= $n) { $rd = min($chunk, $pos); $pos -= $rd; fseek($fh, $pos); $buf = fread($fh, $rd) . $buf; }
+    $fh = fopen($lf, 'r'); $pos = filesize($lf); $buf = ''; $chunk = 8192;
+    while ($pos > 0 && substr_count($buf, "\n") <= $n * 3) { $rd = min($chunk, $pos); $pos -= $rd; fseek($fh, $pos); $buf = fread($fh, $rd) . $buf; }
     fclose($fh);
-    foreach (array_slice(array_filter(explode("\n", $buf)), -$n) as $l) { $j = json_decode($l, true); if (is_array($j)) { unset($j['ua_full']); $lines[] = $j; } }
+    $ids = array_map(fn($m) => $m['id'], members($hhId));
+    foreach (array_filter(explode("\n", $buf)) as $l) { $j = json_decode($l, true); if (is_array($j) && ($j['user'] === '' || in_array((int)$j['user'], $ids, true))) { $lines[] = $j; } }   // only this household's lines (and anonymous attempts)
+    $lines = array_slice($lines, -$n);
   }
-  audit('ok');
-  echo json_encode(['ok' => true, 'you' => $ip, 'size' => file_exists($lf) ? filesize($lf) : 0, 'lines' => $lines]); exit;
+  audit('ok'); ok(['you' => $ip, 'size' => file_exists($lf) ? filesize($lf) : 0, 'lines' => $lines]);
 }
-if ($who === '' || $who === 'invalid') { fail(400, 'bad_request', 'who required'); }
-$file = DATA_DIR . "/$who.json";
 
-if ($a === 'rev') {
-  $obj = file_exists($file) ? json_decode(file_get_contents($file), true) : null;
-  echo json_encode(['ok' => true, 'rev' => $obj['rev'] ?? 0, 'updated' => $obj['updated'] ?? null]); exit;
+// ---- per-member actions: ?who= must be in my household; members may only write their own data, the owner anyone's ----
+$target = $who ? row('SELECT * FROM users WHERE id=? AND household_id=?', [$who, $hhId]) : null;
+if (!$target) fail(400, 'bad_request', 'who must be a member of your household');
+$canWrite = $isOwner || (int)$target['id'] === (int)$user['id'];
+
+function defaultProfile(): array { return ['kcal' => 1900, 'protein' => 150, 'floor' => 1700, 'fatMax' => 75, 'carbMax' => 230, 'maint' => 2500, 'pMin' => 130, 'kg' => 80, 'goal' => 75, 'steps' => 8000, 'restCut' => 100]; }
+function validateProfile($p): ?string {
+  if (!is_array($p)) return 'profile must be an object';
+  $num = ['kcal' => [800, 6000], 'protein' => [30, 400], 'floor' => [600, 6000], 'fatMax' => [10, 300], 'carbMax' => [20, 800], 'maint' => [1000, 7000], 'pMin' => [20, 400], 'kg' => [20, 300], 'goal' => [20, 300], 'steps' => [0, 50000], 'restCut' => [0, 500]];
+  foreach ($p as $f => $v) {
+    if ($f === 'name') { if (!is_string($v) || trim($v) === '' || mb_strlen($v) > 40) return 'bad name'; continue; }
+    if ($f === 'notesTitle') { if (!is_string($v) || mb_strlen($v) > 60) return 'bad notes title'; continue; }
+    if ($f === 'notes') { if (!is_array($v) || count($v) > 12) return 'too many notes'; foreach ($v as $n) { if (!is_string($n) || mb_strlen($n) > 200) return 'bad note'; } continue; }
+    if ($f === 'vegDays') { if (!is_array($v) || count($v) > 7) return 'bad veg days'; foreach ($v as $d) { if (!is_int($d) || $d < 0 || $d > 6) return 'bad veg day'; } continue; }
+    if ($f === 'sex') { if (!in_array($v, ['m', 'f', 'x'], true)) return 'bad sex'; continue; }
+    if ($f === 'meals') { if (!is_array($v) || count($v) > 12) return 'bad meals'; foreach ($v as $m) { if (!is_array($m) || !isset($m['name'], $m['time']) || !is_string($m['name']) || mb_strlen($m['name']) > 40 || !is_string($m['time']) || mb_strlen($m['time']) > 30) return 'bad meal'; foreach (['nv', 'v', 'vNoEgg'] as $l) { if (isset($m[$l])) { if (!is_array($m[$l]) || count($m[$l]) > 20) return 'bad meal list'; foreach ($m[$l] as $it) { $id = is_array($it) ? ($it[0] ?? '') : $it; if (!is_string($id) || !preg_match('/^[a-z0-9_]{1,40}$/', $id)) return 'bad meal item'; } } } } continue; }
+    if (in_array($f, ['id', 'role', 'verified', 'email', 'hasPassword'], true)) continue;   // read-only echoes from the app
+    if (isset($num[$f])) { if (!is_numeric($v) || $v < $num[$f][0] || $v > $num[$f][1]) return "$f out of range"; continue; }
+    return "unknown profile field $f";
+  }
+  return null;
 }
-if ($a === 'get') {
-  if (!file_exists($file)) { audit('ok', ['rev' => 0]); echo json_encode(['ok' => true, 'rev' => 0, 'data' => null]); exit; }
-  $obj = json_decode(file_get_contents($file), true);
-  audit('ok', ['rev' => $obj['rev'] ?? 0]);
-  echo json_encode(['ok' => true, 'rev' => $obj['rev'] ?? 0, 'data' => $obj['data'] ?? null]); exit;
+if ($a === 'profile_put') {
+  needPost(); if (!$canWrite) fail(403, 'forbidden', 'You can only edit your own profile.');
+  $p = $body['profile'] ?? null; $err = validateProfile($p); if ($err) { fail(422, 'rejected', $err); }
+  $clean = []; $name = $target['name'];
+  foreach ($p as $f => $v) {
+    if (in_array($f, ['id', 'role', 'verified', 'email', 'hasPassword'], true)) continue;
+    if ($f === 'name') { $name = cleanName($v); continue; }
+    if ($f === 'notes') { $clean[$f] = array_values(array_map(fn($n) => trim(strip_tags($n)), $v)); }
+    elseif ($f === 'meals') { $clean[$f] = array_values(array_map(fn($m) => ['name' => trim(strip_tags($m['name'])), 'time' => trim(strip_tags($m['time'])), 'nv' => array_values($m['nv'] ?? []), 'v' => array_values($m['v'] ?? []), 'vNoEgg' => array_values($m['vNoEgg'] ?? [])], $v)); }
+    elseif (is_string($v)) { $clean[$f] = trim(strip_tags($v)); }
+    elseif ($f === 'vegDays') { $clean[$f] = array_values($v); }
+    else { $clean[$f] = +$v; }
+  }
+  if ($name === '') fail(422, 'rejected', 'name required');
+  q('UPDATE users SET name=?, profile=? WHERE id=?', [$name, json_encode($clean, JSON_UNESCAPED_UNICODE), $target['id']]);
+  audit('ok'); ok(meOut(row('SELECT * FROM users WHERE id=?', [$user['id']])));
 }
+$doc = row('SELECT rev, updated, data FROM docs WHERE user_id=?', [$target['id']]);
+if ($a === 'rev') { ok(['rev' => (int)($doc['rev'] ?? 0), 'updated' => $doc['updated'] ?? null]); }
+if ($a === 'get') { audit('ok', ['rev' => (int)($doc['rev'] ?? 0)]); echo '{"ok":true,"rev":' . (int)($doc['rev'] ?? 0) . ',"data":' . ($doc ? $doc['data'] : 'null') . '}'; exit; }   // stored JSON goes out untouched, so {} stays {}
 
 // Fix 5: validate the stored document before writing it. Shape, sizes, depth, value ranges.
 function validateDoc($d, int $depth = 0): ?string {
@@ -246,20 +288,16 @@ function validateShape(array $d): ?string {
 }
 
 if ($a === 'put') {
-  $body = file_get_contents('php://input');
-  if (strlen($body) > 1000000) { fail(413, 'too_large', 'too large'); }
-  $in = json_decode($body, true, 12);
-  if (!is_array($in) || !isset($in['data']) || !is_array($in['data'])) { fail(400, 'bad_body', 'bad body'); }
-  $err = validateDoc($in['data']) ?: validateShape($in['data']);
+  needPost(); if (!$canWrite) fail(403, 'forbidden', 'You can only change your own data.');
+  if (!isset($body['data']) || !is_array($body['data'])) { fail(400, 'bad_body', 'bad body'); }
+  $err = validateDoc($body['data']) ?: validateShape($body['data']);
   if ($err) { audit('rejected', ['why' => $err]); http_response_code(422); echo json_encode(['ok' => false, 'error' => 'rejected: ' . $err]); exit; }
-  $fp = fopen($file, 'c+'); flock($fp, LOCK_EX);
-  $cur = stream_get_contents($fp); $curObj = $cur ? json_decode($cur, true) : null; $rev = ($curObj['rev'] ?? 0) + 1;
   // PHP decodes an empty JSON object as an empty array and would write it back as []; keep maps as maps.
-  foreach (['days', 'log', 'wlog', 'manual'] as $mapField) { if (isset($in['data'][$mapField]) && $in['data'][$mapField] === []) { $in['data'][$mapField] = new stdClass(); } }
-  $out = json_encode(['rev' => $rev, 'updated' => gmdate('c'), 'by' => $user, 'data' => $in['data']]);
-  ftruncate($fp, 0); rewind($fp); fwrite($fp, $out); fflush($fp); flock($fp, LOCK_UN); fclose($fp);
-  $bk = DATA_DIR . "/backup-$who-" . gmdate('Y-m-d') . '.json'; if (!file_exists($bk)) { copy($file, $bk); }
-  audit('ok', ['rev' => $rev, 'bytes' => strlen($body)]);
-  echo json_encode(['ok' => true, 'rev' => $rev]); exit;
+  foreach (['days', 'log', 'wlog', 'manual'] as $mapField) { if (isset($body['data'][$mapField]) && $body['data'][$mapField] === []) { $body['data'][$mapField] = new stdClass(); } }
+  db()->beginTransaction();
+  $cur = row('SELECT rev FROM docs WHERE user_id=?', [$target['id']]); $rev = (int)($cur['rev'] ?? 0) + 1; $upd = gmdate('c');
+  q('INSERT INTO docs(user_id,rev,updated,by_user,data) VALUES(?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET rev=excluded.rev, updated=excluded.updated, by_user=excluded.by_user, data=excluded.data', [$target['id'], $rev, $upd, $user['id'], json_encode($body['data'], JSON_UNESCAPED_UNICODE)]);
+  db()->commit();
+  audit('ok', ['rev' => $rev]); ok(['rev' => $rev, 'updated' => $upd]);
 }
 fail(404, 'unknown_action', 'unknown action');

@@ -884,3 +884,12 @@ html[data-theme=dark] #toast,html:not([data-theme=light]) #toast{background:rgba
 .row.dev .devt b{font-size:16px;font-weight:600}
 .row.dev .devt span{font-size:13px;color:var(--muted)}
 .btn.devrm{flex-shrink:0;color:var(--red)}
+/* v16: accounts */
+.authlinks{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.authlinks .btn.q{flex:1;color:var(--acc)}
+#ovKey .search{margin-bottom:10px}
+.seg.many button .nm{display:none}
+.seg.many button{padding:7px 8px}
+.row .hhin{flex:1;font:inherit;font-size:17px;border:0;background:transparent;color:var(--text);outline:none;min-width:0}
+.row .hhin:disabled{color:var(--muted)}
+body.ro #meals button,body.ro #meals .sugg,body.ro #checkin,body.ro #wtForm,body.ro #daySwitch,body.ro #copyDay,body.ro #warn [data-fix]{pointer-events:none;opacity:.55}
