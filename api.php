@@ -160,7 +160,7 @@ if ($a === 'invite') {
   else { q('INSERT INTO users(household_id,email,pass_hash,name,role,verified,created,profile) VALUES(?,?,"",?,"member",0,?,?)', [$hhId, $emailIn, $name, $now, json_encode(defaultProfile())]); $uid = (int)db()->lastInsertId(); }
   $hh = row('SELECT name FROM households WHERE id=?', [$hhId]);
   $t = makeToken($uid, 'invite', 7 * 86400); $sent = mailInvite($emailIn, $name, $user['name'], $hh['name'], $t);
-  audit('ok', ['member' => $uid, 'mail' => $sent ? 'sent' : 'failed']); ok(['sent' => $sent] + meOut($user));
+  audit('ok', ['member' => $uid, 'mail' => $sent ? 'sent' : 'failed']); ok(['sent' => $sent, 'link' => appUrl() . '?invite=' . $t] + meOut($user));   // the owner may pass the link on directly (WhatsApp, iMessage) when e-mail does not arrive
 }
 if ($a === 'member_remove') {
   needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can remove members.');
