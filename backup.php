@@ -1,6 +1,6 @@
 <?php
 // v16.4: nightly backup of DATA_DIR/app.db, run by a cPanel cron job (command line only).
-// Safe while the app is live: SQLite's VACUUM INTO writes a consistent copy from a read transaction.
+// Safe while the app is live: uses SQLite's online backup API, so readers and writers are not blocked.
 // Each copy is integrity-checked, gzipped into DATA_DIR/backups/app-YYYY-MM-DD-HHMM.db.gz, and the newest KEEP are kept.
 // Never reachable over the web: .htaccess denies backup.php and the script exits unless PHP_SAPI is cli.
 // Cron line (daily 03:10 server time):  10 3 * * * /usr/local/bin/php /home/<account>/<site>/backup.php
@@ -13,9 +13,17 @@ if (!file_exists($src)) { $log('nothing to back up: ' . $src . ' missing'); exit
 if (!is_dir($dir) && !mkdir($dir, 0700, true)) { $log('cannot create ' . $dir); exit(1); }
 $stamp = date('Y-m-d-Hi'); $tmp = $dir . '/app-' . $stamp . '.db'; $out = $tmp . '.gz';
 try {
-  $pdo = new PDO('sqlite:' . $src, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-  $pdo->exec('PRAGMA busy_timeout=10000');
-  $pdo->exec("VACUUM INTO " . $pdo->quote($tmp));
+  // SQLite's online backup API (sqlite3_backup): consistent copy, works on every SQLite version, readers and writers keep going.
+  if (class_exists('SQLite3')) {
+    $from = new SQLite3($src, SQLITE3_OPEN_READONLY); $from->busyTimeout(10000);
+    $to = new SQLite3($tmp);
+    if (!$from->backup($to)) { throw new RuntimeException('sqlite backup failed: ' . $from->lastErrorMsg()); }
+    $to->close(); $from->close();
+  } else {
+    $pdo = new PDO('sqlite:' . $src, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $pdo->exec('PRAGMA busy_timeout=10000');
+    $pdo->exec("VACUUM INTO " . $pdo->quote($tmp));   // SQLite 3.27+ only; used when the SQLite3 class is missing
+  }
   $chk = new PDO('sqlite:' . $tmp, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
   $r = $chk->query('PRAGMA integrity_check')->fetchColumn();
   $users = (int)$chk->query('SELECT COUNT(*) FROM users')->fetchColumn();
