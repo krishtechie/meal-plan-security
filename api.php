@@ -194,7 +194,8 @@ if ($a === 'security' || $a === 'households') {
       if (in_array($o, ['bad_password', 'locked', 'bad_token', 'bad_code'], true)) { $ipk = $j['ip'] ?? '?'; $byIp[$ipk] = ($byIp[$ipk] ?? 0) + 1; if (count($events) < 400) $events[] = ['ts' => $j['ts'], 'ip' => $ipk, 'action' => $act, 'outcome' => $o, 'ua' => substr($j['ua'] ?? '', 0, 40)]; } }
     fclose($fh); }
   arsort($byIp); $events = array_slice(array_reverse($events), 0, 60);
-  audit('ok'); ok(['counts' => $c, 'topIps' => array_slice($byIp, 0, 10, true), 'events' => $events, 'sessions' => (int)row('SELECT COUNT(*) c FROM sessions')['c'], 'users' => (int)row('SELECT COUNT(*) c FROM users')['c'], 'households' => (int)row('SELECT COUNT(*) c FROM households')['c']]);
+  $bk = glob(DATA_DIR . '/backups/app-*.db.gz') ?: []; rsort($bk); $last = $bk ? filemtime($bk[0]) : 0;
+  audit('ok'); ok(['backups' => ['count' => count($bk), 'last' => $last, 'bytes' => $bk ? filesize($bk[0]) : 0], 'counts' => $c, 'topIps' => array_slice($byIp, 0, 10, true), 'events' => $events, 'sessions' => (int)row('SELECT COUNT(*) c FROM sessions')['c'], 'users' => (int)row('SELECT COUNT(*) c FROM users')['c'], 'households' => (int)row('SELECT COUNT(*) c FROM households')['c']]);
 }
 if ($a === 'sessions') {
   $list = []; foreach (rows('SELECT s.*, u.name FROM sessions s JOIN users u ON u.id=s.user_id WHERE u.household_id=? ORDER BY s.last DESC', [$hhId]) as $v) {

@@ -1,6 +1,7 @@
 <?php
 // Structure of config.php (v16). The real file lives only on the server, is written by setup.php and is never committed.
 define('DATA_DIR', dirname(__DIR__) . '/meal-data');   // outside the web root: app.db (SQLite) and audit.log live here
+define('BACKUP_KEEP', 30);                                // nightly copies of app.db kept in DATA_DIR/backups (see backup.php and SETUP.md)
 define('SIGNUP_CLOSED', true);                           // true: sign-up only with an invite link from an admin. false: public sign-up page
 define('ADMIN_EMAILS', ['you@example.com']);              // accounts that can hand out sign-up invites (Settings → App admin)
 // Optional e-mail branding and delivery

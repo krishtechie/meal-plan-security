@@ -57,6 +57,19 @@ STEP 6 - account
   failed sign-ins, lockouts, bad tokens and invite links, sign-ups,
   suspicious events by IP, and a households overview. Never food data.
 
+STEP 6b - nightly backups
+  backup.php copies the database safely while the app is in use, checks
+  the copy, gzips it to <DATA_DIR>/backups/app-YYYY-MM-DD-HHMM.db.gz and
+  keeps the newest 30 (BACKUP_KEEP in config.php). It only runs from the
+  command line; the web server refuses it. cPanel -> Cron Jobs -> add:
+    minute 10, hour 3, every day, command:
+    /usr/local/bin/php /home/<account>/<site-folder>/backup.php
+  Settings -> App admin -> Security shows the newest copy ("ok" if it is
+  under two days old, "stale" otherwise). Restore: gunzip the file and
+  replace <DATA_DIR>/app.db with it (delete app.db-wal and app.db-shm).
+  Download a copy off the server now and then; a backup next to the data
+  does not survive a lost hosting account.
+
 STEP 7 - on each phone
   iPhone: open the link in Safari -> Share -> Add to Home Screen.
   Android: open in Chrome -> menu -> Add to Home screen / Install app.

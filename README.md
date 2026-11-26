@@ -41,6 +41,7 @@ Live instance: private. The code is public; the people, targets and data are not
 | 4b | Activity screen in the app: the audit log readable after sign-in, file still blocked from the web | A09 Security Logging and Monitoring Failures | done |
 | 5 | Strict validation of the request body | A03 Injection | done |
 | 6 | Data, backups and logs moved outside the web root | A05 Security Misconfiguration | done |
+| 6b | Nightly verified SQLite backups with rotation (cron, CLI-only script) | A05 Security Misconfiguration | done |
 | 7 | Per-account credentials and per-account lockout | A01 Broken Access Control | done |
 | 8 | Service worker never caches the API; `worker-src 'self'` in CSP | A05 Security Misconfiguration | done |
 | 9 | Personal data removed from the public code and reports; served from server config after sign-in | A01 Broken Access Control, A04 Insecure Design | done |

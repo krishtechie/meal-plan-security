@@ -4,7 +4,7 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 # ---- Meal Planner rules (fixes 3 and 3b). Keep any cPanel-generated lines ABOVE this block. ----
 
 # Protect config and data from the web
-<FilesMatch "^(config\.php|config\.example\.php)$">
+<FilesMatch "^(config\.php|config\.example\.php|backup\.php)$">
   Require all denied
 </FilesMatch>
 RewriteEngine On
