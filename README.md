@@ -21,6 +21,8 @@ Live instance: private. The code is public; the people, targets and data are not
 - Back end: `api.php` over SQLite (`db.php`). Accounts (e-mail + bcrypt password), households, one JSON document per person with revision-checked merges so two phones never overwrite each other, session tokens, e-mail tokens for verify, reset and invite
 - Auth (v16): sign up or sign in by e-mail and password; the password is sent once to `a=login` and a 256-bit session token does the rest. Forgot-password and invite links are one-time tokens that expire
 - Households: the first account owns a household and invites family by e-mail (up to 8). The owner can see and edit everyone's logs and profiles; members only their own. Every data request is checked against the caller's household
+- Onboarding (v16.1): five short steps on first sign-in (body stats, goal and pace, how you eat, cuisines) compute calorie and protein targets with Mifflin-St Jeor and an activity factor; everything stays editable in Profiles. Adults only (18+ at sign-up).
+- Cuisines: every food row is tagged Indian and/or Canadian and American; the picker and suggestions follow the person's choice, search covers everything
 - Identity: the code knows no one. Names, targets, notes and meal schedules live in the database and are returned only to a signed-in member of the same household
 - Hosting: LiteSpeed on cPanel shared hosting, HTTPS via AutoSSL, deployed from this repo with cPanel Git Version Control
 

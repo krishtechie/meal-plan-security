@@ -763,6 +763,156 @@ const EXTRA = {
     ['c_pesarapappudal','Pesara pappu (moong dal) plain, no tadka','150 g',150,10,24,2,'v'],
     ['c_pesarapappufry','Pesara pappu podi / dry moong dal fry','100 g',170,11,22,5,'v'],
   ],
+  ca_bf:[
+    ['ca_eggs2toast','2 scrambled eggs on whole wheat toast','2 eggs + 1 slice',260,17,16,14,'e'],
+    ['ca_omelette3','3-egg omelette with cheese and vegetables','1 (about 220 g)',390,27,6,28,'e'],
+    ['ca_eggwhites','Egg whites, scrambled','150 g (5 whites)',80,17,1,0,'e'],
+    ['ca_oatmeal','Oatmeal cooked in milk','1 bowl (250 g)',230,10,36,6,'v'],
+    ['ca_overnight','Overnight oats with chia and berries','1 jar (300 g)',340,14,48,10,'v'],
+    ['ca_gyparfait','Greek yogurt parfait with granola and berries','1 (250 g)',290,18,36,8,'v'],
+    ['ca_cottage','Cottage cheese 2% with fruit','1 cup (225 g)',220,24,16,6,'v'],
+    ['ca_proteinpancake','Protein pancakes with maple syrup','3 pancakes',420,28,52,10,'e'],
+    ['ca_pancakes','Pancakes with butter and maple syrup','2 pancakes',380,8,58,12,'e'],
+    ['ca_bagel','Bagel with cream cheese','1 (110 g)',380,12,56,12,'v'],
+    ['ca_pbtoast','Peanut butter and banana toast','1 slice + 1 tbsp + 1/2 banana',260,8,34,11,'v'],
+    ['ca_avotoast','Avocado toast with egg','1 slice + 1/2 avocado + 1 egg',320,12,26,20,'e'],
+    ['ca_cereal','Cereal with 2% milk','1 bowl (40 g + 200 ml)',260,9,46,5,'v'],
+    ['ca_bfsandwich','Breakfast sandwich: egg, cheese, English muffin','1',340,18,30,16,'e'],
+    ['ca_timsbfsand','Tim Hortons breakfast sandwich, egg and cheese','1',340,17,31,16,'e'],
+    ['ca_timsbagel','Tim Hortons everything bagel with cream cheese','1',430,14,60,15,'v'],
+    ['ca_protsmoothie','Protein smoothie: whey, banana, berries, milk','1 (450 ml)',350,30,42,6,'v'],
+    ['ca_breakfastburrito','Breakfast burrito: eggs, cheese, beans, salsa','1 (250 g)',480,24,46,22,'e'],
+  ],
+  ca_main:[
+    ['ca_chkbreast','Grilled chicken breast','150 g',245,46,0,5,'n'],
+    ['ca_chkthighroast','Roast chicken thigh, skin on','1 (120 g)',250,26,0,16,'n'],
+    ['ca_rotisserie','Costco rotisserie chicken, skinless','150 g',250,40,0,9,'n'],
+    ['ca_rotisserieskin','Costco rotisserie chicken, with skin','150 g',330,38,0,19,'n'],
+    ['ca_turkeybreast','Turkey breast, roasted or deli','100 g',135,28,2,2,'n'],
+    ['ca_salmon','Baked salmon fillet','150 g',310,34,0,19,'n'],
+    ['ca_tilapia','Baked white fish (tilapia, cod)','150 g',165,35,0,2,'n'],
+    ['ca_shrimp','Shrimp, grilled or sauteed','150 g',170,34,1,3,'n'],
+    ['ca_chickenburger','Grilled chicken burger with bun','1',480,36,42,18,'n'],
+    ['ca_turkeyburger','Turkey burger with bun','1',460,32,40,18,'n'],
+    ['ca_veggieburger','Veggie burger with bun','1',420,18,52,14,'v'],
+    ['ca_chkwrap','Grilled chicken wrap with vegetables','1 (280 g)',480,34,46,16,'n'],
+    ['ca_subway6','Subway 6 inch turkey or chicken sub','1',360,24,46,8,'n'],
+    ['ca_subway12','Subway footlong chicken sub','1',700,48,92,14,'n'],
+    ['ca_chksalad','Chicken Caesar salad','1 bowl (350 g)',520,38,14,34,'n'],
+    ['ca_cobbsalad','Cobb salad with egg and chicken','1 bowl (350 g)',480,36,10,32,'n'],
+    ['ca_gardensalad','Garden salad with vinaigrette','1 bowl (250 g)',150,3,12,10,'v'],
+    ['ca_sweetkale','Sweet Kale salad kit with dressing','1 serving (100 g)',150,3,12,10,'v'],
+    ['ca_quinoabowl','Quinoa bowl with roasted vegetables and chickpeas','1 bowl (400 g)',520,18,72,18,'v'],
+    ['ca_burritobowl','Burrito bowl: rice, beans, chicken, salsa, cheese','1 (500 g)',680,42,72,24,'n'],
+    ['ca_burritobowlveg','Burrito bowl: rice, beans, fajita veg, guacamole','1 (500 g)',620,20,86,22,'v'],
+    ['ca_pastachk','Pasta with grilled chicken and tomato sauce','1 plate (350 g)',560,40,62,14,'n'],
+    ['ca_macncheese','Mac and cheese','1 bowl (300 g)',540,20,58,24,'v'],
+    ['ca_pizza2','Pizza, 2 slices (large, cheese or veg)','2 slices',560,24,64,22,'v'],
+    ['ca_pizzachk2','Pizza, 2 slices (chicken or pepperoni-free meat)','2 slices',620,32,62,26,'n'],
+    ['ca_stirfry','Chicken stir-fry with vegetables and rice','1 plate (400 g)',560,36,62,16,'n'],
+    ['ca_tofustirfry','Tofu stir-fry with vegetables and rice','1 plate (400 g)',480,24,64,14,'v'],
+    ['ca_sheetpan','Sheet-pan chicken with potatoes and broccoli','1 plate (400 g)',520,42,38,20,'n'],
+    ['ca_chili','Chicken or turkey chili with beans','1 bowl (350 g)',380,34,36,10,'n'],
+    ['ca_vegchili','Three-bean vegetarian chili','1 bowl (350 g)',320,16,52,6,'v'],
+    ['ca_lentilsoup','Lentil soup','1 bowl (350 g)',260,16,40,4,'v'],
+    ['ca_chksoup','Chicken noodle soup','1 bowl (350 g)',220,16,24,6,'n'],
+    ['ca_fishtacos','Fish tacos, 2','2 tacos',460,28,46,18,'n'],
+    ['ca_chktacos','Chicken tacos, 2 (soft)','2 tacos',440,30,42,16,'n'],
+    ['ca_poutine','Poutine, small','1 small (300 g)',620,16,66,34,'v'],
+    ['ca_grilledcheese','Grilled cheese sandwich','1',420,16,36,24,'v'],
+    ['ca_tunasandwich','Tuna salad sandwich, whole wheat','1',420,28,38,16,'n'],
+    ['ca_eggsandwich','Egg salad sandwich, whole wheat','1',400,18,36,20,'e'],
+    ['ca_pbj','Peanut butter and jam sandwich','1',380,12,46,16,'v'],
+  ],
+  ca_side:[
+    ['ca_bakedpotato','Baked potato, plain','1 medium (175 g)',160,4,36,0,'v'],
+    ['ca_sweetpotatofries','Sweet potato fries, air fryer','150 g',260,3,42,9,'v'],
+    ['ca_fries','French fries, restaurant','1 medium (120 g)',380,4,50,18,'v'],
+    ['ca_mashed','Mashed potatoes with butter','1 cup (210 g)',240,4,36,9,'v'],
+    ['ca_brownrice','Brown rice, cooked','1 cup (195 g)',215,5,45,2,'v'],
+    ['ca_quinoa','Quinoa, cooked','1 cup (185 g)',220,8,39,4,'v'],
+    ['ca_roastveg','Roasted vegetables with olive oil','200 g',180,4,20,10,'v'],
+    ['ca_steamedbroccoli','Steamed broccoli','150 g',50,4,8,0,'v'],
+    ['ca_cornonthecob','Corn on the cob with butter','1',150,4,24,6,'v'],
+    ['ca_coleslaw','Coleslaw','1 cup (120 g)',160,1,14,12,'v'],
+    ['ca_garlicbread','Garlic bread','2 slices',280,6,34,13,'v'],
+    ['ca_dinnerroll','Dinner roll with butter','1',140,4,20,5,'v'],
+  ],
+  ca_snack:[
+    ['ca_applepb','Apple slices with peanut butter','1 apple + 1 tbsp',190,4,28,8,'v'],
+    ['ca_carrotshummus','Carrots and cucumber with hummus','150 g + 3 tbsp',160,5,18,8,'v'],
+    ['ca_cheesecrackers','Cheese and crackers','30 g + 6 crackers',250,9,18,16,'v'],
+    ['ca_trailmix','Trail mix','1/4 cup (40 g)',200,6,16,14,'v'],
+    ['ca_beefjerky','Turkey or chicken jerky','30 g',100,14,4,2,'n'],
+    ['ca_hardboiled2','2 hard-boiled eggs','2',140,12,1,10,'e'],
+    ['ca_proteinshake','Premier Protein or Fairlife shake','1 bottle (325 ml)',160,30,4,3,'v'],
+    ['ca_gy0','Greek yogurt 0%, plain','175 g',100,18,6,0,'v'],
+    ['ca_skyr','Skyr, plain','175 g',110,19,7,0,'v'],
+    ['ca_stringcheese','String cheese','1 (24 g)',80,6,1,6,'v'],
+    ['ca_babybel','Babybel, light','1',50,6,0,3,'v'],
+    ['ca_popcornbag','Microwave popcorn, light','1 bag (80 g popped)',330,9,52,10,'v'],
+    ['ca_pretzels','Pretzels','30 g',110,3,23,1,'v'],
+    ['ca_granolabar','Granola bar','1 (35 g)',150,3,24,5,'v'],
+    ['ca_ricecakes','Rice cakes with peanut butter','2 + 1 tbsp',170,5,20,9,'v'],
+    ['ca_edamame','Edamame, steamed','1 cup (155 g)',190,18,14,8,'v'],
+    ['ca_roastedchickpeas','Roasted chickpeas','40 g',160,7,22,5,'v'],
+    ['ca_bananamuffin','Muffin, bakery (banana, blueberry)','1 (110 g)',420,6,58,18,'v'],
+    ['ca_timbits','Timbits','5',350,5,45,17,'v'],
+    ['ca_timsdd','Tim Hortons double double','1 medium',140,2,22,5,'v'],
+    ['ca_latte','Latte with 2% milk','1 medium (350 ml)',150,10,14,6,'v'],
+    ['ca_coffeeblack','Coffee, black or with a splash of milk','1 cup',10,0,1,0,'v'],
+    ['ca_icedcapp','Tim Hortons iced capp','1 small',250,3,38,10,'v'],
+    ['ca_orangejuice','Orange juice','250 ml',110,2,26,0,'v'],
+    ['ca_beer','Beer, regular','1 can (355 ml)',150,1,13,0,'v'],
+    ['ca_wine','Wine','1 glass (150 ml)',125,0,4,0,'v'],
+  ],
+  ni_main:[
+    ['ni_butterchk','Butter chicken','1 bowl (200 g)',390,28,10,26,'n'],
+    ['ni_chktikkamasala','Chicken tikka masala','1 bowl (200 g)',340,30,10,20,'n'],
+    ['ni_tandoorihalf','Tandoori chicken, half','about 300 g with bone',420,58,4,18,'n'],
+    ['ni_seekh2','Seekh kebab, chicken, 2','2 (120 g)',220,26,4,12,'n'],
+    ['ni_chkcurry','Home-style chicken curry, North Indian','1 bowl (200 g)',300,28,8,17,'n'],
+    ['ni_keemamatar','Keema matar (chicken keema with peas)','1 bowl (200 g)',320,30,10,18,'n'],
+    ['ni_eggbhurji','Egg bhurji, 2 eggs','1 bowl (150 g)',230,14,6,17,'e'],
+    ['ni_paneerbm','Paneer butter masala','1 bowl (200 g)',380,16,14,30,'v'],
+    ['ni_palakpaneer','Palak paneer','1 bowl (200 g)',300,16,10,22,'v'],
+    ['ni_shahipaneer','Shahi paneer','1 bowl (200 g)',400,15,14,32,'v'],
+    ['ni_paneertikka','Paneer tikka, grilled','6 cubes (150 g)',330,22,8,24,'v'],
+    ['ni_daltadka','Dal tadka (yellow dal)','1 bowl (200 g)',200,10,26,6,'v'],
+    ['ni_dalmakhani','Dal makhani','1 bowl (200 g)',290,12,30,14,'v'],
+    ['ni_rajma','Rajma masala','1 bowl (200 g)',240,11,36,6,'v'],
+    ['ni_cholemasala','Chole masala','1 bowl (200 g)',260,11,36,8,'v'],
+    ['ni_aloogobi','Aloo gobi','1 bowl (200 g)',210,5,26,10,'v'],
+    ['ni_bhindimasala','Bhindi masala','1 bowl (150 g)',150,3,12,10,'v'],
+    ['ni_baingan','Baingan bharta','1 bowl (150 g)',160,3,14,10,'v'],
+    ['ni_mixveg','Mixed vegetable curry','1 bowl (200 g)',190,5,22,9,'v'],
+    ['ni_kadhi','Kadhi pakora','1 bowl (200 g)',260,8,22,15,'v'],
+    ['ni_sarson','Sarson ka saag with makki roti','1 bowl + 1 roti',380,10,44,18,'v'],
+  ],
+  ni_bread:[
+    ['ni_naan','Naan, plain','1 (90 g)',260,8,46,5,'v'],
+    ['ni_butternaan','Butter naan','1 (95 g)',310,8,46,10,'v'],
+    ['ni_garlicnaan','Garlic naan','1 (95 g)',300,8,47,8,'v'],
+    ['ni_tandooriroti','Tandoori roti','1 (60 g)',150,5,30,1,'v'],
+    ['ni_paratha','Plain paratha','1 (80 g)',260,5,34,12,'v'],
+    ['ni_alooparatha','Aloo paratha with butter','1 (130 g)',330,7,46,13,'v'],
+    ['ni_paneerparatha','Paneer paratha','1 (130 g)',360,13,42,15,'v'],
+    ['ni_bhatura','Bhatura','1 (90 g)',300,6,38,14,'v'],
+    ['ni_kulcha','Kulcha, plain','1 (80 g)',240,7,42,4,'v'],
+    ['ni_jeerarice','Jeera rice','1 bowl (200 g)',300,5,54,7,'v'],
+    ['ni_vegpulao','Veg pulao','1 bowl (250 g)',350,7,58,10,'v'],
+    ['ni_chkbiryani','Chicken biryani, North Indian style','1 plate (350 g)',560,30,70,18,'n'],
+    ['ni_raita','Raita (cucumber, boondi)','1 bowl (120 g)',80,4,8,3,'v'],
+  ],
+  ni_snack:[
+    ['ni_samosa','Samosa','1 (100 g)',260,5,30,14,'v'],
+    ['ni_pakora','Vegetable pakora','4 (100 g)',280,6,24,18,'v'],
+    ['ni_chaat','Papdi or bhel chaat','1 plate (150 g)',300,7,42,12,'v'],
+    ['ni_dahibhalla','Dahi bhalla','2 (180 g)',260,9,30,12,'v'],
+    ['ni_cholebhature','Chole bhature','2 bhature + chole',760,18,96,34,'v'],
+    ['ni_lassi','Lassi, sweet','1 glass (250 ml)',220,7,36,5,'v'],
+    ['ni_chai','Masala chai with milk and sugar','1 cup (150 ml)',80,2,12,3,'v'],
+  ],
   sweet:[
     ['sw_gulab1','Gulab jamun','1 piece with syrup (40 g)',150,2,25,5,'v'],
     ['sw_rasmalai1','Rasmalai','1 piece with milk (60 g)',140,5,18,6,'v'],
@@ -798,7 +948,8 @@ const EXTRA = {
     ['n_trail30','Trail mix: almonds, cashews, raisins, pumpkin seeds','30 g',150,4,13,10,'v'],
   ],
 };
-for(const c0 in EXTRA){ const c=c0==='pieces'?'snack':c0.replace('hyd_','').replace(/\d$/,''); EXTRA[c0].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; if(RAW[c]) RAW[c].push(r); }); }
+const GROUPCAT16={ca_bf:'bf',ca_main:'prot',ca_side:'carb',ca_snack:'snack',ni_main:'prot',ni_bread:'carb',ni_snack:'snack'};
+for(const c0 in EXTRA){ const c=GROUPCAT16[c0]||(c0==='pieces'?'snack':c0.replace('hyd_','').replace(/\d$/,'')); EXTRA[c0].forEach(r=>{ F[r[0]]={id:r[0],n:r[1],g:r[2],k:r[3],p:r[4],c:r[5],f:r[6],t:r[7],cat:c}; CAT_OF[r[0]]=c; if(RAW[c]) RAW[c].push(r); }); }
 // v15.7: duplicate library rows collapse into one visible entry. The hidden ids stay in F so old logs still compute,
 // and suggestions/templates are redirected to the visible row with the portion scaled (REDIR[id] = [visible id, q factor]).
 const REDIR={ k_gy:['p_gy170',1], k_gyberries:['b_gyberries',0.75], k_whey:['p_whey',1], s_curd100:['p_curd200',0.5], s_curd150:['p_curd200',0.75], d_curdbed:['p_curd200',0.5],
@@ -807,6 +958,20 @@ const REDIR={ k_gy:['p_gy170',1], k_gyberries:['b_gyberries',0.75], k_whey:['p_w
   sn_laddu:['sw_laddu_h',1], sn_mysorepak:['sw_mysorepak',1], sn_gulab:['sw_gulab1',1] };
 for(const id in REDIR){ if(F[id]) F[id].hidden=true; }
 function canon(x){ const r=REDIR[x.id]; return r&&F[r[0]] ? {id:r[0],q:+((x.q||1)*r[1]).toFixed(3)} : x; }
+// v16.1: cuisines. Every row carries cu: a set of 'in' (Indian) and/or 'ca' (Canadian and American). Rows added for one cuisine get
+// that tag; the older library is Indian home food, with the generic and western items (eggs, oats, salads, grilled chicken, snacks,
+// chain items) tagged for both so a Canadian/American eater sees them too. Search always covers everything.
+const CA_RX=/\b(egg|eggs|omelet|oat|oats|granola|bread|toast|sandwich|wrap|pasta|pizza|burger|salad|chicken breast|grilled|air fry|air-fry|whey|protein bar|cheese|yogurt|yoghurt|cracker|smoothie|cereal|pancake|bagel|wings|shawarma|falafel|hummus|tofu|salmon|tuna|fish|shrimp|milk|nuts|almond|walnut|cashew|pistachio|peanut|avocado|banana|apple|berries|orange|clementine|grapes|melon|watermelon|pear|kiwi|mango|popcorn|chips|cookie|cake|donut|ice cream|chocolate|candy|coffee|tea|water|quinoa|sweet potato|potato|broccoli|cauliflower|carrot|cucumber|spinach|mushroom|chickpea|lentil|soup|steak|turkey|costco|tim hortons|subway|rice cake|trail mix|edamame|skyr|cottage|cream|butter|jam|honey|maple|juice|beer|wine|soda|gym|tablet|lime)\b/i;
+Object.values(F).forEach(it=>{ if(it.id.startsWith('ca_')) it.cu='ca'; else if(it.id.startsWith('ni_')) it.cu='in'; else it.cu = CA_RX.test(it.n) ? 'in ca' : 'in'; });
+function cuOk(it){ const cs=P().cuisines||['in','ca']; if(cs.length>=2||!it.cu) return true; return it.cu.split(' ').includes(cs[0]); }
+const CA_MEALS=[
+  { name:'Breakfast', time:'8:00 am', nv:['ca_eggs2toast','ca_coffeeblack'], v:['ca_overnight','ca_coffeeblack'], vNoEgg:['ca_overnight','ca_coffeeblack'] },
+  { name:'Mid-morning', time:'10:30 am', nv:['ca_gy0','f_apple'], v:['ca_gy0','f_apple'] },
+  { name:'Lunch', time:'12:30 pm', nv:['ca_chkbreast','ca_quinoa','ca_gardensalad'], v:['ca_quinoabowl'] },
+  { name:'Afternoon', time:'3:30 pm', nv:['ca_applepb'], v:['ca_applepb'] },
+  { name:'Gym', time:'5:00 to 6:00 pm', nv:['g_gym'], v:['g_gym'] },
+  { name:'Dinner', time:'7:00 pm', nv:['ca_sheetpan'], v:['ca_tofustirfry'] },
+];
 // Every dish in the library is also searchable as an ingredient in the custom builder, converted to per 100 g (or per piece)
 (function(){ const have=new Set(ING.map(x=>x[0].toLowerCase()));
   Object.values(F).forEach(it=>{ if(it.cat==='gym'||it.cat==='drink'&&it.k===0) return; const b=(function(){ if(!it.g) return null; let m=it.g.match(/^(\d+(?:\.\d+)?)[^(\d]*\((\d+(?:\.\d+)?)\s*g\)/); if(m) return {n:+m[2],unit:'g',pc:+m[2]/+m[1]}; m=it.g.match(/(\d+(?:\.\d+)?)\s*(g|ml)\b/); if(m) return {n:+m[1],unit:m[2]}; m=it.g.match(/^(\d+(?:\.\d+)?)\b/); if(m) return {n:+m[1],unit:'pcs'}; return null; })(); if(!b||!b.n) return;
@@ -832,9 +997,22 @@ const BASE_MEALS=[
     ];
 function defaultPerson(){ return { name:'Guest', sex:'x', goal:75, steps:8000, target:{k:1900,p:150}, floor:1700, fatMax:75, carbMax:230, maint:2500, pMin:130, restCut:100, eggsVegDefault:false, kg:80, meals:BASE_MEALS.map(m=>Object.assign({},m)), notes:null, role:'member', id:'guest' }; }
 const PEOPLE = { guest: defaultPerson() };
+// v16.1: targets from body stats. Mifflin-St Jeor for resting energy, an activity factor for maintenance, a deficit or surplus from the
+// chosen pace (7700 kcal per kg), protein by body weight, fat at 25 percent of calories, carbs from what is left. All editable afterwards.
+const ACT={desk:1.2,light:1.375,active:1.55,athlete:1.725};
+function computeTargets(p){ const w=+p.kg||80, h=+p.height||170, a=+p.age||35, sex=p.sex||'x';
+  const bmr= sex==='m' ? 10*w+6.25*h-5*a+5 : sex==='f' ? 10*w+6.25*h-5*a-161 : 10*w+6.25*h-5*a-78;
+  const maint=Math.round(bmr*(ACT[p.activity]||1.375)/10)*10; const pace=+p.pace||0.5; const delta=Math.round(pace*7700/7);
+  let kcal= p.goalType==='gain' ? maint+Math.min(delta,400) : p.goalType==='maintain' ? maint : maint-delta;
+  const minK= sex==='f'?1200:1500; kcal=Math.max(minK,Math.round(kcal/10)*10);
+  const gpk= p.goalType==='lose' ? 1.8 : 1.6; const protein=Math.round(Math.min(220,Math.max(60,w*gpk))/5)*5;
+  const fatMax=Math.round(kcal*0.28/9/5)*5; const carbMax=Math.max(60,Math.round((kcal-protein*4-fatMax*9)/4/5)*5);
+  return {maint, kcal, floor:Math.max(minK,kcal-200), protein, pMin:Math.round(protein*0.8/5)*5, fatMax, carbMax, restCut:p.goalType==='gain'?0:100, steps: p.activity==='desk'?7000:p.activity==='light'?8000:10000}; }
 function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function buildPerson(pr){ const P=defaultPerson(); P.id=String(pr.id); P.role=pr.role||'member'; P.email=pr.email||''; P.verified=!!pr.verified; P.hasPassword=pr.hasPassword!==false; if(pr.name) P.name=pr.name; if(pr.sex) P.sex=pr.sex;
-  ['goal','steps','kg','floor','fatMax','carbMax','maint','pMin','restCut'].forEach(f=>{ if(pr[f]!=null) P[f]=+pr[f]; }); if(pr.kcal) P.target.k=+pr.kcal; if(pr.protein) P.target.p=+pr.protein; if(Array.isArray(pr.vegDays)) P.vegDays=pr.vegDays.slice();
+  ['goal','steps','kg','floor','fatMax','carbMax','maint','pMin','restCut','age','height','pace','onboarded'].forEach(f=>{ if(pr[f]!=null) P[f]=+pr[f]; });
+  ['activity','goalType','diet'].forEach(f=>{ if(pr[f]) P[f]=pr[f]; }); P.cuisines=Array.isArray(pr.cuisines)&&pr.cuisines.length?pr.cuisines.slice():['in','ca']; P.avoid=Array.isArray(pr.avoid)?pr.avoid.slice():[];
+  if(!(Array.isArray(pr.meals)&&pr.meals.length)&&P.cuisines[0]==='ca') P.meals=CA_MEALS.map(m=>Object.assign({},m)); if(pr.kcal) P.target.k=+pr.kcal; if(pr.protein) P.target.p=+pr.protein; if(Array.isArray(pr.vegDays)) P.vegDays=pr.vegDays.slice();
   if(Array.isArray(pr.meals)&&pr.meals.length) P.meals=pr.meals.map(m=>({name:m.name,time:m.time,nv:m.nv||[],v:m.v||[],vNoEgg:(m.vNoEgg&&m.vNoEgg.length)?m.vNoEgg:undefined}));
   P.notesTitle=pr.notesTitle||''; P.notesList=Array.isArray(pr.notes)?pr.notes.slice():[]; P.notes=P.notesList.length?`<h3>${esc(pr.notesTitle||pr.name)}</h3><ul>${P.notesList.map(n=>'<li>'+esc(n)+'</li>').join('')}</ul>`:null; return P; }
 function memberIds(){ return Object.keys(PEOPLE).filter(k=>k!=='guest'); }
@@ -1039,7 +1217,7 @@ async function api(a,who,body){ const r=await fetch(apiUrl()+'?a='+a+(who?'&who=
   if(r.status===422||r.status===403||r.status===409||r.status===400){ let j={}; try{ j=await r.json(); }catch(e){} const e=new Error('rejected: '+(j.error||'')); e.msg=j.error||''; throw e; }
   if(!r.ok) throw new Error('http '+r.status); return r.json(); }
 function forgetKey(){ CLOUD.key=''; CLOUD.me=null; try{ localStorage.removeItem('kl-token'); localStorage.removeItem('kl-key'); }catch(e){} }
-function applyMe(j){ if(!j||!j.user) return; CLOUD.me=j.user; CLOUD.household=j.household||null; setMembers(j.members||[]); }
+function applyMe(j){ if(!j||!j.user) return; CLOUD.me=j.user; CLOUD.household=j.household||null; setMembers(j.members||[]); const me=PEOPLE[String(CLOUD.me.id)]; if(me&&!me.onboarded&&!ONB.shown&&!document.getElementById('ovKey').classList.contains('show')){ ONB.shown=true; setTimeout(()=>onbOpen(CLOUD.me.id),300); } }
 async function signIn(email,password){ const j=await api('login',null,{email,password}); CLOUD.key=j.token; try{ localStorage.setItem('kl-token',j.token); }catch(e){} applyMe(j); return j; }
 function isLocked(){ return (CLOUD.lockedUntil||0)>Date.now(); }
 async function cloudInit(){
@@ -1069,7 +1247,7 @@ function readProf(){ const out={}; document.querySelectorAll('#pfForm .pfcard').
 document.getElementById('openProf').onclick=()=>{ if(!CLOUD.key){ askKey('Sign in first; profiles are stored on the server.'); return; } renderProf(); document.getElementById('ovSet').classList.remove('show'); document.getElementById('ovProf').classList.add('show'); };
 document.getElementById('pfCancel').onclick=()=>document.getElementById('ovProf').classList.remove('show');
 document.getElementById('pfSave').onclick=async()=>{ const msg=document.getElementById('pfMsg'); const p=readProf(); for(const k in p){ if(!p[k].name){ msg.textContent='Every name is required.'; return; } if(!(p[k].kcal>=800&&p[k].protein>=30)){ msg.textContent='Calories (800+) and protein (30+) are required.'; return; } }
-  msg.textContent='Saving…'; try{ let last=null; for(const k in p){ const cur=PEOPLE[k]; const body=Object.assign({},p[k]); if(cur&&Array.isArray(cur.vegDays)) body.vegDays=cur.vegDays; if(cur&&cur.meals&&cur.mealsCustom) body.meals=cur.meals; last=await api('profile_put',k,{profile:body}); } if(last) applyMe(last); save(); document.getElementById('ovProf').classList.remove('show'); render(); }catch(e){ msg.textContent= e.msg||(e.message==='auth'?'Sign in again.':'Could not reach the server.'); } };
+  msg.textContent='Saving…'; try{ let last=null; for(const k in p){ const cur=PEOPLE[k]; const body=Object.assign({},p[k]); if(cur){ if(Array.isArray(cur.vegDays)) body.vegDays=cur.vegDays; if(cur.meals&&cur.mealsCustom) body.meals=cur.meals; ['age','height','activity','goalType','pace','diet','onboarded'].forEach(f=>{ if(cur[f]!=null&&cur[f]!=='') body[f]=cur[f]; }); body.cuisines=cur.cuisines; body.avoid=cur.avoid; } last=await api('profile_put',k,{profile:body}); } if(last) applyMe(last); save(); document.getElementById('ovProf').classList.remove('show'); render(); }catch(e){ msg.textContent= e.msg||(e.message==='auth'?'Sign in again.':'Could not reach the server.'); } };
 function renderNames(){ const seg=document.querySelector('.seg'); if(!seg) return; const ids=memberIds(); const list=ids.length?ids:['guest']; seg.innerHTML=list.map(k=>{ const P=PEOPLE[k]; return `<button class="who${k===S.who?' on':''}" data-who="${k}"><span class="av">${esc(P.name.slice(0,1).toUpperCase())}</span><span class="nm">${esc(P.name)}</span></button>`; }).join(''); seg.classList.toggle('many',list.length>2); seg.querySelectorAll('.who').forEach(b=>b.onclick=()=>{ S.who=b.dataset.who; save(); render(); });
   document.title=(CLOUD.household&&CLOUD.household.name&&CLOUD.household.name!=='Home'?CLOUD.household.name+' ':'')+'Meal Planner'; }
 function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.add('show'); authMode('login'); document.getElementById('keyMsg').textContent=msg||''; setStatus('Not signed in','warn'); }
@@ -1332,7 +1510,7 @@ function recentFamilies(){ const ps=PS(); const y=new Set(), w=new Map(), ever=n
 // Top picks for a meal slot given what is still missing today (protein gap first, then calories), varied by history
 function suggestFor(mi){ const plan=isFuture()?P().meals.map(m=>({name:m.name,time:m.time,items:[]})):dayPlan(); const p=P(); const all=[]; plan.forEach(m=>all.push(...m.items)); const T=tot(all); const pGap=p.target.p-T.p, kGap=p.target.k-T.k; const used=new Set(all.map(x=>x.id)); const recent=recentFamilies(); const name=plan[mi].name.toLowerCase();
   const snackSlot=/mid-morning|pre-gym|evening|snack|waking/.test(name);
-  const cands=Object.values(F).filter(it=>!it.hidden&&allowed(it)&&!used.has(it.id)&&it.cat!=='gym'&&(snackSlot?['snack','fruit','prot','drink','bf'].includes(it.cat):['prot','carb','veg','side','bf'].includes(it.cat)))
+  const cands=Object.values(F).filter(it=>!it.hidden&&cuOk(it)&&allowed(it)&&!used.has(it.id)&&it.cat!=='gym'&&(snackSlot?['snack','fruit','prot','drink','bf'].includes(it.cat):['prot','carb','veg','side','bf'].includes(it.cat)))
     .map(it=>{ const fam=family(it.n); let sc=0; if(pGap>10) sc+=Math.abs(Math.min(it.p,pGap)-Math.min(35,pGap))*1.2 - (it.p>=15?8:0); else sc+=it.p*0.3; if(kGap<300) sc+=it.k/40; else sc+=Math.abs(it.k-Math.min(kGap,450))/60; sc+=(COST[it.id]||2)*3; if(recent.y.has(fam)) sc+=8; sc+=Math.min(8,(recent.w.get(fam)||0)*3); if(recent.ever.has(it.id)) sc-=5; if(REC.has(it.id)) sc-=3; sc+=hashStr(it.id+ymd(weekDate(S.day)))%5; return {it,fam,sc}; })
     .sort((a,b)=>a.sc-b.sc).filter((c,i,arr)=>arr.findIndex(o=>o.fam===c.fam)===i).slice(0,4);
   return new Set(cands.map(c=>c.it.id)); }
@@ -1362,7 +1540,7 @@ function renderWarnings(plan,T,tk,tp){
   const mainsShort=plan.map((m,mi)=>({m,mi,p:tot(m.items).p})).filter(x=>/lunch|dinner/i.test(x.m.name)&&x.p<20);
   if(T.p<tp-10||T.p<p.pMin||mainsShort.length||T.k<p.floor){ const gap=Math.max(tp-T.p, mainsShort.length?25:0, T.k<p.floor?20:0); const used=new Set(allItems.map(x=>x.id)); const usedNames=new Set(allItems.map(x=>F[x.id]&&F[x.id].n.toLowerCase().split(',')[0]));
     const mealIdx=(re)=>plan.findIndex(m=>re.test(m.name));
-    const cands=Object.values(F).filter(it=>!it.hidden&&(it.cat==='prot'||it.cat==='snack')&&it.p>=10&&allowed(it)&&!used.has(it.id)&&!usedNames.has(it.n.toLowerCase().split(',')[0]))
+    const cands=Object.values(F).filter(it=>!it.hidden&&cuOk(it)&&(it.cat==='prot'||it.cat==='snack')&&it.p>=10&&allowed(it)&&!used.has(it.id)&&!usedNames.has(it.n.toLowerCase().split(',')[0]))
       .map(it=>{ const snacky=/whey|yogurt|skyr|curd|milk|cottage|cheese|chana|peanut|nuts|bar|sprout|whites|eggs/i.test(it.n); let target;
         if(mainsShort.length&&!snacky) target=mainsShort[0].mi; else if(snacky) target=(gap>25?mealIdx(/mid-morning/i):mealIdx(/pre-gym|evening/i)); else target=mealIdx(/dinner/i); if(target<0) target=mealIdx(/lunch/i);
         const fit=Math.abs(it.p-gap); const fam=family(it.n); const recent=recentFamilies(); const yday=recent.y.has(fam), week=recent.w.get(fam)||0, ever=recent.ever.has(it.id);
@@ -1526,7 +1704,7 @@ function renderSheet(){
   document.getElementById('search').style.display = sheet.cat==='custom' ? 'none' : 'block';
   if(sheet.cat==='custom'){ renderCustomForm(); return; }
   const foodSearch=(q)=>{ const words=q.split(/\s+/).filter(Boolean); const esc=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); return Object.values(F).filter(x=>x.cat!=='gym'&&!x.hidden).map(x=>{ const name=x.n.toLowerCase(), al=(ALIAS[x.id]||'').toLowerCase(); let sc=0; for(const w of words){ const ww=new RegExp('(^|[^a-z])'+esc(w)+'([^a-z]|$)'); if(ww.test(name)) sc+=8; else if(name.split(/[\s,/()+·-]+/).some(t=>t.startsWith(w))) sc+=5; else if(ww.test(al)) sc+=4; else if(al.split(/\s+/).some(t=>t.startsWith(w))) sc+=3; else if((name+' '+al).includes(w)) sc+=1; else return null; } return {x,sc}; }).filter(Boolean).sort((a,b)=>b.sc-a.sc||(REC.has(b.x.id)?1:0)-(REC.has(a.x.id)?1:0)||a.x.n.length-b.x.n.length).map(o=>o.x); };
-  let list = q ? foodSearch(q) : (sheet.cat==='all' ? Object.values(F).filter(x=>x.cat!=='gym'&&!x.hidden) : sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]).filter(x=>!x.hidden));
+  let list = q ? foodSearch(q) : (sheet.cat==='all' ? Object.values(F).filter(x=>x.cat!=='gym'&&!x.hidden&&cuOk(x)) : sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]).filter(x=>!x.hidden&&cuOk(x)));
   const hiddenN=list.filter(it=>!allowed(it)).length; if(!sheet.showAll) list=list.filter(it=>allowed(it));   // v15.7 fix: filter(allowed) passed the array index as the day
   if(cur) list.sort((a,b)=>Math.abs(a.p-cur.p)-Math.abs(b.p-cur.p));
   if(!q) list.sort((a,b)=>(REC.has(b.id)?1:0)-(REC.has(a.id)?1:0));
@@ -1719,14 +1897,59 @@ function openReset(token,invite){ CLOUD.resetToken=token; document.getElementByI
 document.getElementById('keyToSignup').onclick=()=>authMode('signup'); document.getElementById('keyToLogin').onclick=()=>authMode('login'); document.getElementById('keyToForgot').onclick=()=>authMode('forgot');
 document.getElementById('keyGo').onclick=async()=>{ const m=document.getElementById('ovKey').dataset.mode||'login'; const msg=document.getElementById('keyMsg'); const v=(id)=>document.getElementById(id).value.trim(); const email=v('keyEmail').toLowerCase(), pw=document.getElementById('keyIn').value, pw2=document.getElementById('keyIn2').value;
   const fail=(e)=>{ msg.textContent= e.message==='locked' ? 'Too many wrong attempts. Wait 15 minutes.' : e.msg || (e.message==='auth' ? 'Wrong e-mail or password.' : 'Cannot reach the server.'); };
-  const finish=(j)=>{ CLOUD.key=j.token; try{ localStorage.setItem('kl-token',j.token); }catch(e){} applyMe(j); document.getElementById('keyIn').value=''; document.getElementById('keyIn2').value=''; document.getElementById('ovKey').classList.remove('show'); CLOUD.on=true; cloudPull(); };
+  const finish=(j)=>{ CLOUD.key=j.token; try{ localStorage.setItem('kl-token',j.token); }catch(e){} document.getElementById('keyIn').value=''; document.getElementById('keyIn2').value=''; document.getElementById('ovKey').classList.remove('show'); applyMe(j); CLOUD.on=true; cloudPull(); };
   try{
     if(m==='login'){ if(!email||!pw){ msg.textContent='Enter your e-mail and password.'; return; } msg.textContent='Signing in…'; finish(await signIn(email,pw)); }
-    else if(m==='signup'){ const name=v('keyName'); if(!name||!email||!pw){ msg.textContent='Name, e-mail and password are required.'; return; } if(pw.length<10){ msg.textContent='Password must be at least 10 characters.'; return; } if(pw!==pw2){ msg.textContent='Passwords do not match.'; return; } msg.textContent='Creating…'; const j=await api('signup',null,{name,email,password:pw,household:v('keyHh')}); finish(j); setTimeout(()=>toast(j.mail?'Check your e-mail to confirm the address':'Account created'),600); }
+    else if(m==='signup'){ const name=v('keyName'); if(!name||!email||!pw){ msg.textContent='Name, e-mail and password are required.'; return; } if(!document.getElementById('keyAdultCb').checked){ msg.textContent='This app is for adults. Tick the box to confirm you are 18 or older.'; return; } if(pw.length<10){ msg.textContent='Password must be at least 10 characters.'; return; } if(pw!==pw2){ msg.textContent='Passwords do not match.'; return; } msg.textContent='Creating…'; const j=await api('signup',null,{name,email,password:pw,household:v('keyHh')}); finish(j); setTimeout(()=>toast(j.mail?'Check your e-mail to confirm the address':'Account created'),600); }
     else if(m==='forgot'){ if(!email){ msg.textContent='Enter your e-mail.'; return; } msg.textContent='Sending…'; await api('forgot',null,{email}); msg.textContent='If that address has an account, a reset link is on its way. Check spam too.'; }
     else if(m==='reset'){ if(pw.length<10){ msg.textContent='Password must be at least 10 characters.'; return; } if(pw!==pw2){ msg.textContent='Passwords do not match.'; return; } msg.textContent='Saving…'; const j=await api('reset',null,{token:CLOUD.resetToken,password:pw}); CLOUD.resetToken=''; finish(j); setTimeout(()=>toast('Password saved'),600); }
   }catch(e){ fail(e); } };
 document.getElementById('keySkip').onclick=()=>{ if(!confirm('Use this device only? Nothing syncs until you sign in.')) return; document.getElementById('ovKey').classList.remove('show'); setStatus('This device only','warn'); };
+
+// ---- v16.1 onboarding: five short steps, then targets. Runs for a member on first sign-in and from Profiles at any time. ----
+const ONB={step:0, d:null, who:null};
+const ONB_STEPS=['About you','Your goal','How you eat','Cuisines','Your targets'];
+function onbOpen(who){ const k=String(who||CLOUD.me.id); const P=PEOPLE[k]; if(!P) return; ONB.who=k; ONB.step=0;
+  ONB.d={name:P.name, sex:P.sex||'x', age:P.age||'', height:P.height||'', kg:P.kg||'', goal:P.goal||'', goalType:P.goalType||'lose', pace:P.pace||0.5, activity:P.activity||'light', diet:P.diet||(S.people[k]&&S.people[k].allVeg?'veg':'nonveg'), vegDays:(S.people[k]&&S.people[k].vegDays)||P.vegDays||[], avoid:P.avoid||[], cuisines:P.cuisines||['in','ca'], t:null, notesTitle:P.notesTitle||'', notes:P.notesList||[], steps:P.steps};
+  document.getElementById('ovOnb').classList.add('show'); onbRender(); }
+function onbRender(){ const d=ONB.d, st=ONB.step, b=document.getElementById('onbBody'); document.getElementById('onbTitle').textContent=ONB_STEPS[st]; document.getElementById('onbStep').textContent=(st+1)+' of 5'; document.getElementById('onbMsg').textContent=''; document.getElementById('onbBack').textContent=st?'Back':'Later'; document.getElementById('onbNext').textContent=st===4?'Finish':'Next';
+  const fld=(id,label,unit,val,attrs='')=>`<div class="fld"><span>${label}</span><div><input id="${id}" type="number" inputmode="decimal" ${attrs} value="${val===''||val==null?'':val}"><small>${unit}</small></div></div>`;
+  const cards=(key,opts,one)=>`<div class="opts${one?' one':''}">${opts.map(([v,t,sub])=>`<button type="button" class="opt-card${d[key]===v?' on':''}" data-k="${key}" data-v="${v}"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</button>`).join('')}</div>`;
+  const multi=(key,opts)=>`<div class="opts">${opts.map(([v,t,sub])=>`<button type="button" class="opt-card${d[key].includes(v)?' on':''}" data-mk="${key}" data-v="${v}"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</button>`).join('')}</div>`;
+  if(st===0){ b.innerHTML=`<div class="onb-q">Used only to work out your calorie and protein targets. Everything can be changed later in Profiles.</div>
+    <div class="grp" style="margin-bottom:14px"><div class="fld"><span>Name</span><input id="onbName" type="text" maxlength="40" value="${esc(d.name)}" style="width:160px"></div>${fld('onbAge','Age','years',d.age,'min="18" max="110"')}${fld('onbH','Height','cm',d.height,'min="100" max="250"')}${fld('onbW','Weight now','kg',d.kg,'min="20" max="300" step="0.1"')}${fld('onbG','Goal weight','kg',d.goal,'min="20" max="300" step="0.1"')}</div>
+    <div class="onb-q">Body type for the formula</div>${cards('sex',[['f','Female'],['m','Male'],['x','Prefer not to say','uses an average']])}`; }
+  if(st===1){ b.innerHTML=`<div class="onb-q">What are you here for?</div>${cards('goalType',[['lose','Lose fat'],['maintain','Stay here'],['gain','Build muscle']])}
+    ${d.goalType==='maintain'?'':`<div class="onb-q">${d.goalType==='gain'?'How fast':'How fast (slower keeps more muscle)'}</div>${cards('pace',[[0.25,'Gentle','0.25 kg a week'],[0.5,'Standard','0.5 kg a week'],[0.75,'Faster','0.75 kg a week']])}`}
+    <div class="onb-q">A normal day for you</div>${cards('activity',[['desk','Desk job','little walking'],['light','Lightly active','walks, 2 to 3 workouts'],['active','Active','on your feet or 4 to 5 workouts'],['athlete','Very active','physical job or daily training']])}`; }
+  if(st===2){ const DN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; b.innerHTML=`<div class="onb-q">Suggestions and the food list follow this.</div>${cards('diet',[['nonveg','Non-veg','chicken, eggs, fish'],['veg','Vegetarian','no meat, no eggs'],['eggs','Veg + eggs','eggs on veg days too']])}
+    ${d.diet==='veg'?'':`<div class="onb-q">Vegetarian days (tap to toggle)</div><div class="daychips">${DN.map((n,i)=>`<button type="button" data-day="${i}" class="${d.vegDays.includes(i)?'on':''}">${n}</button>`).join('')}</div>`}
+    <div class="onb-q">Never show me</div>${multi('avoid',[['beef','Beef'],['pork','Pork'],['seafood','Seafood'],['dairy','Dairy'],['nuts','Nuts'],['gluten','Gluten']])}`; }
+  if(st===3){ b.innerHTML=`<div class="onb-q">Pick one or both. The first one you pick leads the suggestions; the food list shows the rest too.</div>${multi('cuisines',[['in','Indian','South and North Indian home food'],['ca','Canadian and American','home cooking, grocery and chain items']])}`; }
+  if(st===4){ const t=d.t=computeTargets(d); b.innerHTML=`<div class="onb-q">${d.goalType==='lose'?`About ${Math.round((t.maint-t.kcal)/7700*7*100)/100} kg a week at this intake.`:d.goalType==='gain'?'A small surplus so most of the gain is muscle.':'Calories to hold your weight.'} Maintenance is about ${t.maint} kcal. Adjust anything you like.</div>
+    <div class="grp">${fld('onbKcal','Calories a day','kcal',t.kcal)}${fld('onbProt','Protein a day','g',t.protein)}${fld('onbCarb','Carbs max','g',t.carbMax)}${fld('onbFat','Fat max','g',t.fatMax)}${fld('onbSteps','Steps a day','',t.steps)}</div>`; }
+  b.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{ onbRead(); const v=el.dataset.v; d[el.dataset.k]=isNaN(+v)||el.dataset.k==='sex'||el.dataset.k==='diet'||el.dataset.k==='goalType'||el.dataset.k==='activity'?v:+v; onbRender(); });
+  b.querySelectorAll('[data-mk]').forEach(el=>el.onclick=()=>{ const k=el.dataset.mk, v=el.dataset.v; const i=d[k].indexOf(v); if(i>=0) d[k].splice(i,1); else d[k].push(v); onbRender(); });
+  b.querySelectorAll('[data-day]').forEach(el=>el.onclick=()=>{ const i=+el.dataset.day; const j=d.vegDays.indexOf(i); if(j>=0) d.vegDays.splice(j,1); else d.vegDays.push(i); onbRender(); }); }
+function onbRead(){ const d=ONB.d; const g=(id)=>{ const el=document.getElementById(id); return el?el.value.trim():null; }; const n=(id)=>{ const v=g(id); return v===null||v===''?'':+v; };
+  if(ONB.step===0){ d.name=g('onbName')||d.name; d.age=n('onbAge'); d.height=n('onbH'); d.kg=n('onbW'); d.goal=n('onbG'); }
+  if(ONB.step===4&&d.t){ d.t.kcal=n('onbKcal')||d.t.kcal; d.t.protein=n('onbProt')||d.t.protein; d.t.carbMax=n('onbCarb')||d.t.carbMax; d.t.fatMax=n('onbFat')||d.t.fatMax; d.t.steps=n('onbSteps')||d.t.steps; } }
+function onbValid(){ const d=ONB.d, msg=document.getElementById('onbMsg');
+  if(ONB.step===0){ if(!d.name){ msg.textContent='Name is required.'; return false; } if(!(d.age>=18&&d.age<=110)){ msg.textContent='This app is for adults: age must be 18 or over.'; return false; } if(!(d.height>=100&&d.height<=250)){ msg.textContent='Height in cm, 100 to 250.'; return false; } if(!(d.kg>=20&&d.kg<=300)){ msg.textContent='Weight in kg.'; return false; } if(!(d.goal>=20&&d.goal<=300)) d.goal=d.kg; }
+  if(ONB.step===3&&!d.cuisines.length){ msg.textContent='Pick at least one cuisine.'; return false; }
+  if(ONB.step===4){ const t=d.t; if(!(t.kcal>=800&&t.kcal<=6000)||!(t.protein>=30&&t.protein<=400)){ msg.textContent='Calories 800 to 6000 and protein 30 to 400.'; return false; } }
+  return true; }
+document.getElementById('onbBack').onclick=async()=>{ if(ONB.step===0){ document.getElementById('ovOnb').classList.remove('show'); const P=PEOPLE[ONB.who]; if(P&&!P.onboarded){ try{ applyMe(await api('profile_put',ONB.who,{profile:Object.assign(profOf(ONB.who),{onboarded:1,cuisines:P.cuisines,avoid:P.avoid,vegDays:P.vegDays||[]})})); }catch(e){} } return; } onbRead(); ONB.step--; onbRender(); };
+document.getElementById('onbNext').onclick=async()=>{ onbRead(); if(!onbValid()) return; if(ONB.step<4){ ONB.step++; onbRender(); return; }
+  const d=ONB.d, t=d.t, msg=document.getElementById('onbMsg'); msg.textContent='Saving…';
+  const prof={name:d.name, sex:d.sex, age:d.age, height:d.height, kg:d.kg, goal:d.goal, goalType:d.goalType, pace:d.goalType==='maintain'?0:d.pace, activity:d.activity, diet:d.diet, vegDays:d.diet==='veg'?[]:d.vegDays.slice().sort(), avoid:d.avoid, cuisines:d.cuisines, onboarded:1, kcal:t.kcal, protein:t.protein, floor:t.floor, maint:t.maint, pMin:t.pMin, carbMax:t.carbMax, fatMax:t.fatMax, steps:t.steps, restCut:t.restCut};
+  if(d.notesTitle) prof.notesTitle=d.notesTitle; if(d.notes.length) prof.notes=d.notes;
+  const cur=PEOPLE[ONB.who]; if(cur&&cur.meals&&cur.mealsCustom) prof.meals=cur.meals;
+  try{ const j=await api('profile_put',ONB.who,{profile:prof}); applyMe(j);
+    const prev=S.who; S.who=ONB.who; const ps=PS(); ps.allVeg=d.diet==='veg'; ps.allNonVeg=false; ps.eggsVeg=d.diet==='eggs'; ps.vegDays=prof.vegDays.slice(); ps.seafood=!d.avoid.includes('seafood'); save(); S.who=prev;
+    document.getElementById('ovOnb').classList.remove('show'); document.getElementById('ovProf').classList.remove('show'); render(); toast('Targets set'); }
+  catch(e){ msg.textContent=e.msg||(e.message==='auth'?'Sign in again.':'Could not reach the server.'); } };
+document.getElementById('pfOnb').onclick=()=>{ if(!CLOUD.me) return; onbOpen(CLOUD.me.id); };
 // ---- household sheet: members, invites, removal, name ----
 async function hhRender(){ const w=document.getElementById('hhList'); const me=CLOUD.me; const owner=me&&me.role==='owner'; const ids=memberIds();
   document.getElementById('hhName').value=CLOUD.household?CLOUD.household.name:''; document.getElementById('hhName').disabled=!owner; document.getElementById('hhNameSave').hidden=!owner; document.getElementById('hhInvite').hidden=!owner; document.getElementById('hhFoot').textContent=owner?'As the owner you can add up to 8 people, edit their profiles and see their logs. Members see the household but only edit their own data.':'Only the household owner can add or remove people.';

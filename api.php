@@ -197,13 +197,18 @@ $canWrite = $isOwner || (int)$target['id'] === (int)$user['id'];
 function defaultProfile(): array { return ['kcal' => 1900, 'protein' => 150, 'floor' => 1700, 'fatMax' => 75, 'carbMax' => 230, 'maint' => 2500, 'pMin' => 130, 'kg' => 80, 'goal' => 75, 'steps' => 8000, 'restCut' => 100]; }
 function validateProfile($p): ?string {
   if (!is_array($p)) return 'profile must be an object';
-  $num = ['kcal' => [800, 6000], 'protein' => [30, 400], 'floor' => [600, 6000], 'fatMax' => [10, 300], 'carbMax' => [20, 800], 'maint' => [1000, 7000], 'pMin' => [20, 400], 'kg' => [20, 300], 'goal' => [20, 300], 'steps' => [0, 50000], 'restCut' => [0, 500]];
+  $num = ['kcal' => [800, 6000], 'protein' => [30, 400], 'floor' => [600, 6000], 'fatMax' => [10, 300], 'carbMax' => [20, 800], 'maint' => [1000, 7000], 'pMin' => [20, 400], 'kg' => [20, 300], 'goal' => [20, 300], 'steps' => [0, 50000], 'restCut' => [0, 500], 'age' => [18, 110], 'height' => [100, 250], 'pace' => [0, 1], 'onboarded' => [0, 1]];
   foreach ($p as $f => $v) {
     if ($f === 'name') { if (!is_string($v) || trim($v) === '' || mb_strlen($v) > 40) return 'bad name'; continue; }
     if ($f === 'notesTitle') { if (!is_string($v) || mb_strlen($v) > 60) return 'bad notes title'; continue; }
     if ($f === 'notes') { if (!is_array($v) || count($v) > 12) return 'too many notes'; foreach ($v as $n) { if (!is_string($n) || mb_strlen($n) > 200) return 'bad note'; } continue; }
     if ($f === 'vegDays') { if (!is_array($v) || count($v) > 7) return 'bad veg days'; foreach ($v as $d) { if (!is_int($d) || $d < 0 || $d > 6) return 'bad veg day'; } continue; }
     if ($f === 'sex') { if (!in_array($v, ['m', 'f', 'x'], true)) return 'bad sex'; continue; }
+    if ($f === 'activity') { if (!in_array($v, ['desk', 'light', 'active', 'athlete'], true)) return 'bad activity'; continue; }
+    if ($f === 'goalType') { if (!in_array($v, ['lose', 'maintain', 'gain'], true)) return 'bad goal'; continue; }
+    if ($f === 'diet') { if (!in_array($v, ['veg', 'nonveg', 'eggs'], true)) return 'bad diet'; continue; }
+    if ($f === 'cuisines') { if (!is_array($v) || count($v) > 6) return 'bad cuisines'; foreach ($v as $c) { if (!in_array($c, ['in', 'ca'], true)) return 'bad cuisine'; } continue; }
+    if ($f === 'avoid') { if (!is_array($v) || count($v) > 8) return 'bad avoid'; foreach ($v as $c) { if (!in_array($c, ['beef', 'pork', 'seafood', 'eggs', 'dairy', 'nuts', 'gluten'], true)) return 'bad avoid item'; } continue; }
     if ($f === 'meals') { if (!is_array($v) || count($v) > 12) return 'bad meals'; foreach ($v as $m) { if (!is_array($m) || !isset($m['name'], $m['time']) || !is_string($m['name']) || mb_strlen($m['name']) > 40 || !is_string($m['time']) || mb_strlen($m['time']) > 30) return 'bad meal'; foreach (['nv', 'v', 'vNoEgg'] as $l) { if (isset($m[$l])) { if (!is_array($m[$l]) || count($m[$l]) > 20) return 'bad meal list'; foreach ($m[$l] as $it) { $id = is_array($it) ? ($it[0] ?? '') : $it; if (!is_string($id) || !preg_match('/^[a-z0-9_]{1,40}$/', $id)) return 'bad meal item'; } } } } continue; }
     if (in_array($f, ['id', 'role', 'verified', 'email', 'hasPassword'], true)) continue;   // read-only echoes from the app
     if (isset($num[$f])) { if (!is_numeric($v) || $v < $num[$f][0] || $v > $num[$f][1]) return "$f out of range"; continue; }
@@ -221,7 +226,7 @@ if ($a === 'profile_put') {
     if ($f === 'notes') { $clean[$f] = array_values(array_map(fn($n) => trim(strip_tags($n)), $v)); }
     elseif ($f === 'meals') { $clean[$f] = array_values(array_map(fn($m) => ['name' => trim(strip_tags($m['name'])), 'time' => trim(strip_tags($m['time'])), 'nv' => array_values($m['nv'] ?? []), 'v' => array_values($m['v'] ?? []), 'vNoEgg' => array_values($m['vNoEgg'] ?? [])], $v)); }
     elseif (is_string($v)) { $clean[$f] = trim(strip_tags($v)); }
-    elseif ($f === 'vegDays') { $clean[$f] = array_values($v); }
+    elseif ($f === 'vegDays' || $f === 'cuisines' || $f === 'avoid') { $clean[$f] = array_values(array_unique($v)); }
     else { $clean[$f] = +$v; }
   }
   if ($name === '') fail(422, 'rejected', 'name required');

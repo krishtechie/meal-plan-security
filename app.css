@@ -895,3 +895,22 @@ html[data-theme=dark] #toast,html:not([data-theme=light]) #toast{background:rgba
 body.ro #meals button,body.ro #meals .sugg,body.ro #checkin,body.ro #wtForm,body.ro #daySwitch,body.ro #copyDay,body.ro #warn [data-fix]{pointer-events:none;opacity:.55}
 .hhlink{width:100%;box-sizing:border-box;font:inherit;font-size:13px;margin:8px 0 6px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text)}
 #hhMsg .btn.q{margin-right:8px;color:var(--acc)}
+/* v16.1: onboarding */
+.chk{display:flex;align-items:center;gap:10px;font-size:15px;margin:2px 0 12px;color:var(--text)}
+.chk input{width:20px;height:20px;accent-color:var(--acc)}
+.onbnav{display:flex;gap:10px;margin:18px 0 6px}
+.onbnav .btn{flex:1;font-size:17px;padding:13px}
+.onbnav .btn.q{color:var(--acc)}
+.onb-q{font-size:15px;color:var(--muted);line-height:1.45;margin:4px 0 14px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.opts.one{grid-template-columns:1fr}
+.opt-card{border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;background:var(--grp);text-align:left;font:inherit;color:var(--text);cursor:pointer}
+.opt-card b{display:block;font-size:16px}.opt-card span{font-size:13px;color:var(--muted)}
+.opt-card.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--grp))}
+.fld{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:52px;padding:0 16px;background:var(--grp);border-bottom:1px solid var(--line)}
+.fld:first-child{border-radius:16px 16px 0 0}.fld:last-child{border-bottom:0;border-radius:0 0 16px 16px}.fld:only-child{border-radius:16px}
+.fld span{font-size:16px}.fld input{width:110px;text-align:right;font:inherit;font-size:17px;border:0;background:transparent;color:var(--text);outline:none}
+.fld small{color:var(--muted);font-size:14px;margin-left:4px}
+.daychips{display:flex;gap:6px;margin:4px 0 14px}.daychips button{flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--line);background:var(--grp);font:inherit;font-size:13px;font-weight:600;color:var(--text)}.daychips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#pfOnb{width:100%;margin-bottom:8px;color:var(--acc)}

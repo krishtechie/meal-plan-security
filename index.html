@@ -32,7 +32,7 @@
 <link rel="apple-touch-startup-image" href="splash/750x1334-light.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: light)">
 <link rel="apple-touch-startup-image" href="splash/750x1334-dark.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="stylesheet" href="app.css?v=64">
+<link rel="stylesheet" href="app.css?v=65">
 </head>
 <body>
 <div class="app">
@@ -110,10 +110,20 @@
     <input class="search" id="keyIn" type="password" placeholder="Password" autocomplete="current-password" data-m="login signup reset" data-s="s13">
     <input class="search" id="keyIn2" type="password" placeholder="Repeat password" autocomplete="new-password" data-m="signup reset" hidden>
     <input class="search" id="keyHh" type="text" placeholder="Household name (optional)" maxlength="40" data-m="signup" hidden>
+    <label class="chk" id="keyAdult" data-m="signup" hidden><input type="checkbox" id="keyAdultCb"> I am 18 or older</label>
     <div class="sub" id="keyMsg" data-s="s9"></div>
     <button class="btn pri" id="keyGo">Sign in</button>
     <div class="authlinks"><button class="btn q" id="keyToForgot" type="button">Forgot password?</button><button class="btn q" id="keyToSignup" type="button" hidden>Create account</button><button class="btn q" id="keyToLogin" type="button" hidden>Back to sign in</button></div>
     <button class="btn q" id="keySkip" hidden>Use this device only</button>
+  </div>
+</div>
+
+<div class="ov" id="ovOnb">
+  <div class="sheet ios">
+    <div class="shead"><span class="stitle" id="onbTitle">About you</span><span class="sdone" id="onbStep">1 of 5</span></div>
+    <div id="onbBody"></div>
+    <div class="onbnav"><button class="btn q" id="onbBack">Back</button><button class="btn pri" id="onbNext">Next</button></div>
+    <div class="gf" id="onbMsg"></div>
   </div>
 </div>
 
@@ -193,6 +203,7 @@
     <div class="shead"><button class="sdone plain" id="pfCancel">Cancel</button><span class="stitle">Profiles</span><button class="sdone" id="pfSave">Save</button></div>
     <div class="gf top">Targets drive the gauge, warnings and suggestions. Notes show on that person's Plan tab.</div>
     <div class="pfwrap" id="pfForm"></div>
+    <button class="btn q" id="pfOnb" type="button">Run setup again for me (recalculate targets)</button>
     <div class="gf" id="pfMsg"></div>
   </div>
 </div>
@@ -258,10 +269,10 @@
     <div class="gh">Activity</div>
     <div class="grp"><button class="row navr" id="openAudit"><div class="rl"><span class="rico c-orange"><svg viewBox="0 0 24 24"><path d="M8 6.5h11M8 12h11M8 17.5h11"/><circle cx="4.8" cy="6.5" r=".9"/><circle cx="4.8" cy="12" r=".9"/><circle cx="4.8" cy="17.5" r=".9"/></svg></span><span>View activity log</span></div><i class="chev"></i></button></div>
     <div class="gf">Every sign-in, sync and save on the server, with the result and which device it came from.</div>
-    <div class="ver" id="appVer">Meal Planner v16.0.2</div>
+    <div class="ver" id="appVer">Meal Planner v16.1</div>
   </div>
 </div>
 
-<script src="app.js?v=64" defer></script>
+<script src="app.js?v=65" defer></script>
 </body>
 </html>
