@@ -19,12 +19,12 @@ $who  = (int)($_GET['who'] ?? 0);
 $tok  = $_SERVER['HTTP_X_APP_TOKEN'] ?? '';
 $now  = time();
 $method = $_SERVER['REQUEST_METHOD'];
-$ACTIONS = ['ping','signup','login','logout','forgot','reset','verify','resend','sessions','revoke','get','put','rev','profile_put','household_put','invite','member_remove','audit','account_delete','codes','code_new','code_revoke','joincheck'];
+$ACTIONS = ['ping','signup','login','logout','forgot','reset','verify','resend','sessions','revoke','get','put','rev','profile_put','household_put','invite','member_remove','audit','account_delete','codes','code_new','code_revoke','joincheck','photo','photo_put','photo_del','account_put','email_change','password_change','logout_all','security','households'];
 $ADMINS = defined('ADMIN_EMAILS') && is_array(ADMIN_EMAILS) ? array_map('strtolower', ADMIN_EMAILS) : [];   // app admins: hand out sign-up invites, set in config.php only
 if (!in_array($a, $ACTIONS, true)) { $a = 'unknown'; }
 if (!preg_match('/^[a-f0-9]{64}$/', $tok)) { $tok = ''; }
 $body = [];
-if ($method === 'POST') { $raw = file_get_contents('php://input'); if (strlen($raw) > 1000000) { http_response_code(413); echo json_encode(['ok' => false, 'error' => 'too large']); exit; } $body = json_decode($raw, true, 12); if (!is_array($body)) $body = []; }
+if ($method === 'POST') { $raw = file_get_contents('php://input'); if ($a === 'photo_put') { $rawBin = $raw; $raw = '{}'; } if (strlen($raw) > 1000000) { http_response_code(413); echo json_encode(['ok' => false, 'error' => 'too large']); exit; } $body = json_decode($raw, true, 12); if (!is_array($body)) $body = []; }
 $user = null;   // the signed-in user row
 
 // Fix 4: audit log. One JSON line per request. Never logs passwords, tokens or data.
@@ -53,7 +53,7 @@ $sess = null;
 if ($tok !== '') {
   $sess = row('SELECT s.*, u.household_id FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?', [hash('sha256', $tok)]);
   if (!$sess) { bump($ipKey); }
-  else { $user = row('SELECT * FROM users WHERE id=?', [$sess['user_id']]); if ($now - (int)$sess['last'] > 3600) { q('UPDATE sessions SET last=?, ip=? WHERE id=?', [$now, $ip, $sess['id']]); } }
+  else { $user = row('SELECT * FROM users WHERE id=?', [$sess['user_id']]); if ($now - (int)$sess['last'] > 3600) { q('UPDATE sessions SET last=?, ip=? WHERE id=?', [$now, $ip, $sess['id']]); q('UPDATE users SET last_seen=? WHERE id=?', [$now, $user['id']]); } }
 }
 function newSession(int $uid): array { global $now, $ip, $ua; $t = bin2hex(random_bytes(32)); $id = substr(bin2hex(random_bytes(4)), 0, 8);
   q('INSERT INTO sessions(id,user_id,token_hash,created,last,ip,ua) VALUES(?,?,?,?,?,?,?)', [$id, $uid, hash('sha256', $t), $now, $now, $ip, $ua]);
@@ -127,7 +127,10 @@ if ($a === 'reset') {   // also completes an invite: the token sets the first pa
 if ($a === 'verify') {   // the app posts the token from the e-mail link
   $t = (string)($body['token'] ?? $_GET['t'] ?? ''); $r = useToken($t, ['verify']);
   if (!$r) { bump($ipKey); fail(400, 'bad_token', 'This confirmation link is no longer valid. Tap Resend confirmation in Settings.'); }
-  q('UPDATE users SET verified=1 WHERE id=?', [$r['user_id']]); burnToken($t); audit('ok');
+  $tu = row('SELECT * FROM users WHERE id=?', [$r['user_id']]);
+  if ($r['kind'] === 'verify' && $tu && $tu['pending_email']) { if (row('SELECT id FROM users WHERE email=? AND id<>?', [$tu['pending_email'], $tu['id']])) { burnToken($t); fail(409, 'exists', 'That e-mail now belongs to another account.'); } q('UPDATE users SET email=?, pending_email=NULL, verified=1 WHERE id=?', [$tu['pending_email'], $tu['id']]); }
+  else { q('UPDATE users SET verified=1 WHERE id=?', [$r['user_id']]); }
+  burnToken($t); audit('ok');
   if ($user && (int)$user['id'] === (int)$r['user_id']) { $user = row('SELECT * FROM users WHERE id=?', [$user['id']]); ok(meOut($user)); }
   ok();
 }
@@ -135,9 +138,63 @@ if ($a === 'verify') {   // the app posts the token from the e-mail link
 // ---- everything below needs a session ----
 if (!$user) { fail(401, $tok === '' ? 'no_key' : 'bad_token', 'not signed in'); }
 if ($a === 'unknown') { fail(404, 'unknown_action', 'unknown action'); }
-$hhId = (int)$user['household_id']; $isOwner = $user['role'] === 'owner';
+$hhId = (int)$user['household_id']; $isOwner = $user['role'] === 'owner'; $isAdmin = in_array(strtolower($user['email']), $ADMINS, true);
 if ($a === 'logout') { q('DELETE FROM sessions WHERE id=?', [$sess['id']]); audit('ok', ['sid' => $sess['id']]); ok(); }
 if ($a === 'resend') { if ((int)$user['verified']) ok(['sent' => false]); bump($ipKey); $t = makeToken((int)$user['id'], 'verify', 86400); $sent = mailVerify($user['email'], $user['name'], $t); audit('ok'); ok(['sent' => $sent]); }
+if ($a === 'account_put') { needPost(); $name = cleanName($body['name'] ?? ''); if ($name === '') fail(422, 'rejected', 'Enter your name.'); q('UPDATE users SET name=? WHERE id=?', [$name, $user['id']]); audit('ok'); ok(meOut(row('SELECT * FROM users WHERE id=?', [$user['id']]))); }
+if ($a === 'email_change') {
+  needPost(); $pw = (string)($body['password'] ?? '');
+  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(401, 'bad_password', 'Wrong password.'); }
+  if ($emailIn === '') fail(422, 'rejected', 'Enter a valid e-mail address.');
+  if ($emailIn === strtolower($user['email'])) fail(422, 'rejected', 'That is already your e-mail.');
+  if (row('SELECT id FROM users WHERE email=? OR pending_email=?', [$emailIn, $emailIn])) fail(409, 'exists', 'That e-mail is already in use.');
+  q('UPDATE users SET pending_email=? WHERE id=?', [$emailIn, $user['id']]);
+  $t = makeToken((int)$user['id'], 'verify', 86400); $sent = mailVerify($emailIn, $user['name'], $t);
+  audit('ok', ['mail' => $sent ? 'sent' : 'failed']); ok(['sent' => $sent] + meOut(row('SELECT * FROM users WHERE id=?', [$user['id']])));
+}
+if ($a === 'password_change') {
+  needPost(); $pw = (string)($body['password'] ?? ''); $new = (string)($body['newPassword'] ?? '');
+  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(401, 'bad_password', 'Wrong current password.'); }
+  if ($e = validPassword($new)) fail(422, 'rejected', $e);
+  q('UPDATE users SET pass_hash=? WHERE id=?', [password_hash($new, PASSWORD_BCRYPT), $user['id']]);
+  q('DELETE FROM sessions WHERE user_id=? AND id<>?', [$user['id'], $sess['id']]);   // every other device signs in again
+  audit('ok'); ok();
+}
+if ($a === 'logout_all') { needPost(); $n = q('DELETE FROM sessions WHERE user_id=? AND id<>?', [$user['id'], $sess['id']])->rowCount(); audit('ok', ['removed' => $n]); ok(['removed' => $n]); }
+if ($a === 'photo') {   // GET ?who=: a member's photo, household only
+  $t2 = $who ? row('SELECT photo, photo_v FROM users WHERE id=? AND household_id=?', [$who, $hhId]) : null;
+  if (!$t2 || !$t2['photo']) { http_response_code(404); header('Content-Type: text/plain'); echo 'no photo'; exit; }
+  header('Content-Type: image/jpeg'); header('Cache-Control: private, max-age=86400'); header('X-Content-Type-Options: nosniff'); echo $t2['photo']; exit;
+}
+if ($a === 'photo_put' || $a === 'photo_del') {
+  needPost(); $tgt = $who ? row('SELECT * FROM users WHERE id=? AND household_id=?', [$who, $hhId]) : $user; if (!$tgt) fail(400, 'bad_request', 'who must be a member of your household');
+  if (!$isOwner && (int)$tgt['id'] !== (int)$user['id']) fail(403, 'forbidden', 'You can only change your own photo.');
+  if ($a === 'photo_del') { q('UPDATE users SET photo=NULL, photo_v=photo_v+1 WHERE id=?', [$tgt['id']]); audit('ok'); ok(meOut(row('SELECT * FROM users WHERE id=?', [$user['id']]))); }
+  $bin = $rawBin ?? ''; $len = strlen($bin);
+  if ($len < 200 || $len > 300000) fail(422, 'rejected', 'Photo must be a JPEG under 300 KB.');
+  if (substr($bin, 0, 3) !== "\xFF\xD8\xFF") fail(422, 'rejected', 'Photo must be a JPEG.');
+  $info = @getimagesizefromstring($bin); if (!$info || $info[2] !== IMAGETYPE_JPEG || $info[0] > 1024 || $info[1] > 1024) fail(422, 'rejected', 'Photo must be a JPEG up to 1024 px.');
+  $st = db()->prepare('UPDATE users SET photo=?, photo_v=photo_v+1 WHERE id=?'); $st->bindValue(1, $bin, PDO::PARAM_LOB); $st->bindValue(2, $tgt['id'], PDO::PARAM_INT); $st->execute();
+  audit('ok', ['bytes' => $len]); ok(meOut(row('SELECT * FROM users WHERE id=?', [$user['id']])));
+}
+if ($a === 'security' || $a === 'households') {
+  if (!$isAdmin) fail(403, 'forbidden', 'Admin only.');
+  if ($a === 'households') {
+    $list = []; foreach (rows('SELECT h.id, h.name, h.created, (SELECT COUNT(*) FROM users u WHERE u.household_id=h.id) AS n, (SELECT MAX(last_seen) FROM users u WHERE u.household_id=h.id) AS seen, (SELECT email FROM users u WHERE u.household_id=h.id AND u.role="owner" LIMIT 1) AS owner FROM households h ORDER BY h.created DESC LIMIT 200') as $h) { $list[] = ['id' => (int)$h['id'], 'name' => $h['name'], 'members' => (int)$h['n'], 'created' => (int)$h['created'], 'seen' => (int)$h['seen'], 'owner' => $h['owner']]; }
+    audit('ok'); ok(['households' => $list, 'sessions' => (int)row('SELECT COUNT(*) c FROM sessions')['c']]);
+  }
+  // Security: counts and suspicious events from the audit log (never food data or passwords). Scans the last 2 MB.
+  $lf = DATA_DIR . '/audit.log'; $events = []; $day = $now - 86400; $week = $now - 7 * 86400;
+  $c = ['bad_password' => [0, 0], 'locked' => [0, 0], 'bad_token' => [0, 0], 'bad_code' => [0, 0], 'signup' => [0, 0], 'rejected' => [0, 0]]; $byIp = [];
+  if (file_exists($lf)) { $size = filesize($lf); $fh = fopen($lf, 'r'); if ($size > 2000000) { fseek($fh, $size - 2000000); fgets($fh); }
+    while (($l = fgets($fh)) !== false) { $j = json_decode($l, true); if (!is_array($j) || empty($j['ts'])) continue; $ts = strtotime($j['ts']); if ($ts < $week) continue;
+      $o = $j['outcome'] ?? ''; $act = $j['action'] ?? ''; $key = $act === 'signup' && $o === 'ok' ? 'signup' : (isset($c[$o]) ? $o : '');
+      if ($key !== '') { $c[$key][1]++; if ($ts >= $day) $c[$key][0]++; }
+      if (in_array($o, ['bad_password', 'locked', 'bad_token', 'bad_code'], true)) { $ipk = $j['ip'] ?? '?'; $byIp[$ipk] = ($byIp[$ipk] ?? 0) + 1; if (count($events) < 400) $events[] = ['ts' => $j['ts'], 'ip' => $ipk, 'action' => $act, 'outcome' => $o, 'ua' => substr($j['ua'] ?? '', 0, 40)]; } }
+    fclose($fh); }
+  arsort($byIp); $events = array_slice(array_reverse($events), 0, 60);
+  audit('ok'); ok(['counts' => $c, 'topIps' => array_slice($byIp, 0, 10, true), 'events' => $events, 'sessions' => (int)row('SELECT COUNT(*) c FROM sessions')['c'], 'users' => (int)row('SELECT COUNT(*) c FROM users')['c'], 'households' => (int)row('SELECT COUNT(*) c FROM households')['c']]);
+}
 if ($a === 'sessions') {
   $list = []; foreach (rows('SELECT s.*, u.name FROM sessions s JOIN users u ON u.id=s.user_id WHERE u.household_id=? ORDER BY s.last DESC', [$hhId]) as $v) {
     if (!$isOwner && (int)$v['user_id'] !== (int)$user['id']) continue;   // members see their own devices, the owner sees the household's
@@ -154,7 +211,6 @@ if ($a === 'household_put') {
   $n = cleanName($body['name'] ?? ''); if ($n === '') fail(422, 'rejected', 'Enter a household name.');
   q('UPDATE households SET name=? WHERE id=?', [$n, $hhId]); audit('ok'); ok(meOut($user));
 }
-$isAdmin = in_array(strtolower($user['email']), $ADMINS, true);
 if ($a === 'codes' || $a === 'code_new' || $a === 'code_revoke') {
   if (!$isAdmin) fail(403, 'forbidden', 'Admin only.');
   if ($a === 'code_new') { needPost(); $note = cleanName($body['note'] ?? ''); $days = max(1, min(60, (int)($body['days'] ?? 14)));

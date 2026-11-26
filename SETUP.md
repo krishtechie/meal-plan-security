@@ -20,6 +20,7 @@ STEP 1 - deploy the files (see step 2), then open setup.php once
   Your account becomes the app admin (ADMIN_EMAILS in config.php) and
   hands out sign-up invite links from Settings -> App admin; each lets one
   person create their own separate household. Untick it for public sign-up.
+  If the admin later changes their sign-in e-mail, update ADMIN_EMAILS too.
 
 STEP 2 - deploy
   Option A, cPanel Git Version Control: clone this repo into a folder,
@@ -48,7 +49,15 @@ STEP 5 - add family
   Members edit only their own data; the owner can edit everyone's and
   remove people.
 
-STEP 6 - on each phone
+STEP 6 - account
+  Settings -> the card at the top: photo (shrunk to 256 px on the phone,
+  stored in the database, visible only to the household), name, e-mail
+  change with confirmation, password change, sign out of other devices.
+  Admins also get Settings -> App admin -> Security and households:
+  failed sign-ins, lockouts, bad tokens and invite links, sign-ups,
+  suspicious events by IP, and a households overview. Never food data.
+
+STEP 7 - on each phone
   iPhone: open the link in Safari -> Share -> Add to Home Screen.
   Android: open in Chrome -> menu -> Add to Home screen / Install app.
   Sign in once on each phone. Settings -> Signed-in devices lists them.

@@ -19,6 +19,9 @@ function db(): PDO {
     CREATE TABLE IF NOT EXISTS tokens (token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, kind TEXT NOT NULL, expires INTEGER NOT NULL, created INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS attempts (key TEXT PRIMARY KEY, n INTEGER NOT NULL, t INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS signup_codes (id TEXT PRIMARY KEY, code_hash TEXT NOT NULL UNIQUE, note TEXT NOT NULL DEFAULT "", created_by INTEGER NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL, used_by INTEGER, used_at INTEGER, used_hh TEXT, revoked INTEGER NOT NULL DEFAULT 0);');
+  // v16.3: columns added after the first release (SQLite has no IF NOT EXISTS for columns)
+  $cols = array_column($pdo->query('PRAGMA table_info(users)')->fetchAll(), 'name');
+  if (!in_array('photo', $cols, true)) { $pdo->exec('ALTER TABLE users ADD COLUMN photo BLOB'); $pdo->exec('ALTER TABLE users ADD COLUMN photo_v INTEGER NOT NULL DEFAULT 0'); $pdo->exec('ALTER TABLE users ADD COLUMN pending_email TEXT'); $pdo->exec('ALTER TABLE users ADD COLUMN last_seen INTEGER NOT NULL DEFAULT 0'); }
   return $pdo;
 }
 function dbReady(): bool { return file_exists(DATA_DIR . '/app.db'); }
@@ -27,7 +30,7 @@ function row(string $sql, array $args = []) { $r = q($sql, $args)->fetch(); retu
 function rows(string $sql, array $args = []): array { return q($sql, $args)->fetchAll(); }
 
 // Profile JSON stored per user: name lives in users.name; everything else (targets, veg days, notes, meals) in users.profile.
-function userProfile(array $u): array { $p = json_decode($u['profile'] ?? '{}', true); if (!is_array($p)) $p = []; $p['name'] = $u['name']; $p['id'] = (int)$u['id']; $p['role'] = $u['role']; $p['verified'] = (int)$u['verified']; $p['email'] = $u['email']; $p['hasPassword'] = $u['pass_hash'] !== ''; return $p; }
+function userProfile(array $u): array { $p = json_decode($u['profile'] ?? '{}', true); if (!is_array($p)) $p = []; $p['name'] = $u['name']; $p['id'] = (int)$u['id']; $p['role'] = $u['role']; $p['verified'] = (int)$u['verified']; $p['email'] = $u['email']; $p['hasPassword'] = $u['pass_hash'] !== ''; $p['photo'] = (int)($u['photo_v'] ?? 0); $p['pendingEmail'] = $u['pending_email'] ?? ''; return $p; }
 function members(int $hh): array { $out = []; foreach (rows('SELECT * FROM users WHERE household_id=? ORDER BY CASE role WHEN "owner" THEN 0 ELSE 1 END, created, id', [$hh]) as $u) { $out[] = userProfile($u); } return $out; }
 
 // One-time tokens for e-mail links (verify, reset, invite). Only the SHA-256 is stored.
