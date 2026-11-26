@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Privacy · Meal Planner</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f2f2f7;color:#1c1c1e;line-height:1.55}@media(prefers-color-scheme:dark){body{background:#000;color:#f2f2f7}main{background:#1c1c1e!important}a{color:#0a84ff}}main{max-width:620px;margin:0 auto;padding:28px 22px 48px;background:#fff}h1{font-size:28px;margin:0 0 6px}h2{font-size:18px;margin:26px 0 8px}p,li{font-size:16px}ul{padding-left:20px}a{color:#0a84ff;text-decoration:none}.back{display:inline-block;margin-bottom:18px;font-size:15px}.sm{color:#6e6e73;font-size:14px}</style></head>
+<body><main>
+<a class="back" href="./">‹ Meal Planner</a>
+<h1>Privacy</h1>
+<p class="sm">Last updated November 2026</p>
+<p>Meal Planner is a small, self-hosted app for logging meals, water, sleep and weight within a household. This page says exactly what it stores and what it does with it.</p>
+<h2>What is stored</h2>
+<ul>
+<li><b>Account</b>: your name, e-mail address and a bcrypt hash of your password. Never the password itself.</li>
+<li><b>Profile</b>: the things you enter in setup or Profiles: body type, age, height, current and goal weight, activity level, goal and pace, how you eat (veg, non-veg, eggs, veg days, foods to avoid), cuisines, and the calorie, protein, carb, fat and step targets computed from them.</li>
+<li><b>Logs</b>: the foods you add to each meal, portions, water, bedtime and wake time, weight entries, custom foods and saved meal templates.</li>
+<li><b>Sessions and activity</b>: a hash of each device's session token with its IP address and browser type, and an activity log of API requests (time, IP, action, result). Never food data or passwords.</li>
+</ul>
+<h2>Who can see it</h2>
+<ul>
+<li>You, and the other members of your household. The household owner can see and edit every member's logs and profile; members see the household but edit only their own.</li>
+<li>The person who runs this site has technical access to the server and database, as with any self-hosted service. They do not look at household data in normal operation and have no reason to.</li>
+<li>Nobody else. There are no ads, no analytics, no trackers and no data sales.</li>
+</ul>
+<h2>Where it lives</h2>
+<p>In one SQLite database file on the server that hosts this site, outside the web root, reachable only through the app's API over HTTPS. Hosting is on a shared cPanel host in Canada.</p>
+<h2>E-mail</h2>
+<p>Three kinds of e-mail only: confirm your address, reset your password, and household invites. They are sent through Brevo (Sendinblue), which sees the recipient address, subject and message body for delivery. No marketing mail, ever.</p>
+<h2>Your controls</h2>
+<ul>
+<li><b>Export</b>: Settings → Export gives you everything as a spreadsheet or CSV.</li>
+<li><b>Devices</b>: Settings → Signed-in devices lists every session and lets you end any of them.</li>
+<li><b>Delete</b>: Settings → Delete account removes your account and all your logs immediately. If you are the household owner it removes the whole household. There is no retention period.</li>
+</ul>
+<h2>Cookies and storage</h2>
+<p>No cookies. The app keeps your session token and a cache of your own data in your browser's local storage so it works offline; Sign out clears it.</p>
+<h2>Age</h2>
+<p>The app is for adults. Accounts require confirming you are 18 or older, and the target calculator refuses an age under 18.</p>
+<h2>Source</h2>
+<p>The code is public at <a href="https://github.com/krishtechie/meal-plan-security" rel="noopener">github.com/krishtechie/meal-plan-security</a>, including the security fixes made along the way.</p>
+</main></body></html>

@@ -19,7 +19,8 @@ $who  = (int)($_GET['who'] ?? 0);
 $tok  = $_SERVER['HTTP_X_APP_TOKEN'] ?? '';
 $now  = time();
 $method = $_SERVER['REQUEST_METHOD'];
-$ACTIONS = ['ping','signup','login','logout','forgot','reset','verify','resend','sessions','revoke','get','put','rev','profile_put','household_put','invite','member_remove','audit','account_delete'];
+$ACTIONS = ['ping','signup','login','logout','forgot','reset','verify','resend','sessions','revoke','get','put','rev','profile_put','household_put','invite','member_remove','audit','account_delete','codes','code_new','code_revoke','joincheck'];
+$ADMINS = defined('ADMIN_EMAILS') && is_array(ADMIN_EMAILS) ? array_map('strtolower', ADMIN_EMAILS) : [];   // app admins: hand out sign-up invites, set in config.php only
 if (!in_array($a, $ACTIONS, true)) { $a = 'unknown'; }
 if (!preg_match('/^[a-f0-9]{64}$/', $tok)) { $tok = ''; }
 $body = [];
@@ -58,19 +59,22 @@ function newSession(int $uid): array { global $now, $ip, $ua; $t = bin2hex(rando
   q('INSERT INTO sessions(id,user_id,token_hash,created,last,ip,ua) VALUES(?,?,?,?,?,?,?)', [$id, $uid, hash('sha256', $t), $now, $now, $ip, $ua]);
   $n = (int)row('SELECT COUNT(*) c FROM sessions WHERE user_id=?', [$uid])['c']; if ($n > 20) { q('DELETE FROM sessions WHERE user_id=? AND id IN (SELECT id FROM sessions WHERE user_id=? ORDER BY last ASC LIMIT ?)', [$uid, $uid, $n - 20]); }
   return ['token' => $t, 'sid' => $id]; }
-function meOut(array $u): array { $hh = row('SELECT * FROM households WHERE id=?', [$u['household_id']]); return ['user' => userProfile($u), 'household' => ['id' => (int)$hh['id'], 'name' => $hh['name']], 'members' => members((int)$u['household_id'])]; }
+function meOut(array $u): array { global $ADMINS; $hh = row('SELECT * FROM households WHERE id=?', [$u['household_id']]); $me = userProfile($u); $me['admin'] = in_array(strtolower($u['email']), $ADMINS, true); return ['user' => $me, 'household' => ['id' => (int)$hh['id'], 'name' => $hh['name']], 'members' => members((int)$u['household_id'])]; }
 function validPassword(string $p): ?string { if (strlen($p) < 10) return 'Password must be at least 10 characters.'; if (strlen($p) > 200) return 'Password too long.'; return null; }
 function cleanName($n): string { $n = trim(strip_tags((string)$n)); return mb_substr($n, 0, 40); }
 
 // ---- public actions ----
 if ($a === 'ping') {
   audit($user ? 'ok' : ($tok === '' ? 'no_key' : 'bad_token'));
-  if (!$user) ok(['auth' => false, 'signup' => !(defined('SIGNUP_CLOSED') && SIGNUP_CLOSED)]);
+  if (!$user) ok(['auth' => false, 'signup' => !(defined('SIGNUP_CLOSED') && SIGNUP_CLOSED), 'invites' => true]);
   ok(['auth' => true] + meOut($user));
 }
+function codeRow(string $code) { if (!preg_match('/^[a-f0-9]{32}$/', $code)) return null; $r = row('SELECT * FROM signup_codes WHERE code_hash=?', [hash('sha256', $code)]); if (!$r || $r['revoked'] || $r['used_by'] || $r['expires'] < time()) return null; return $r; }
+if ($a === 'joincheck') { $c = (string)($_GET['code'] ?? ''); $r = codeRow($c); if (!$r) bump($ipKey); audit($r ? 'ok' : 'bad_code'); ok(['valid' => (bool)$r, 'note' => $r ? $r['note'] : '']); }
 if ($a === 'signup') {
   needPost();
-  if (defined('SIGNUP_CLOSED') && SIGNUP_CLOSED) fail(403, 'closed', 'Sign-up is closed on this server.');
+  $closed = defined('SIGNUP_CLOSED') && SIGNUP_CLOSED; $code = (string)($body['code'] ?? ''); $cr = $code !== '' ? codeRow($code) : null;
+  if ($closed && !$cr) { bump($ipKey); fail(403, 'closed', $code !== '' ? 'This invite link is no longer valid. Ask for a new one.' : 'Sign-up is by invitation on this server.'); }
   $name = cleanName($body['name'] ?? ''); $hhName = cleanName($body['household'] ?? '') ?: 'Home'; $pw = (string)($body['password'] ?? '');
   if ($emailIn === '') fail(422, 'rejected', 'Enter a valid e-mail address.');
   if ($name === '') fail(422, 'rejected', 'Enter your name.');
@@ -80,6 +84,7 @@ if ($a === 'signup') {
   q('INSERT INTO households(name,created) VALUES(?,?)', [$hhName, $now]); $hh = (int)db()->lastInsertId();
   q('INSERT INTO users(household_id,email,pass_hash,name,role,verified,created,profile) VALUES(?,?,?,?,"owner",0,?,?)', [$hh, $emailIn, password_hash($pw, PASSWORD_BCRYPT), $name, $now, json_encode(defaultProfile())]);
   $uid = (int)db()->lastInsertId();
+  if ($cr) { q('UPDATE signup_codes SET used_by=?, used_at=?, used_hh=? WHERE id=?', [$uid, $now, $hhName, $cr['id']]); }
   db()->commit();
   $user = row('SELECT * FROM users WHERE id=?', [$uid]);
   $vt = makeToken($uid, 'verify', 86400); $sent = mailVerify($emailIn, $name, $vt);
@@ -148,6 +153,19 @@ if ($a === 'household_put') {
   needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can do that.');
   $n = cleanName($body['name'] ?? ''); if ($n === '') fail(422, 'rejected', 'Enter a household name.');
   q('UPDATE households SET name=? WHERE id=?', [$n, $hhId]); audit('ok'); ok(meOut($user));
+}
+$isAdmin = in_array(strtolower($user['email']), $ADMINS, true);
+if ($a === 'codes' || $a === 'code_new' || $a === 'code_revoke') {
+  if (!$isAdmin) fail(403, 'forbidden', 'Admin only.');
+  if ($a === 'code_new') { needPost(); $note = cleanName($body['note'] ?? ''); $days = max(1, min(60, (int)($body['days'] ?? 14)));
+    $c = bin2hex(random_bytes(16)); $id = substr(bin2hex(random_bytes(4)), 0, 8);
+    q('INSERT INTO signup_codes(id,code_hash,note,created_by,created,expires) VALUES(?,?,?,?,?,?)', [$id, hash('sha256', $c), $note, $user['id'], $now, $now + $days * 86400]);
+    audit('ok', ['code' => $id]); $link = appUrl() . '#join=' . $c; }
+  if ($a === 'code_revoke') { needPost(); $id = (string)($body['id'] ?? ''); if (!preg_match('/^[a-f0-9]{8}$/', $id)) fail(400, 'bad_request', 'bad id'); q('UPDATE signup_codes SET revoked=1 WHERE id=? AND used_by IS NULL', [$id]); audit('ok', ['code' => $id]); }
+  $list = []; foreach (rows('SELECT c.*, u.name AS uname FROM signup_codes c LEFT JOIN users u ON u.id=c.used_by ORDER BY c.created DESC LIMIT 100') as $r) {
+    $list[] = ['id' => $r['id'], 'note' => $r['note'], 'created' => (int)$r['created'], 'expires' => (int)$r['expires'], 'status' => $r['used_by'] ? 'used' : ($r['revoked'] ? 'revoked' : ($r['expires'] < $now ? 'expired' : 'pending')), 'usedBy' => $r['uname'] ?? '', 'usedHh' => $r['used_hh'] ?? '', 'usedAt' => (int)($r['used_at'] ?? 0)]; }
+  if ($a !== 'codes') audit('ok');
+  ok(['codes' => $list] + (isset($link) ? ['link' => $link, 'id' => $id] : []));
 }
 if ($a === 'invite') {
   needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can add members.');

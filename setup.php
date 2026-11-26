@@ -16,10 +16,11 @@ $legacy = [];
 if ($mode === 'upgrade') { foreach (['p1', 'p2'] as $k) { $f = DATA_DIR . "/$k.json"; if (file_exists($f)) { $j = json_decode(file_get_contents($f), true); if (is_array($j)) $legacy[$k] = $j; } }
   $prof = file_exists(DATA_DIR . '/profiles.json') ? json_decode(file_get_contents(DATA_DIR . '/profiles.json'), true) : (defined('APP_PROFILES') ? APP_PROFILES : []); if (!is_array($prof)) $prof = []; }
 
-function writeConfig(string $cfg, string $dataDir, bool $closed): bool {
+function writeConfig(string $cfg, string $dataDir, bool $closed, string $admin = ''): bool {
   $php = "<?php\n// Private server config, created by setup.php on " . date('Y-m-d') . ". Never commit this file.\n"
        . "define('DATA_DIR', '" . addslashes($dataDir) . "');\n"
-       . "define('SIGNUP_CLOSED', " . ($closed ? 'true' : 'false') . ");   // true: only the owner can add people (by invite). false: public sign-up page.\n"
+       . "define('SIGNUP_CLOSED', " . ($closed ? 'true' : 'false') . ");   // true: sign-up only with an invite link from an admin. false: public sign-up page.\n"
+       . "define('ADMIN_EMAILS', ['" . addslashes($admin) . "']);   // accounts that can hand out sign-up invites (Settings → App admin)\n"
        . "// Optional branding for e-mails: define('BRAND_NAME', 'Meal Planner'); define('BRAND_COLOR', '#0a84ff'); define('BRAND_LOGO', 'https://.../icon-192.png');\n"
        . "// Optional mail settings: define('MAIL_FROM', 'noreply@example.com'); define('MAIL_REPLY', 'you@example.com'); define('APP_URL', 'https://meal.example.com/');\n";
   return file_put_contents($cfg, $php, LOCK_EX) !== false;
@@ -48,7 +49,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $dataDir = dirname(__DIR__) . '/meal-data';
       if (!is_dir($dataDir) && !@mkdir($dataDir, 0700, true)) { $dataDir = __DIR__ . '/data'; if (!is_dir($dataDir)) @mkdir($dataDir, 0700, true); }
       if (!defined('DATA_DIR')) define('DATA_DIR', $dataDir);
-      if (!writeConfig($cfg, $dataDir, $closed)) $err = 'Could not write config.php. Check folder permissions.';
+      if (!writeConfig($cfg, $dataDir, $closed, $email)) $err = 'Could not write config.php. Check folder permissions.';
     }
     if (!$err) {
       try {
@@ -77,7 +78,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if ($email2 !== '') { $t = makeToken($u2, 'invite', 7 * 86400); $sent = mailInvite($email2, $name2, $name, $hh, $t); $notes[] = $sent ? "Invite e-mail sent to $email2." : "Could not send the invite e-mail to $email2 (mail() failed). After signing in, use Settings → Household → Resend invite."; }
           foreach (['p1.json', 'p2.json', 'profiles.json', 'sessions.json', 'attempts.json'] as $f) { if (file_exists(DATA_DIR . "/$f")) @rename(DATA_DIR . "/$f", DATA_DIR . "/$f.v15-backup"); }
           $notes[] = 'Old files kept as *.v15-backup in the data folder; delete them once you are happy.';
-          $add = "\n// v16 upgrade on " . date('Y-m-d') . "\ndefine('SIGNUP_CLOSED', " . ($closed ? 'true' : 'false') . ");\n";
+          $add = "\n// v16 upgrade on " . date('Y-m-d') . "\ndefine('SIGNUP_CLOSED', " . ($closed ? 'true' : 'false') . ");\ndefine('ADMIN_EMAILS', ['" . addslashes($email) . "']);\n";
           if (!defined('SIGNUP_CLOSED') && @file_put_contents($cfg, $add, FILE_APPEND | LOCK_EX) === false) $notes[] = 'Could not append SIGNUP_CLOSED to config.php; add it by hand if you want sign-up closed.';
         }
         if (!file_exists(DATA_DIR . '/.htaccess')) @file_put_contents(DATA_DIR . '/.htaccess', "Require all denied\nDeny from all\n");

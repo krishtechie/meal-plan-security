@@ -17,7 +17,8 @@ function db(): PDO {
     CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, token_hash TEXT NOT NULL UNIQUE, created INTEGER NOT NULL, last INTEGER NOT NULL, ip TEXT, ua TEXT);
     CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
     CREATE TABLE IF NOT EXISTS tokens (token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, kind TEXT NOT NULL, expires INTEGER NOT NULL, created INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS attempts (key TEXT PRIMARY KEY, n INTEGER NOT NULL, t INTEGER NOT NULL);');
+    CREATE TABLE IF NOT EXISTS attempts (key TEXT PRIMARY KEY, n INTEGER NOT NULL, t INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS signup_codes (id TEXT PRIMARY KEY, code_hash TEXT NOT NULL UNIQUE, note TEXT NOT NULL DEFAULT "", created_by INTEGER NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL, used_by INTEGER, used_at INTEGER, used_hh TEXT, revoked INTEGER NOT NULL DEFAULT 0);');
   return $pdo;
 }
 function dbReady(): bool { return file_exists(DATA_DIR . '/app.db'); }

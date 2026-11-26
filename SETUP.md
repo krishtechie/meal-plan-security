@@ -16,8 +16,10 @@ STEP 1 - deploy the files (see step 2), then open setup.php once
   old config.php, asks for the current app password, person 1's e-mail
   (becomes the owner) and person 2's e-mail (gets an invite), moves both
   records into the database and keeps the old files as *.v15-backup.
-  "Private server" is ticked by default: no public sign-up page, only
-  invites from the owner. Untick it to let anyone create a household.
+  "Private server" is ticked by default: nobody can sign up on their own.
+  Your account becomes the app admin (ADMIN_EMAILS in config.php) and
+  hands out sign-up invite links from Settings -> App admin; each lets one
+  person create their own separate household. Untick it for public sign-up.
 
 STEP 2 - deploy
   Option A, cPanel Git Version Control: clone this repo into a folder,
@@ -34,13 +36,19 @@ STEP 3 - open it
   Sign in with your e-mail and password. The header shows "Synced" and
   one button per household member; tap a person to see their log.
 
-STEP 4 - add family
+STEP 4 - let other households in (optional)
+  Settings -> App admin -> Sign-up invites -> Create invite link. Send it
+  by message; it works once and expires in 14 days. Their household is
+  separate: you cannot see their data. The landing page offers a demo
+  with made-up data that stores nothing.
+
+STEP 5 - add family
   Settings -> People and invites -> Add someone. They get an e-mail with
   a link to set their own password (valid 7 days). Up to 8 per household.
   Members edit only their own data; the owner can edit everyone's and
   remove people.
 
-STEP 5 - on each phone
+STEP 6 - on each phone
   iPhone: open the link in Safari -> Share -> Add to Home Screen.
   Android: open in Chrome -> menu -> Add to Home screen / Install app.
   Sign in once on each phone. Settings -> Signed-in devices lists them.
