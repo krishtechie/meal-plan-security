@@ -1,6 +1,6 @@
 // Offline shell cache. App files are served from cache first and refreshed in the background; api.php is always network.
-const VER = 'kl-v16o';
-const SHELL = ['./', 'index.html', 'app.css?v=76', 'app.js?v=76', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon.svg', 'favicon-32.png', 'icon-maskable-192.png',
+const VER = 'kl-v16p';
+const SHELL = ['./', 'index.html', 'app.css?v=77', 'app.js?v=77', 'manifest.json', 'icon-192.png?v=2', 'icon-512.png?v=2', 'apple-touch-icon.png?v=2', 'favicon.svg?v=2', 'favicon-32.png?v=2', 'icon-maskable-192.png?v=2',
   'fonts/sora-latin-600-normal.woff2', 'fonts/sora-latin-700-normal.woff2', 'fonts/manrope-latin-500-normal.woff2', 'fonts/manrope-latin-600-normal.woff2', 'fonts/manrope-latin-700-normal.woff2'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VER).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VER).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
