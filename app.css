@@ -966,3 +966,5 @@ body.ro #meals button,body.ro #meals .sugg,body.ro #checkin,body.ro #wtForm,body
 /* v16.5 household actions */
 .hhact{display:flex;gap:6px;flex-shrink:0}
 .btn.q.danger{color:#ff3b30}
+.opt-card.warnopt span{color:#b25e00}
+html[data-theme=dark] .opt-card.warnopt span{color:#ffb340}
