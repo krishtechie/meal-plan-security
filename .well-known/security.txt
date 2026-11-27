@@ -1,0 +1,5 @@
+Contact: https://github.com/krishtechie/meal-plan-security/security/advisories/new
+Expires: 2027-12-31T00:00:00.000Z
+Preferred-Languages: en
+Policy: https://github.com/krishtechie/meal-plan-security/blob/main/SECURITY.md
+Canonical: https://meal.krishdesigns.com/.well-known/security.txt

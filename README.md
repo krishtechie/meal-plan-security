@@ -43,9 +43,12 @@ Live instance: private. The code is public; the people, targets and data are not
 | 6 | Data, backups and logs moved outside the web root | A05 Security Misconfiguration | done |
 | 6b | Nightly verified SQLite backups with rotation (cron, CLI-only script) | A05 Security Misconfiguration | done |
 | 7 | Per-account credentials and per-account lockout | A01 Broken Access Control | done |
+| 7b | Password deny list and no e-mail name in passwords; owner re-enters password to delete a member | A07 Identification and Authentication Failures | done |
+| 7c | Members move between households with their data (no silent deletion); join needs the invitee's acceptance | A01 Broken Access Control | done |
 | 8 | Service worker never caches the API; `worker-src 'self'` in CSP | A05 Security Misconfiguration | done |
 | 9 | Personal data removed from the public code and reports; served from server config after sign-in | A01 Broken Access Control, A04 Insecure Design | done |
 | 10 | Session tokens: the password is sent once at sign-in and never stored on the device; sessions expire, are listed in the app and can be revoked per device | A07 Identification and Authentication Failures, A02 Cryptographic Failures | done |
+| 11 | security.txt (RFC 9116) with private vulnerability reporting | A05 Security Misconfiguration | done |
 
 ## Results
 

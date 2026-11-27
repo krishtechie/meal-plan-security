@@ -19,7 +19,7 @@ $who  = (int)($_GET['who'] ?? 0);
 $tok  = $_SERVER['HTTP_X_APP_TOKEN'] ?? '';
 $now  = time();
 $method = $_SERVER['REQUEST_METHOD'];
-$ACTIONS = ['ping','signup','login','logout','forgot','reset','verify','resend','sessions','revoke','get','put','rev','profile_put','household_put','invite','member_remove','audit','account_delete','codes','code_new','code_revoke','joincheck','photo','photo_put','photo_del','account_put','email_change','password_change','logout_all','security','households'];
+$ACTIONS = ['ping','member_move','join_info','join_accept','signup','login','logout','forgot','reset','verify','resend','sessions','revoke','get','put','rev','profile_put','household_put','invite','member_remove','audit','account_delete','codes','code_new','code_revoke','joincheck','photo','photo_put','photo_del','account_put','email_change','password_change','logout_all','security','households'];
 $ADMINS = defined('ADMIN_EMAILS') && is_array(ADMIN_EMAILS) ? array_map('strtolower', ADMIN_EMAILS) : [];   // app admins: hand out sign-up invites, set in config.php only
 if (!in_array($a, $ACTIONS, true)) { $a = 'unknown'; }
 if (!preg_match('/^[a-f0-9]{64}$/', $tok)) { $tok = ''; }
@@ -60,7 +60,11 @@ function newSession(int $uid): array { global $now, $ip, $ua; $t = bin2hex(rando
   $n = (int)row('SELECT COUNT(*) c FROM sessions WHERE user_id=?', [$uid])['c']; if ($n > 20) { q('DELETE FROM sessions WHERE user_id=? AND id IN (SELECT id FROM sessions WHERE user_id=? ORDER BY last ASC LIMIT ?)', [$uid, $uid, $n - 20]); }
   return ['token' => $t, 'sid' => $id]; }
 function meOut(array $u): array { global $ADMINS; $hh = row('SELECT * FROM households WHERE id=?', [$u['household_id']]); $me = userProfile($u); $me['admin'] = in_array(strtolower($u['email']), $ADMINS, true); return ['user' => $me, 'household' => ['id' => (int)$hh['id'], 'name' => $hh['name']], 'members' => members((int)$u['household_id'])]; }
-function validPassword(string $p): ?string { if (strlen($p) < 10) return 'Password must be at least 10 characters.'; if (strlen($p) > 200) return 'Password too long.'; return null; }
+function validPassword(string $p, string $email = ''): ?string { if (strlen($p) < 10) return 'Password must be at least 10 characters.'; if (strlen($p) > 200) return 'Password too long.';
+  $l = strtolower($p); $common = ['password12','password123','1234567890','qwertyuiop','12345678910','passw0rd12','iloveyou12','welcome123','admin12345','letmein123','abcdefghij','1q2w3e4r5t','qwerty1234','password1234','mealplanner','krishdesigns'];
+  if (in_array($l, $common, true) || preg_match('/^(.)\1{9,}$/', $l) || preg_match('/^(0123456789|1234567890|abcdefghij)/', $l)) return 'That password is too common. Pick something only you would think of.';
+  $local = strtolower(strstr($email, '@', true) ?: ''); if (strlen($local) >= 4 && str_contains($l, $local)) return 'The password must not contain your e-mail name.';
+  return null; }
 function cleanName($n): string { $n = trim(strip_tags((string)$n)); return mb_substr($n, 0, 40); }
 
 // ---- public actions ----
@@ -78,7 +82,7 @@ if ($a === 'signup') {
   $name = cleanName($body['name'] ?? ''); $hhName = cleanName($body['household'] ?? '') ?: 'Home'; $pw = (string)($body['password'] ?? '');
   if ($emailIn === '') fail(422, 'rejected', 'Enter a valid e-mail address.');
   if ($name === '') fail(422, 'rejected', 'Enter your name.');
-  if ($e = validPassword($pw)) fail(422, 'rejected', $e);
+  if ($e = validPassword($pw, $emailIn)) fail(422, 'rejected', $e);
   if (row('SELECT id FROM users WHERE email=?', [$emailIn])) { bump($ipKey); fail(409, 'exists', 'That e-mail already has an account. Sign in or reset the password.'); }
   db()->beginTransaction();
   q('INSERT INTO households(name,created) VALUES(?,?)', [$hhName, $now]); $hh = (int)db()->lastInsertId();
@@ -116,7 +120,7 @@ if ($a === 'reset') {   // also completes an invite: the token sets the first pa
   $t = (string)($body['token'] ?? ''); $pw = (string)($body['password'] ?? '');
   $r = useToken($t, ['reset', 'invite']);
   if (!$r) { bump($ipKey); fail(400, 'bad_token', 'This link is no longer valid. Ask for a new one.'); }
-  if ($e = validPassword($pw)) fail(422, 'rejected', $e);
+  if ($e = validPassword($pw, (string)(row('SELECT email FROM users WHERE id=?', [$r['user_id']])['email'] ?? ''))) fail(422, 'rejected', $e);
   q('UPDATE users SET pass_hash=?, verified=1 WHERE id=?', [password_hash($pw, PASSWORD_BCRYPT), $r['user_id']]);
   q('DELETE FROM sessions WHERE user_id=?', [$r['user_id']]);   // every other device has to sign in again
   burnToken($t);
@@ -155,7 +159,7 @@ if ($a === 'email_change') {
 if ($a === 'password_change') {
   needPost(); $pw = (string)($body['password'] ?? ''); $new = (string)($body['newPassword'] ?? '');
   if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(401, 'bad_password', 'Wrong current password.'); }
-  if ($e = validPassword($new)) fail(422, 'rejected', $e);
+  if ($e = validPassword($new, $user['email'])) fail(422, 'rejected', $e);
   q('UPDATE users SET pass_hash=? WHERE id=?', [password_hash($new, PASSWORD_BCRYPT), $user['id']]);
   q('DELETE FROM sessions WHERE user_id=? AND id<>?', [$user['id'], $sess['id']]);   // every other device signs in again
   audit('ok'); ok();
@@ -231,16 +235,46 @@ if ($a === 'invite') {
   $name = cleanName($body['name'] ?? ''); if ($emailIn === '') fail(422, 'rejected', 'Enter a valid e-mail address.'); if ($name === '') fail(422, 'rejected', 'Enter their name.');
   if ((int)row('SELECT COUNT(*) c FROM users WHERE household_id=?', [$hhId])['c'] >= 8) fail(422, 'rejected', 'A household can have up to 8 members.');
   $ex = row('SELECT * FROM users WHERE email=?', [$emailIn]);
-  if ($ex && ((int)$ex['household_id'] !== $hhId || $ex['pass_hash'] !== '')) fail(409, 'exists', 'That e-mail already belongs to an account.');
+  if ($ex && (int)$ex['household_id'] === $hhId && $ex['pass_hash'] !== '') fail(409, 'exists', 'They are already in this household.');
+  if ($ex && (int)$ex['household_id'] !== $hhId) {   // v16.5: an existing account is asked to join, bringing their data; nothing changes until they accept
+    if ($ex['pass_hash'] === '') fail(409, 'exists', 'That e-mail has a pending invite from another household.');
+    $hh = row('SELECT name FROM households WHERE id=?', [$hhId]); $t = makeToken((int)$ex['id'], 'joinhh:' . $hhId, 7 * 86400); $sent = mailJoin($emailIn, $ex['name'], $user['name'], $hh['name'], $t);
+    audit('ok', ['member' => (int)$ex['id'], 'join' => 'asked', 'mail' => $sent ? 'sent' : 'failed']); ok(['sent' => $sent, 'link' => appUrl() . '#joinhh=' . $t, 'existing' => true] + meOut($user));
+  }
   if ($ex) { $uid = (int)$ex['id']; q('UPDATE users SET name=? WHERE id=?', [$name, $uid]); }   // re-invite: same row, new link
   else { q('INSERT INTO users(household_id,email,pass_hash,name,role,verified,created,profile) VALUES(?,?,"",?,"member",0,?,?)', [$hhId, $emailIn, $name, $now, json_encode(defaultProfile())]); $uid = (int)db()->lastInsertId(); }
   $hh = row('SELECT name FROM households WHERE id=?', [$hhId]);
   $t = makeToken($uid, 'invite', 7 * 86400); $sent = mailInvite($emailIn, $name, $user['name'], $hh['name'], $t);
   audit('ok', ['member' => $uid, 'mail' => $sent ? 'sent' : 'failed']); ok(['sent' => $sent, 'link' => appUrl() . '#invite=' . $t] + meOut($user));   // the owner may pass the link on directly (WhatsApp, iMessage) when e-mail does not arrive
 }
+if ($a === 'member_move') {   // v16.5: a member leaves to a household of their own; account, logs, weights, profile and photo all stay with them
+  needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can do this.');
+  $id = (int)($body['id'] ?? 0); $m = row('SELECT * FROM users WHERE id=? AND household_id=?', [$id, $hhId]); if (!$m || $id === (int)$user['id']) fail(422, 'rejected', 'Not a member of this household.');
+  if ($m['pass_hash'] === '') fail(422, 'rejected', 'They have not set up their account yet; remove the invite instead.');
+  q('INSERT INTO households(name,created) VALUES(?,?)', [$m['name'] . "'s household", $now]); $nh = (int)db()->lastInsertId();
+  q('UPDATE users SET household_id=?, role="owner" WHERE id=?', [$nh, $id]); q('DELETE FROM tokens WHERE user_id=? AND kind LIKE "joinhh:%"', [$id]);
+  audit('ok', ['member' => $id, 'moved_to' => $nh]); ok(meOut($user));
+}
+if ($a === 'join_info' || $a === 'join_accept') {   // v16.5: accept an invitation to join another household, keeping all data
+  needPost(); $t = (string)($body['token'] ?? ''); $r = preg_match('/^[a-f0-9]{48}$/', $t) ? row('SELECT * FROM tokens WHERE token_hash=? AND kind LIKE "joinhh:%"', [hash('sha256', $t)]) : null;
+  if (!$r || $r['expires'] < $now) { bump($ipKey); fail(400, 'bad_token', 'This invitation is no longer valid. Ask for a new one.'); }
+  if ((int)$r['user_id'] !== (int)$user['id']) fail(403, 'forbidden', 'This invitation was sent to a different account. Sign in with the e-mail it was sent to.');
+  $target = (int)substr($r['kind'], 7); $th = row('SELECT * FROM households WHERE id=?', [$target]); if (!$th) { burnToken($t); fail(400, 'bad_token', 'That household no longer exists.'); }
+  $by = row('SELECT name FROM users WHERE household_id=? AND role="owner"', [$target]);
+  if ($a === 'join_info') { audit('ok'); ok(['household' => $th['name'], 'by' => $by['name'] ?? '', 'same' => $target === $hhId]); }
+  if ($target === $hhId) { burnToken($t); fail(422, 'rejected', 'You are already in this household.'); }
+  $others = (int)row('SELECT COUNT(*) c FROM users WHERE household_id=? AND id<>?', [$hhId, $user['id']])['c'];
+  if ($isOwner && $others > 0) fail(422, 'rejected', 'Your household still has other members. Move them out or remove them first.');
+  if ((int)row('SELECT COUNT(*) c FROM users WHERE household_id=?', [$target])['c'] >= 8) fail(422, 'rejected', 'That household is full (8 people).');
+  q('UPDATE users SET household_id=?, role="member" WHERE id=?', [$target, $user['id']]); if ($others === 0) q('DELETE FROM households WHERE id=?', [$hhId]);
+  burnToken($t); $fresh = row('SELECT * FROM users WHERE id=?', [$user['id']]);
+  audit('ok', ['joined' => $target, 'left' => $hhId]); ok(meOut($fresh));
+}
 if ($a === 'member_remove') {
   needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can remove members.');
   $id = (int)($body['id'] ?? 0); if ($id === (int)$user['id']) fail(422, 'rejected', 'The owner cannot remove themselves. Delete the account instead.');
+  $m = row('SELECT pass_hash FROM users WHERE id=? AND household_id=?', [$id, $hhId]); if (!$m) fail(422, 'rejected', 'Not a member of this household.');
+  if ($m['pass_hash'] !== '') { $pw = (string)($body['password'] ?? ''); if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(401, 'bad_password', 'Enter your own password to delete a member.'); } }   // v16.5: deleting someone's data needs the owner's password; cancelling an unused invite does not
   $n = q('DELETE FROM users WHERE id=? AND household_id=?', [$id, $hhId])->rowCount();   // cascades to docs, sessions, tokens
   audit('ok', ['member' => $id, 'removed' => $n]); ok(meOut($user));
 }
@@ -273,7 +307,7 @@ $canWrite = $isOwner || (int)$target['id'] === (int)$user['id'];
 function defaultProfile(): array { return ['kcal' => 1900, 'protein' => 150, 'floor' => 1700, 'fatMax' => 75, 'carbMax' => 230, 'maint' => 2500, 'pMin' => 130, 'kg' => 80, 'goal' => 75, 'steps' => 8000, 'restCut' => 100]; }
 function validateProfile($p): ?string {
   if (!is_array($p)) return 'profile must be an object';
-  $num = ['kcal' => [800, 6000], 'protein' => [30, 400], 'floor' => [600, 6000], 'fatMax' => [10, 300], 'carbMax' => [20, 800], 'maint' => [1000, 7000], 'pMin' => [20, 400], 'kg' => [20, 300], 'goal' => [20, 300], 'steps' => [0, 50000], 'restCut' => [0, 500], 'age' => [18, 110], 'height' => [100, 250], 'pace' => [0, 1], 'onboarded' => [0, 1]];
+  $num = ['kcal' => [800, 6000], 'protein' => [30, 400], 'floor' => [600, 6000], 'fatMax' => [10, 300], 'carbMax' => [20, 800], 'maint' => [1000, 7000], 'pMin' => [20, 400], 'kg' => [20, 300], 'goal' => [20, 300], 'steps' => [0, 50000], 'restCut' => [0, 500], 'age' => [18, 110], 'height' => [100, 250], 'pace' => [0, 1], 'onboarded' => [0, 1], 'mealsPerDay' => [3, 6], 'wkDays' => [0, 7]];
   foreach ($p as $f => $v) {
     if ($f === 'name') { if (!is_string($v) || trim($v) === '' || mb_strlen($v) > 40) return 'bad name'; continue; }
     if ($f === 'notesTitle') { if (!is_string($v) || mb_strlen($v) > 60) return 'bad notes title'; continue; }
@@ -283,8 +317,14 @@ function validateProfile($p): ?string {
     if ($f === 'activity') { if (!in_array($v, ['desk', 'light', 'active', 'athlete'], true)) return 'bad activity'; continue; }
     if ($f === 'goalType') { if (!in_array($v, ['lose', 'maintain', 'gain'], true)) return 'bad goal'; continue; }
     if ($f === 'diet') { if (!in_array($v, ['veg', 'nonveg', 'eggs'], true)) return 'bad diet'; continue; }
-    if ($f === 'cuisines') { if (!is_array($v) || count($v) > 6) return 'bad cuisines'; foreach ($v as $c) { if (!in_array($c, ['in', 'ca'], true)) return 'bad cuisine'; } continue; }
-    if ($f === 'avoid') { if (!is_array($v) || count($v) > 8) return 'bad avoid'; foreach ($v as $c) { if (!in_array($c, ['beef', 'pork', 'seafood', 'eggs', 'dairy', 'nuts', 'gluten'], true)) return 'bad avoid item'; } continue; }
+    if ($f === 'cuisines') { if (!is_array($v) || count($v) > 6) return 'bad cuisines'; foreach ($v as $c) { if (!in_array($c, ['in', 'ca', 'med', 'ea', 'mx'], true)) return 'bad cuisine'; } continue; }
+    if ($f === 'avoid') { if (!is_array($v) || count($v) > 10) return 'bad avoid'; foreach ($v as $c) { if (!in_array($c, ['beef', 'pork', 'seafood', 'eggs', 'dairy', 'nuts', 'gluten', 'soy'], true)) return 'bad avoid item'; } continue; }
+    // v16.5 onboarding: diet rules, fasting days, meals a day, workouts, the reason behind the goal
+    if ($f === 'rules') { if (!is_array($v) || count($v) > 6) return 'bad rules'; foreach ($v as $c) { if (!in_array($c, ['halal', 'jain', 'vegan', 'lowcarb', 'diabetic'], true)) return 'bad rule'; } continue; }
+    if ($f === 'fastDays') { if (!is_array($v) || count($v) > 7) return 'bad fast days'; foreach ($v as $d) { if (!is_int($d) || $d < 0 || $d > 6) return 'bad fast day'; } continue; }
+    if ($f === 'why') { if (!in_array($v, ['fat', 'muscle', 'health', 'event', 'habit'], true)) return 'bad why'; continue; }
+    if ($f === 'wkType') { if (!in_array($v, ['gym', 'home', 'walk', 'yoga', 'sport', 'none'], true)) return 'bad workout'; continue; }
+    if ($f === 'wkTime') { if (!in_array($v, ['am', 'pm'], true)) return 'bad workout time'; continue; }
     if ($f === 'meals') { if (!is_array($v) || count($v) > 12) return 'bad meals'; foreach ($v as $m) { if (!is_array($m) || !isset($m['name'], $m['time']) || !is_string($m['name']) || mb_strlen($m['name']) > 40 || !is_string($m['time']) || mb_strlen($m['time']) > 30) return 'bad meal'; foreach (['nv', 'v', 'vNoEgg'] as $l) { if (isset($m[$l])) { if (!is_array($m[$l]) || count($m[$l]) > 20) return 'bad meal list'; foreach ($m[$l] as $it) { $id = is_array($it) ? ($it[0] ?? '') : $it; if (!is_string($id) || !preg_match('/^[a-z0-9_]{1,40}$/', $id)) return 'bad meal item'; } } } } continue; }
     if (in_array($f, ['id', 'role', 'verified', 'email', 'hasPassword'], true)) continue;   // read-only echoes from the app
     if (isset($num[$f])) { if (!is_numeric($v) || $v < $num[$f][0] || $v > $num[$f][1]) return "$f out of range"; continue; }
@@ -302,7 +342,7 @@ if ($a === 'profile_put') {
     if ($f === 'notes') { $clean[$f] = array_values(array_map(fn($n) => trim(strip_tags($n)), $v)); }
     elseif ($f === 'meals') { $clean[$f] = array_values(array_map(fn($m) => ['name' => trim(strip_tags($m['name'])), 'time' => trim(strip_tags($m['time'])), 'nv' => array_values($m['nv'] ?? []), 'v' => array_values($m['v'] ?? []), 'vNoEgg' => array_values($m['vNoEgg'] ?? [])], $v)); }
     elseif (is_string($v)) { $clean[$f] = trim(strip_tags($v)); }
-    elseif ($f === 'vegDays' || $f === 'cuisines' || $f === 'avoid') { $clean[$f] = array_values(array_unique($v)); }
+    elseif (in_array($f, ['vegDays', 'cuisines', 'avoid', 'rules', 'fastDays'], true)) { $clean[$f] = array_values(array_unique($v)); }
     else { $clean[$f] = +$v; }
   }
   if ($name === '') fail(422, 'rejected', 'name required');

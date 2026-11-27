@@ -40,7 +40,12 @@ STEP 3 - open it
 STEP 4 - let other households in (optional)
   Settings -> App admin -> Sign-up invites -> Create invite link. Send it
   by message; it works once and expires in 14 days. Their household is
-  separate: you cannot see their data. The landing page offers a demo
+  separate: you cannot see their data. New people run a 6-step wizard:
+  body stats, goal and the reason behind it, diet and rules (halal, Jain,
+  vegan, low carb, diabetic-friendly), fasting days, meals a day,
+  cuisines, workouts (type, days, morning or evening) and the targets
+  that follow. The plan's meal slots follow these answers; custom slots
+  from Profiles are never changed. The landing page offers a demo
   with made-up data that stores nothing.
 
 STEP 5 - add family
@@ -48,6 +53,15 @@ STEP 5 - add family
   a link to set their own password (valid 7 days). Up to 8 per household.
   Members edit only their own data; the owner can edit everyone's and
   remove people.
+
+STEP 5b - someone leaves or joins with their data
+  People and invites -> "Move out" gives a member a household of their
+  own: account, logs, weights, targets and photo all go with them and you
+  stop seeing them. "Delete" removes their account and data for good and
+  asks for your password. Inviting an e-mail that already has an account
+  sends a join invitation instead: they accept it from the e-mail (or a
+  link you share) and move in with all their data. An owner whose
+  household still has members cannot join another until they are moved.
 
 STEP 6 - account
   Settings -> the card at the top: photo (shrunk to 256 px on the phone,

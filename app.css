@@ -962,3 +962,7 @@ body.ro #meals button,body.ro #meals .sugg,body.ro #checkin,body.ro #wtForm,body
 .keepbtn{width:100%;margin-top:10px;color:var(--acc)}
 .ld-note{font-size:14px;margin-top:-14px}
 .sdone.plain{font-weight:400}
+
+/* v16.5 household actions */
+.hhact{display:flex;gap:6px;flex-shrink:0}
+.btn.q.danger{color:#ff3b30}
