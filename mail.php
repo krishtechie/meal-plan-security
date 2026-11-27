@@ -13,7 +13,7 @@ function mailFrom(): string { $host = preg_replace('/^www\./', '', $_SERVER['HTT
 
 // Renders the branded shell around a short message with one button.
 function emailHtml(string $title, string $intro, string $btnText, string $btnUrl, string $outro = ''): string {
-  $name = htmlspecialchars(brand('BRAND_NAME', 'Meal Planner')); $color = brand('BRAND_COLOR', '#0a84ff'); $logo = brand('BRAND_LOGO', appUrl() . 'icon-192.png');
+  $name = htmlspecialchars(brand('BRAND_NAME', 'Meal Planner')); $color = brand('BRAND_COLOR', '#0a84ff'); $logo = brand('BRAND_LOGO', appUrl() . 'icon-192.png?v=2');   // version the address: mail clients cache images by URL
   $t = htmlspecialchars($title); $i = nl2br(htmlspecialchars($intro)); $b = htmlspecialchars($btnText); $u = htmlspecialchars($btnUrl); $o = nl2br(htmlspecialchars($outro));
   $host = htmlspecialchars(preg_replace('#^https?://#', '', rtrim(appUrl(), '/')));
   return <<<HTML
@@ -56,6 +56,9 @@ function mailReset(string $to, string $name, string $token): bool {
 }
 function mailJoin(string $to, string $name, string $byName, string $household, string $token): bool {
   return sendMail($to, "$byName invited you to join $household on " . brand('BRAND_NAME', 'Meal Planner'), "Hi $name, $byName invited you", "$byName asked you to join the household \"$household\". If you accept, your account moves there with all your logs, weights and targets, and $byName can see and edit them as the household owner. Nothing changes until you accept. The link works for 7 days.", 'Review the invitation', appUrl() . '#joinhh=' . $token, "Not expecting this? Ignore the e-mail and nothing happens.");
+}
+function mailMoved(string $to, string $name, string $byName, string $oldHousehold): bool {
+  return sendMail($to, "You now have your own household on " . brand('BRAND_NAME', 'Meal Planner'), "Hi $name, a change to your household", "$byName moved you out of the household \"$oldHousehold\". Nothing was deleted: your account, logs, weights, targets and photo are all still yours, and you are now the owner of a household of your own. Open the app as usual; your sign-in is unchanged.", 'Open the app', appUrl(), "If you expected to stay together, $byName can invite you back and you can accept with all your data.");
 }
 function mailInvite(string $to, string $name, string $byName, string $household, string $token): bool {
   return sendMail($to, "$byName invited you to $household on " . brand('BRAND_NAME', 'Meal Planner'), "Hi $name, $byName added you", "$byName added you to the household \"$household\". Open the link to finish setting up your account and start logging meals, water, sleep and weight on your own phone. The link works for 7 days.", 'Finish setting up', appUrl() . '#invite=' . $token, "Your meals and targets are your own; $byName can see them as the household owner.");

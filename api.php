@@ -253,7 +253,8 @@ if ($a === 'member_move') {   // v16.5: a member leaves to a household of their 
   if ($m['pass_hash'] === '') fail(422, 'rejected', 'They have not set up their account yet; remove the invite instead.');
   q('INSERT INTO households(name,created) VALUES(?,?)', [$m['name'] . "'s household", $now]); $nh = (int)db()->lastInsertId();
   q('UPDATE users SET household_id=?, role="owner" WHERE id=?', [$nh, $id]); q('DELETE FROM tokens WHERE user_id=? AND kind LIKE "joinhh:%"', [$id]);
-  audit('ok', ['member' => $id, 'moved_to' => $nh]); ok(meOut($user));
+  $oh = row('SELECT name FROM households WHERE id=?', [$hhId]); $sent = mailMoved($m['email'], $m['name'], $user['name'], $oh['name']);
+  audit('ok', ['member' => $id, 'moved_to' => $nh, 'mail' => $sent ? 'sent' : 'failed']); ok(meOut($user));
 }
 if ($a === 'join_info' || $a === 'join_accept') {   // v16.5: accept an invitation to join another household, keeping all data
   needPost(); $t = (string)($body['token'] ?? ''); $r = preg_match('/^[a-f0-9]{48}$/', $t) ? row('SELECT * FROM tokens WHERE token_hash=? AND kind LIKE "joinhh:%"', [hash('sha256', $t)]) : null;
