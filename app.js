@@ -1270,7 +1270,7 @@ function renderWorkout(){
   const sorted=WORKOUTS.slice().sort((a,b)=>(a.day===todayIdx?-1:b.day===todayIdx?1:a.day-b.day));
   sorted.forEach(d=>{ const open=!!S.woOpen[d.day]; const box=document.createElement('div'); box.className='wo'+(d.day===todayIdx?' today':'')+(open?' open':' closed');
     const n=d.ex.length+(d.day<=4?4:0);
-    let h=`<button type="button" class="hd wohd" aria-expanded="${open}"><span class="wol"><b>${d.day===todayIdx?'Today · ':''}${DAYS[d.day]} · ${d.name}</b><span>${d.sub||(n+' exercises')}</span></span><span class="chev" aria-hidden="true">›</span></button><div class="wobody">`;
+    let h=`<button type="button" class="hd wohd" aria-expanded="${open}"><span class="wol"><b>${d.day===todayIdx?'Today · ':''}${DAYS[d.day]} · ${d.name}</b><span>${d.sub||(n+' exercises')}</span></span><span class="chev" aria-hidden="true"></span></button><div class="wobody">`;
     d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${nm(e[0])}</div><div class="cue">${nm(e[1])}</div>${demoHtml(e[0])}${d.day===todayIdx&&S.week===0?wlogHtml(e[0]):wlogLast(e[0])}</div>${sr?`<div class="sr">${nm(sr)}</div>`:''}</div>`; });
     if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${nm(e[0])}</div><div class="cue">${nm(e[1])}</div>${demoHtml(e[0])}</div><div class="sr">${sr}</div></div>`; }); }
     h+=`<div class="foot">${d.foot}</div></div>`; box.innerHTML=h; box.querySelector('.wohd').onclick=()=>{ S.woOpen[d.day]=!S.woOpen[d.day]; renderWorkout(); };
