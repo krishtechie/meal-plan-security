@@ -1104,7 +1104,7 @@ function shapeSlots(P){ const lead=(P.cuisines&&P.cuisines[0])==='ca'?CA_MEALS:B
   return m; }
 function buildPerson(pr){ const P=defaultPerson(); P.id=String(pr.id); P.role=pr.role||'member'; P.email=pr.email||''; P.verified=!!pr.verified; P.hasPassword=pr.hasPassword!==false; P.photo=+pr.photo||0; if(pr.name) P.name=pr.name; if(pr.sex) P.sex=pr.sex;
   ['goal','steps','kg','floor','fatMax','carbMax','maint','pMin','restCut','age','height','pace','onboarded'].forEach(f=>{ if(pr[f]!=null) P[f]=+pr[f]; });
-  ['activity','goalType','diet','why','wkType','wkTime'].forEach(f=>{ if(pr[f]) P[f]=pr[f]; }); ['mealsPerDay','wkDays'].forEach(f=>{ if(pr[f]!=null) P[f]=+pr[f]; }); P.cuisines=Array.isArray(pr.cuisines)&&pr.cuisines.length?pr.cuisines.slice():['in','ca']; P.avoid=Array.isArray(pr.avoid)?pr.avoid.slice():[]; P.rules=Array.isArray(pr.rules)?pr.rules.slice():[]; P.fastDays=Array.isArray(pr.fastDays)?pr.fastDays.slice():[];
+  ['activity','goalType','diet','why','wkType','wkTime','level','equip'].forEach(f=>{ if(pr[f]) P[f]=pr[f]; }); ['mealsPerDay','wkDays'].forEach(f=>{ if(pr[f]!=null) P[f]=+pr[f]; }); P.cuisines=Array.isArray(pr.cuisines)&&pr.cuisines.length?pr.cuisines.slice():['in','ca']; P.avoid=Array.isArray(pr.avoid)?pr.avoid.slice():[]; P.rules=Array.isArray(pr.rules)?pr.rules.slice():[]; P.fastDays=Array.isArray(pr.fastDays)?pr.fastDays.slice():[];
   if(!(Array.isArray(pr.meals)&&pr.meals.length)) P.meals=shapeSlots(P); if(pr.kcal) P.target.k=+pr.kcal; if(pr.protein) P.target.p=+pr.protein; if(Array.isArray(pr.vegDays)) P.vegDays=pr.vegDays.slice();
   if(Array.isArray(pr.meals)&&pr.meals.length) P.meals=pr.meals.map(m=>({name:m.name,time:m.time,nv:m.nv||[],v:m.v||[],vNoEgg:(m.vNoEgg&&m.vNoEgg.length)?m.vNoEgg:undefined}));
   P.notesTitle=pr.notesTitle||''; P.notesList=Array.isArray(pr.notes)?pr.notes.slice():[]; P.notes=P.notesList.length?`<h3>${esc(pr.notesTitle||pr.name)}</h3><ul>${P.notesList.map(n=>'<li>'+esc(n)+'</li>').join('')}</ul>`:null; return P; }
@@ -1260,32 +1260,187 @@ function wlogHtml(name){ const ps=PS(); const cur=((ps.wlog||{})[ymd(new Date())
   return `<div class="wlog" data-ex="${name.replace(/"/g,'&quot;')}"><div class="wlin"><label><span>kg</span><input class="lw" type="number" inputmode="decimal" step="0.5" min="0" value="${cur.w||''}" placeholder="0" autocomplete="off" name="log-kg"></label><label><span>reps</span><input class="lr" type="number" inputmode="numeric" min="0" value="${cur.r||''}" placeholder="0" autocomplete="off" name="log-reps"></label><label><span>sets</span><input class="ls" type="number" inputmode="numeric" min="0" value="${cur.s||''}" placeholder="0" autocomplete="off" name="log-sets"></label><span class="ldone${cur.w&&cur.r?' on':''}" aria-hidden="true">✓</span></div><div class="wlhint">${hint}</div></div>`; }
 function wlogLast(name){ const prev=wlogPrev(name); return prev?`<div class="wlhint">Last: <b>${prev.w} kg × ${prev.r}</b>${prev.s?' × '+prev.s:''} on ${new Date(prev.d+'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}</div>`:''; }
 const nm=(t)=>{ const ids=memberIds(); const n=(i)=>PEOPLE[ids[i]]?PEOPLE[ids[i]].name:('Person '+(i+1)); return String(t).replace(/\{p1\}/g,n(0)).replace(/\{p2\}/g,n(1)); };
+
+// ================= v18: PLAN FROM THE PROFILE =================
+// Workout type, days a week, goal, experience level and equipment come from onboarding (Profiles can change them).
+// The plan is rebuilt from those each time; the log (weights, reps, sets per exercise) is what persists.
+const SCHEME={ lose:{cs:3,cr:'10-12',is:3,ir:'12-15',rest:[60,45],note:'Lose fat: moderate weights, 10 to 15 reps, short rests, a core finisher. The deficit does the fat loss; the lifting keeps the muscle.'},
+  gain:{cs:4,cr:'6-8',is:3,ir:'10-12',rest:[120,75],note:'Build muscle: heavier, 6 to 10 reps on the big lifts, longer rests. Add weight when you hit the top of the range on every set.'},
+  maintain:{cs:3,cr:'8-12',is:3,ir:'10-15',rest:[90,60],note:'Stay strong: 8 to 12 reps, steady weights, progress when it feels easy.'} };
+const LEVELS={new:'First weeks: learn each movement with a light weight you could do 5 more reps with. One set fewer than listed. Form before load.', some:'You know the lifts: use the listed sets, keep 1 or 2 reps in reserve, add weight when every set hits the top of the range.', regular:'Push the top set close to failure, log everything, add 2.5 kg (upper) or 5 kg (lower) the week after you hit the top of the range.'};
+// swaps when there is no gym: dumbbells at home, bands, or just the body
+const SWAP={
+ 'Barbell or dumbbell bench press':{db:'Dumbbell floor press',bw:'Push-up',bands:'Band chest press'},
+ 'Incline dumbbell press':{db:'Dumbbell floor press',bw:'Pike push-up',bands:'Band chest press'},
+ 'Chest-supported machine fly or cable fly':{db:'Dumbbell floor fly',bw:'Wide push-up',bands:'Band fly'},
+ 'Push-ups ({p2}: incline on a bench)':{db:'Push-up',bw:'Push-up',bands:'Push-up'},
+ 'Rope triceps pushdown':{db:'Overhead triceps extension',bw:'Chair dip',bands:'Band pushdown'},
+ 'Lat pulldown (wide grip)':{db:'Dumbbell row (bent over)',bw:'Inverted row (table or bar)',bands:'Band lat pulldown'},
+ 'Seated cable row':{db:'Dumbbell row (bent over)',bw:'Inverted row (table or bar)',bands:'Band row'},
+ 'One-arm dumbbell row':{db:'One-arm dumbbell row',bw:'Towel row (door)',bands:'Band row'},
+ 'Face pulls':{db:'Rear delt fly (machine or bent over)',bw:'Prone Y-T raise',bands:'Band pull-apart'},
+ 'Dumbbell bicep curl':{db:'Dumbbell bicep curl',bw:'Towel curl (door)',bands:'Band curl'},
+ 'Hammer curl':{db:'Hammer curl',bw:'Towel curl (door)',bands:'Band hammer curl'},
+ 'EZ bar or dumbbell curl':{db:'Dumbbell bicep curl',bw:'Towel curl (door)',bands:'Band curl'},
+ 'Barbell back squat or leg press':{db:'Goblet squat',bw:'Bodyweight squat',bands:'Band squat'},
+ 'Walking lunges':{db:'Reverse lunge (dumbbells)',bw:'Reverse lunge',bands:'Reverse lunge'},
+ 'Leg extension':{db:'Goblet squat, slow 3 sec down',bw:'Wall sit',bands:'Band leg extension'},
+ 'Standing calf raise':{db:'Standing calf raise',bw:'Standing calf raise',bands:'Standing calf raise'},
+ 'Seated dumbbell shoulder press':{db:'Seated dumbbell shoulder press',bw:'Pike push-up',bands:'Band shoulder press'},
+ 'Dumbbell lateral raise':{db:'Dumbbell lateral raise',bw:'Pike push-up',bands:'Band lateral raise'},
+ 'Rear delt fly (machine or bent over)':{db:'Rear delt fly (machine or bent over)',bw:'Prone Y-T raise',bands:'Band pull-apart'},
+ 'Overhead triceps extension':{db:'Overhead triceps extension',bw:'Chair dip',bands:'Band pushdown'},
+ 'Cable or dumbbell shrug':{db:'Cable or dumbbell shrug',bw:'Superman hold',bands:'Band shrug'},
+ 'Romanian deadlift (barbell or dumbbell)':{db:'Dumbbell Romanian deadlift',bw:'Single-leg Romanian deadlift (bodyweight)',bands:'Band Romanian deadlift'},
+ 'Hip thrust or glute bridge':{db:'Glute bridge (dumbbell on hips)',bw:'Glute bridge',bands:'Band glute bridge'},
+ 'Lying or seated leg curl':{db:'Single-leg glute bridge',bw:'Single-leg glute bridge',bands:'Band leg curl'},
+ 'Bulgarian split squat':{db:'Bulgarian split squat',bw:'Bulgarian split squat',bands:'Bulgarian split squat'},
+};
+// cues and muscles for the swap exercises (gym ones are in MUSCLES already)
+const SWAPINFO={
+ 'Dumbbell floor press':['Lie on the floor, elbows touch the floor each rep, press up and in',['chest','triceps','shoulders']],
+ 'Push-up':['Body straight, chest to a fist from the floor; knees down or hands on a counter if needed',['chest','triceps','abs']],
+ 'Pike push-up':['Hips high, head towards the floor between the hands, shoulders do the work',['shoulders','triceps']],
+ 'Wide push-up':['Hands wider than shoulders, slow 2 sec down',['chest','shoulders']],
+ 'Dumbbell floor fly':['Slight bend in the elbows, squeeze the chest at the top',['chest']],
+ 'Chair dip':['Hands on a chair behind you, elbows straight back, go to 90 degrees',['triceps','chest']],
+ 'Dumbbell row (bent over)':['Hinge to 45 degrees, flat back, pull to the hips, squeeze 1 sec',['back','biceps']],
+ 'Inverted row (table or bar)':['Under a sturdy table or bar, body straight, chest to the edge',['back','biceps']],
+ 'Towel row (door)':['Towel around a door handle, lean back, row chest to hands',['back','biceps']],
+ 'Towel curl (door)':['Towel around the handle, lean back, curl with the elbows pinned',['biceps']],
+ 'Prone Y-T raise':['Face down, arms out in a Y then a T, thumbs up, small lift and squeeze',['shoulders','back','traps']],
+ 'Goblet squat':['Dumbbell at the chest, elbows inside the knees at the bottom, chest up',['quads','glutes','abs']],
+ 'Goblet squat, slow 3 sec down':['Count three down, drive up fast',['quads','glutes']],
+ 'Bodyweight squat':['Feet shoulder width, sit between the heels, pause at the bottom',['quads','glutes']],
+ 'Wall sit':['Back flat on the wall, thighs parallel, hold',['quads']],
+ 'Reverse lunge (dumbbells)':['Step back, back knee to 2 inches off the floor, push through the front heel',['quads','glutes','hamstrings']],
+ 'Reverse lunge':['Step back, back knee to 2 inches off the floor, push through the front heel',['quads','glutes','hamstrings']],
+ 'Dumbbell Romanian deadlift':['Hips back, dumbbells brush the thighs, flat back, feel the hamstrings',['hamstrings','glutes','lowerback']],
+ 'Single-leg Romanian deadlift (bodyweight)':['Hinge on one leg, other leg back, touch the floor and stand tall',['hamstrings','glutes','abs']],
+ 'Glute bridge (dumbbell on hips)':['Dumbbell on the hips, drive through the heels, squeeze 2 sec',['glutes','hamstrings']],
+ 'Glute bridge':['Drive through the heels, squeeze 2 sec at the top',['glutes','hamstrings']],
+ 'Single-leg glute bridge':['One foot on the floor, other leg straight, slow',['glutes','hamstrings']],
+ 'Superman hold':['Face down, lift arms and legs, hold 3 sec, lower slowly',['lowerback','glutes']],
+ 'Band chest press':['Band behind the back, press forward and in',['chest','triceps']],
+ 'Band fly':['Band behind the back, arms wide to together',['chest']],
+ 'Band pushdown':['Band on a door anchor above head, elbows pinned',['triceps']],
+ 'Band lat pulldown':['Band anchored high, pull elbows to the hips',['back','biceps']],
+ 'Band row':['Band around the feet, pull to the stomach, squeeze',['back','biceps']],
+ 'Band pull-apart':['Arms straight, pull the band apart to the chest',['shoulders','traps','back']],
+ 'Band curl':['Stand on the band, strict curl',['biceps']],
+ 'Band hammer curl':['Stand on the band, thumbs up',['biceps','forearms']],
+ 'Band squat':['Band under the feet and over the shoulders',['quads','glutes']],
+ 'Band leg extension':['Band anchored low behind you, extend the knee',['quads']],
+ 'Band shoulder press':['Stand on the band, press overhead',['shoulders','triceps']],
+ 'Band lateral raise':['Stand on the band, lead with the elbows to shoulder height',['shoulders']],
+ 'Band shrug':['Stand on the band, shrug and hold 1 sec',['traps']],
+ 'Band Romanian deadlift':['Stand on the band, hips back, flat back',['hamstrings','glutes']],
+ 'Band glute bridge':['Band over the hips, drive up and squeeze',['glutes']],
+ 'Band leg curl':['Band anchored low, curl the heel to the glute',['hamstrings']],
+ 'Standing calf raise':['Full stretch at the bottom, 2 sec hold at top',['calves']],
+ 'Brisk walk':['Pace where talking is possible but singing is not',['quads','calves','glutes']],
+ 'Interval walk':['3 min brisk, 2 min easy, repeat. Arms swinging, tall posture',['quads','calves','glutes']],
+ 'Long walk':['Steady pace, hills if you have them',['quads','calves','glutes','hamstrings']],
+ 'Easy walk and stretch':['Easy pace, then hips, hamstrings and chest stretches 10 min',['quads','calves','hamstrings']],
+ 'Sun salutations':['6 rounds, breathe with the movement, slow on the way down',['shoulders','hamstrings','abs']],
+ 'Warrior 1 and 2':['Front knee over the ankle, back foot flat, 5 breaths each side',['quads','glutes']],
+ 'Chair pose':['Weight in the heels, arms up, 5 breaths',['quads','glutes']],
+ 'Low lunge with twist':['Back knee down, twist towards the front leg, 5 breaths each side',['quads','obliques']],
+ 'Pigeon pose':['Hips square, fold forward, 8 breaths each side',['glutes']],
+ 'Seated forward fold':['Long spine first, then fold, 8 breaths',['hamstrings','lowerback']],
+ 'Bridge pose':['Feet hip width, press up, 5 breaths, 3 rounds',['glutes','lowerback']],
+ 'Boat pose':['Chest up, shins parallel to the floor, 5 breaths, 3 rounds',['abs']],
+ 'Plank to downward dog':['Flow between the two, 10 slow reps',['abs','shoulders']],
+ 'Tree pose':['Foot above or below the knee, never on it, 8 breaths each side',['glutes','calves']],
+ 'Cat cow':['Slow, 10 rounds, move one vertebra at a time',['lowerback','abs']],
+ 'Thread the needle':['On all fours, reach under and rest the shoulder, 6 breaths each side',['back','shoulders']],
+ 'Cobra':['Elbows bent, chest forward, 5 breaths, 3 rounds',['lowerback']],
+ 'Child pose':['Knees wide, arms long, 10 breaths',['back']],
+ 'Legs up the wall':['5 min, eyes closed',['hamstrings']],
+ 'Happy baby':['Hold the feet, knees to the armpits, 8 breaths',['glutes']],
+ 'Plank':['Glutes squeezed, ribs down, breathe',['abs','obliques','lowerback']],
+ 'Your sport':['Warm up 5 min, play, 5 min stretch after',['quads','calves','glutes']],
+ 'Mountain climbers':['Hips low, knees drive fast, 30 sec',['abs','quads','shoulders']],
+ 'Jumping jacks':['30 sec, land soft',['calves','shoulders']],
+};
+Object.keys(SWAPINFO).forEach(k=>{ if(!MUSCLES[k]) MUSCLES[k]=SWAPINFO[k][1]; });
+Object.assign(DEMO,{ 'Push-up':['push-up','Push up'], 'Dumbbell row (bent over)':['dumbbell-row','Dumbbell row'], 'Dumbbell Romanian deadlift':['romanian-deadlift','Romanian deadlift'], 'Glute bridge (dumbbell on hips)':['barbell-hip-thrust','Hip thrust'], 'Glute bridge':['barbell-hip-thrust','Hip thrust'], 'Standing calf raise':['calf-raise','Calf raise'] });
+const DAYSETS={1:[0],2:[0,3],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,3,4],6:[0,1,2,3,4,5],7:[0,1,2,3,4,5,6]};
+const GYMDAYS={
+ fullA:{name:'Full body A',ex:[['Barbell or dumbbell bench press','c'],['Lat pulldown (wide grip)','c'],['Barbell back squat or leg press','c'],['Seated cable row','c'],['Dumbbell lateral raise','i'],['Rope triceps pushdown','i']]},
+ fullB:{name:'Full body B',ex:[['Romanian deadlift (barbell or dumbbell)','c'],['Seated dumbbell shoulder press','c'],['Walking lunges','c'],['One-arm dumbbell row','c'],['Dumbbell bicep curl','i'],['Standing calf raise','i']]},
+ fullC:{name:'Full body C',ex:[['Incline dumbbell press','c'],['Seated cable row','c'],['Bulgarian split squat','c'],['Hip thrust or glute bridge','c'],['Face pulls','i'],['Lying or seated leg curl','i']]},
+ upperA:{name:'Upper A',ex:[['Barbell or dumbbell bench press','c'],['Lat pulldown (wide grip)','c'],['Seated dumbbell shoulder press','c'],['Seated cable row','c'],['Dumbbell lateral raise','i'],['Rope triceps pushdown','i'],['Dumbbell bicep curl','i']]},
+ lowerA:{name:'Lower A',ex:[['Barbell back squat or leg press','c'],['Romanian deadlift (barbell or dumbbell)','c'],['Walking lunges','c'],['Lying or seated leg curl','i'],['Standing calf raise','i']]},
+ upperB:{name:'Upper B',ex:[['Incline dumbbell press','c'],['One-arm dumbbell row','c'],['Chest-supported machine fly or cable fly','i'],['Face pulls','i'],['Rear delt fly (machine or bent over)','i'],['Hammer curl','i'],['Overhead triceps extension','i']]},
+ lowerB:{name:'Lower B',ex:[['Hip thrust or glute bridge','c'],['Bulgarian split squat','c'],['Leg extension','i'],['Lying or seated leg curl','i'],['Standing calf raise','i']]},
+ push:{name:'Push',ex:[['Barbell or dumbbell bench press','c'],['Incline dumbbell press','c'],['Seated dumbbell shoulder press','c'],['Dumbbell lateral raise','i'],['Rope triceps pushdown','i']]},
+ pull:{name:'Pull',ex:[['Lat pulldown (wide grip)','c'],['Seated cable row','c'],['One-arm dumbbell row','c'],['Face pulls','i'],['Dumbbell bicep curl','i'],['Hammer curl','i']]},
+ legs:{name:'Legs',ex:[['Barbell back squat or leg press','c'],['Romanian deadlift (barbell or dumbbell)','c'],['Walking lunges','c'],['Lying or seated leg curl','i'],['Standing calf raise','i']]},
+};
+const SPLITS={1:['fullA'],2:['fullA','fullB'],3:['fullA','fullB','fullC'],4:['upperA','lowerA','upperB','lowerB'],5:null,6:['push','pull','legs','push','pull','legs'],7:['push','pull','legs','push','pull','legs']};
+const YOGADAYS=[{name:'Flow and standing',ex:['Sun salutations','Warrior 1 and 2','Chair pose','Tree pose','Child pose']},{name:'Hips and hamstrings',ex:['Cat cow','Low lunge with twist','Pigeon pose','Seated forward fold','Happy baby']},{name:'Core and balance',ex:['Plank to downward dog','Boat pose','Bridge pose','Tree pose','Legs up the wall']},{name:'Back and shoulders',ex:['Cat cow','Thread the needle','Cobra','Bridge pose','Child pose']},{name:'Restorative',ex:['Cat cow','Seated forward fold','Pigeon pose','Legs up the wall','Child pose']}];
+const WALKDAYS=[{name:'Interval walk',ex:['Interval walk'],sub:'30 min'},{name:'Long walk',ex:['Long walk'],sub:'45 to 60 min'},{name:'Easy walk and strength',ex:['Easy walk and stretch','Bodyweight squat','Push-up','Glute bridge','Plank'],sub:'30 min walk, 10 min strength'},{name:'Hill or brisk walk',ex:['Brisk walk'],sub:'35 min'}];
+const STARTER={name:'10-minute starter',ex:['Bodyweight squat','Push-up','Glute bridge','Reverse lunge','Plank','Jumping jacks'],sub:'2 rounds, easy pace'};
+function swapFor(name, equip){ if(!equip||equip==='gym') return name; const s=SWAP[name]; if(!s) return name; return s[equip==='dumbbells'?'db':equip==='bands'?'bands':'bw']||name; }
+// Build the week for a person from their profile
+function buildPlan(P){ const type=P.wkType||'gym'; const days=Math.max(0,Math.min(7,P.wkDays!=null?+P.wkDays:3)); const goal=P.goalType||'lose'; const sc=SCHEME[goal]||SCHEME.maintain; const level=P.level||'some'; const equip=type==='gym'?'gym':(P.equip||(type==='home'?'dumbbells':'body'));
+  const sets=(n)=>level==='new'?Math.max(2,n-1):n; const lift=(tpl)=>({kind:'lift',name:tpl.name,ex:tpl.ex.map(([n,t])=>{ const nn=swapFor(n,equip); const info=SWAPINFO[nn]; const base=WORKOUTS.flatMap(d=>d.ex).find(e=>e[0]===n); return {n:nn,cue:info?info[0]:(base?base[1]:''),sets:sets(t==='c'?sc.cs:sc.is),reps:/push-up|dip|row \(table|towel|wall sit|hold/i.test(nn)?'to 2 shy of failure':(t==='c'?sc.cr:sc.ir),rest:t==='c'?sc.rest[0]:sc.rest[1]}; }),core:true});
+  const week=[]; const on=DAYSETS[days]||[];
+  const plan={name:'',sub:'',days:week,level:LEVELS[level],scheme:sc.note,equip};
+  if(type==='none'||days===0){ plan.name='Steps and a starter'; plan.sub='No workout picked yet: daily steps plus a 10-minute routine three mornings a week. Pick a workout type in Profiles whenever you are ready.'; [0,2,4].forEach(d=>week.push({day:d,kind:'lift',name:STARTER.name,sub:STARTER.sub,ex:STARTER.ex.map(n=>({n,cue:SWAPINFO[n]?SWAPINFO[n][0]:'',sets:2,reps:/plank/i.test(n)?'30 sec':/jack/i.test(n)?'30 sec':'10-12',rest:30})),core:false})); }
+  else if(type==='gym'||type==='home'){ plan.name=(type==='gym'?'Gym':equip==='dumbbells'?'Home, dumbbells':equip==='bands'?'Home, bands':'Home, bodyweight')+' · '+days+' days'; plan.sub=sc.note;
+    const split=SPLITS[days]; if(split===null){ WORKOUTS.slice(0,5).forEach((d,i)=>{ week.push(Object.assign(lift({name:d.name,ex:d.ex.map(e=>[e[0],/raise|curl|fly|extension|pushdown|shrug|calf|face|push-up/i.test(e[0])?'i':'c'])}),{day:on[i],sub:d.sub,foot:d.foot})); }); }
+    else on.forEach((d,i)=>{ const key=split[i%split.length]; week.push(Object.assign(lift(GYMDAYS[key]),{day:d})); }); }
+  else if(type==='walk'){ plan.name='Walking plan · '+days+' days'; plan.sub='Walking is the workout: intervals, one long walk, and a short strength circuit so muscle stays while weight comes off. Steps target '+(P.steps||10000)+' a day.'; on.forEach((d,i)=>{ const w=WALKDAYS[i%WALKDAYS.length]; week.push({day:d,kind:'cardio',name:w.name,sub:w.sub,ex:w.ex.map(n=>({n,cue:SWAPINFO[n]?SWAPINFO[n][0]:'',sets:/walk/i.test(n)?1:2,reps:/walk/i.test(n)?w.sub:/plank/i.test(n)?'30 sec':'12',rest:30})),core:false}); }); }
+  else if(type==='yoga'){ plan.name='Yoga · '+days+' days'; plan.sub='Mobility, balance and core. 20 to 30 minutes, breathe through the nose, never force a stretch.'; on.forEach((d,i)=>{ const y=YOGADAYS[i%YOGADAYS.length]; week.push({day:d,kind:'yoga',name:y.name,sub:'25 min',ex:y.ex.map(n=>({n,cue:SWAPINFO[n]?SWAPINFO[n][0]:'',sets:1,reps:'',rest:0})),core:false}); }); }
+  else if(type==='sport'){ plan.name='Sport · '+days+' days'; plan.sub='Your sport on its days, plus two short strength sessions so you get faster and injury-proof. '+sc.note; const strength=on.length>=3?on.slice(-2):[]; on.forEach((d,i)=>{ if(strength.includes(d)){ const key=i%2?'fullB':'fullA'; week.push(Object.assign(lift(GYMDAYS[key]),{day:d,name:'Strength · '+GYMDAYS[key].name})); } else week.push({day:d,kind:'cardio',name:'Sport day',sub:'60 min',ex:[{n:'Your sport',cue:'Warm up 5 min, play, 5 min stretch after',sets:1,reps:'60 min',rest:0}],core:false}); }); }
+  for(let d=0;d<7;d++){ if(!week.some(w=>w.day===d)) week.push({day:d,kind:'rest',name:d===6?'Rest':'Active rest',sub:'',ex:[{n:d===6?'Walk + stretching':'Brisk walk or hike',cue:d===6?'30 min walk, 10 min stretch: hips, chest, hamstrings':'45 to 60 min, or '+(P.steps||8000)+'+ steps across the day',sets:1,reps:'',rest:0}],core:false,foot:d===6?'Weigh in tomorrow morning.':'Steps still count.'}); }
+  week.sort((a,b)=>a.day-b.day); return plan; }
+// Sessions: one record per day when Finish is tapped. Kept separate from the per-exercise log.
+function sessOf(date){ const ps=PS(); return (ps.wsess||{})[date]||null; }
+function sessDone(date, rec){ const ps=PS(); ps.wsess=ps.wsess||{}; ps.wsess[date]=rec; save(); }
+// Rest timer
+const REST={t:null,end:0,el:null};
+function restStart(sec){ restStop(); REST.end=Date.now()+sec*1000; const tick=()=>{ const left=Math.max(0,Math.round((REST.end-Date.now())/1000)); const el=document.getElementById('restBar'); if(!el){ restStop(); return; } el.classList.add('on'); el.querySelector('.rt').textContent=left?`Rest ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`:'Go'; if(!left){ restStop(); try{ navigator.vibrate&&navigator.vibrate([200,100,200]); }catch(e){} setTimeout(()=>{ const e2=document.getElementById('restBar'); if(e2){ e2.classList.remove('on'); e2.querySelector('.rt').textContent='Rest'; } },1500); } }; tick(); REST.t=setInterval(tick,250); }
+function restStop(){ if(REST.t){ clearInterval(REST.t); REST.t=null; } }
 function renderWorkout(){
-  const k=P().sex!=='f';
-  document.getElementById('woTitle').textContent=P().name+' · weekly split';
-  document.getElementById('woSub').textContent = k ? 'Goal: build muscle while cutting. Heavy compound lifts, 6 to 10 reps, add weight every week you hit the top of the range. 60 min, 5 days.' : 'Goal: strong and toned. Same lifts, 10 to 15 reps, lighter weight, glutes and back as priority. 60 min, 5 days. If a week feels flat, drop one set from each exercise, do not skip the day.';
+  const P0=P(); const plan=buildPlan(P0); const todayIdx=(new Date().getDay()+6)%7; const today=ymd(new Date()); const viewingToday=S.week===0&&S.day===todayIdx;
+  document.getElementById('woTitle').textContent=P0.name+' · '+plan.name;
+  document.getElementById('woSub').textContent=plan.sub+' '+plan.level;
   const w=document.getElementById('woDays'); w.innerHTML='';
-  const lg=document.createElement('div'); lg.className='legend'; lg.innerHTML=`<span class="lgsw"></span> Muscles worked (front and back figure). Tap "Form guide" for the Fitbod video, step-by-step cues and common mistakes before your first session with a lift.`; w.appendChild(lg);
-  const todayIdx=(new Date().getDay()+6)%7; S.woOpen=S.woOpen||{}; if(S.woOpen._init!==1){ S.woOpen={_init:1,[todayIdx]:true}; }
-  const sorted=WORKOUTS.slice().sort((a,b)=>(a.day===todayIdx?-1:b.day===todayIdx?1:a.day-b.day));
-  sorted.forEach(d=>{ const open=!!S.woOpen[d.day]; const box=document.createElement('div'); box.className='wo'+(d.day===todayIdx?' today':'')+(open?' open':' closed');
-    const n=d.ex.length+(d.day<=4?4:0);
-    let h=`<button type="button" class="hd wohd" aria-expanded="${open}"><span class="wol"><b>${d.day===todayIdx?'Today · ':''}${DAYS[d.day]} · ${d.name}</b><span>${d.sub||(n+' exercises')}</span></span><span class="chev" aria-hidden="true"></span></button><div class="wobody">`;
-    d.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${nm(e[0])}</div><div class="cue">${nm(e[1])}</div>${demoHtml(e[0])}${d.day===todayIdx&&S.week===0?wlogHtml(e[0]):wlogLast(e[0])}</div>${sr?`<div class="sr">${nm(sr)}</div>`:''}</div>`; });
-    if(d.day<=4){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ const sr=k?e[2]:e[3]; h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${nm(e[0])}</div><div class="cue">${nm(e[1])}</div>${demoHtml(e[0])}</div><div class="sr">${sr}</div></div>`; }); }
-    h+=`<div class="foot">${d.foot}</div></div>`; box.innerHTML=h; box.querySelector('.wohd').onclick=()=>{ S.woOpen[d.day]=!S.woOpen[d.day]; renderWorkout(); };
-    box.querySelectorAll('.wlog').forEach(row=>{ const name=row.dataset.ex; const inW=row.querySelector('.lw'), inR=row.querySelector('.lr'), inS=row.querySelector('.ls'); const upd=()=>{ const ps=PS(); ps.wlog=ps.wlog||{}; const key=ymd(new Date()); ps.wlog[key]=ps.wlog[key]||{}; const v={w:+inW.value||0,r:+inR.value||0,s:+inS.value||0}; if(!v.w&&!v.r&&!v.s) delete ps.wlog[key][name]; else ps.wlog[key][name]=v; save(); row.querySelector('.ldone').classList.toggle('on',!!(v.w&&v.r)); }; [inW,inR,inS].forEach(i=>i.onchange=upd); });
+  const exRow=(e, logIt)=>`<div class="ex">${muscleMap(MUSCLES[e.n]||[])}<div class="exbody"><div class="nm">${nm(e.n)}</div><div class="cue">${nm(e.cue||'')}</div>${demoHtml(e.n)}${logIt?wlogHtml(e.n):wlogLast(e.n)}</div>${e.sets?`<div class="sr">${e.sets>1?e.sets+' × ':''}${e.reps||''}${e.rest?`<small>rest ${e.rest} s</small>`:''}</div>`:''}</div>`;
+  // Today's session card
+  const td=plan.days.find(d=>d.day===todayIdx); const sess=sessOf(today);
+  if(td){ const card=document.createElement('div'); card.className='wo today sess'+(sess?' done':''); const doable=td.kind!=='rest';
+    const ps=PS(); const logged=(ps.wlog||{})[today]||{}; const n=td.ex.length; const doneN=td.ex.filter(e=>logged[e.n]&&(logged[e.n].w||logged[e.n].r)).length;
+    card.innerHTML=`<div class="sesshd"><div><div class="sesst">Today · ${td.name}</div><div class="sesss">${td.sub||(td.kind==='lift'?`${n} exercises${td.core?' + core finisher':''}`:td.kind==='rest'?'No session, keep the steps up':'')}${sess?` · done ${sess.t?sess.t+' min':''}`:''}</div></div>${doable&&!sess?`<button type="button" class="btn primary" id="sessFinish">Finish</button>`:sess?`<span class="sdone plain">✓</span>`:''}</div>
+      ${doable&&td.kind==='lift'?`<div class="restbar" id="restBar"><span class="rt">Rest</span>${[45,60,90,120].map(x=>`<button type="button" class="btn q" data-rest="${x}">${x} s</button>`).join('')}</div>`:''}
+      ${td.ex.map(e=>exRow(e, doable&&!sess)).join('')}
+      ${td.core&&td.kind==='lift'?(()=>{ const c=(todayIdx===1||todayIdx===3)?CORE.B:CORE.A; return `<div class="corehd">${c.name} · 8 min</div>`+c.ex.map(e=>`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${nm(e[0])}</div><div class="cue">${nm(e[1])}</div>${demoHtml(e[0])}</div><div class="sr">${nm(P0.sex==='f'?e[3]:e[2])}</div></div>`).join(''); })():''}
+      ${td.foot?`<div class="foot">${td.foot}</div>`:''}
+      ${doable&&!sess?`<div class="sessfoot">${doneN} of ${n} logged</div>`:''}`;
+    card.querySelectorAll('[data-rest]').forEach(b=>b.onclick=()=>restStart(+b.dataset.rest));
+    const fin=card.querySelector('#sessFinish'); if(fin) fin.onclick=()=>{ if(!canWriteWho(S.who)){ toast('View only'); return; } const ps2=PS(); const lg=(ps2.wlog||{})[today]||{}; const k=td.ex.filter(e=>lg[e.n]&&(lg[e.n].w||lg[e.n].r)).length; if(td.kind==='lift'&&k===0&&!confirm('Nothing logged yet. Finish anyway?')) return; sessDone(today,{n:td.name,k:td.kind,x:k,t:0}); restStop(); renderWorkout(); toast('Session done. '+(k?k+' exercises logged.':'')); };
+    w.appendChild(card); }
+  const lg=document.createElement('div'); lg.className='legend'; lg.innerHTML=`<span class="lgsw"></span> Muscles worked. "Form guide" opens the Fitbod page with video and cues. ${plan.scheme}`; w.appendChild(lg);
+  S.woOpen=S.woOpen||{}; if(S.woOpen._init!==1){ S.woOpen={_init:1}; }
+  plan.days.forEach(d=>{ if(d.day===todayIdx) return; const open=!!S.woOpen[d.day]; const box=document.createElement('div'); box.className='wo'+(open?' open':' closed');
+    let h=`<button type="button" class="hd wohd" aria-expanded="${open}"><span class="wol"><b>${DAYS[d.day]} · ${d.name}</b><span>${d.sub||(d.kind==='lift'?d.ex.length+' exercises'+(d.core?' + core':''):'')}</span></span><span class="chev" aria-hidden="true"></span></button><div class="wobody">`;
+    h+=d.ex.map(e=>exRow(e,false)).join('');
+    if(d.core&&d.kind==='lift'){ const c=(d.day===1||d.day===3)?CORE.B:CORE.A; h+=`<div class="corehd">${c.name} · 8 min</div>`; c.ex.forEach(e=>{ h+=`<div class="ex">${muscleMap(MUSCLES[e[0]]||[])}<div class="exbody"><div class="nm">${nm(e[0])}</div><div class="cue">${nm(e[1])}</div>${demoHtml(e[0])}</div><div class="sr">${nm(P0.sex==='f'?e[3]:e[2])}</div></div>`; }); }
+    if(d.foot) h+=`<div class="foot">${d.foot}</div>`; h+='</div>'; box.innerHTML=h; box.querySelector('.wohd').onclick=()=>{ S.woOpen[d.day]=!S.woOpen[d.day]; renderWorkout(); };
     w.appendChild(box); });
-  const gen=document.createElement('div'); gen.className='rules'; gen.innerHTML=`<h3>Rules for the gym</h3><ul>
-    <li><b>Core every gym day, 8 min at the end.</b> Finisher A on Mon, Wed, Fri, finisher B on Tue, Thu. Side planks, chops, twists and carries are the oblique (love handle) work. Be clear on this: core training builds the muscle underneath, the calorie deficit is what removes the fat on top. Both together is what makes the waist change. No amount of crunches works without the deficit.</li>
-    <li><b>Warm up 5 min</b> on the bike or incline walk, then 2 light sets of the first exercise before your working sets.</li>
-    <li><b>Progressive overload:</b> write down the weight. When you hit the top of the rep range on all sets, add 2.5 kg (upper) or 5 kg (lower) next week. This is the whole muscle-building method, there is no other trick.</li>
-    <li><b>Last rep should be hard</b> but with clean form. 1 or 2 reps left in the tank on most sets, go to failure only on the last set of isolation moves.</li>
-    <li><b>Rest:</b> 90 sec on big lifts, 60 sec on the rest. Phone away, the hour is enough only if you move.</li>
-    <li><b>Train together, different weights.</b> Same exercise order means one machine setup, swap the pin.</li>
-    <li><b>Cardio:</b> 10 min incline walk after Mon and Fri lifting, plus 8,000 to 10,000 steps daily. No long cardio sessions, they eat recovery and muscle.</li>
-    <li><b>Deload every 6th week:</b> same exercises, half the sets. You will come back stronger.</li>
-    <li>Missed a day? Do it the next day and shift the week. Never double up two body parts to catch up.</li></ul>`;
+  w.querySelectorAll('.wlog').forEach(row=>{ const name=row.dataset.ex; const inW=row.querySelector('.lw'), inR=row.querySelector('.lr'), inS=row.querySelector('.ls'); const upd=()=>{ if(!canWriteWho(S.who)) return; const ps=PS(); ps.wlog=ps.wlog||{}; const key=ymd(new Date()); ps.wlog[key]=ps.wlog[key]||{}; const v={w:+inW.value||0,r:+inR.value||0,s:+inS.value||0}; if(!v.w&&!v.r&&!v.s) delete ps.wlog[key][name]; else ps.wlog[key][name]=v; save(); row.querySelector('.ldone').classList.toggle('on',!!(v.w&&v.r)); const sf=document.querySelector('.sessfoot'); if(sf){ const lg2=ps.wlog[key]; const td2=buildPlan(P()).days.find(d=>d.day===todayIdx); if(td2) sf.textContent=`${td2.ex.filter(e=>lg2[e.n]&&(lg2[e.n].w||lg2[e.n].r)).length} of ${td2.ex.length} logged`; } }; [inW,inR,inS].forEach(i=>i.onchange=upd); });
+  const gen=document.createElement('div'); gen.className='rules'; gen.innerHTML=`<h3>How to train</h3><ul>
+    <li><b>Warm up 5 min</b> on the bike or a brisk walk, then 2 light sets of the first exercise before your working sets.</li>
+    <li><b>Progress by writing it down.</b> When you hit the top of the rep range on every set, add 2.5 kg (upper body) or 5 kg (lower) next time. That is the whole method.</li>
+    <li><b>Last rep hard, form clean.</b> Keep 1 or 2 reps in the tank on most sets; go to failure only on the last set of a small exercise.</li>
+    <li><b>Rest</b> as shown next to each exercise. Tap a rest button and the timer buzzes when it is time.</li>
+    <li><b>Core finisher</b> on lifting days, 8 min. The deficit removes the fat on top; the core work builds what is underneath.</li>
+    <li><b>Steps every day</b>, long cardio sessions not needed; they eat recovery.</li>
+    <li><b>Every 6th week, half the sets.</b> You come back stronger.</li>
+    <li>Missed a day? Do it next; never double up two body parts.</li></ul>`;
   w.appendChild(gen);
 }
 
@@ -1348,7 +1503,7 @@ function readProf(){ const out={}; document.querySelectorAll('#pfForm .pfcard').
 document.getElementById('openProf').onclick=()=>{ if(!CLOUD.key){ askKey('Sign in first; profiles are stored on the server.'); return; } renderProf(); document.getElementById('ovSet').classList.remove('show'); document.getElementById('ovProf').classList.add('show'); };
 document.getElementById('pfCancel').onclick=()=>document.getElementById('ovProf').classList.remove('show');
 document.getElementById('pfSave').onclick=async()=>{ const msg=document.getElementById('pfMsg'); const p=readProf(); for(const k in p){ if(!p[k].name){ msg.textContent='Every name is required.'; return; } if(!(p[k].kcal>=800&&p[k].protein>=30)){ msg.textContent='Calories (800+) and protein (30+) are required.'; return; } }
-  msg.textContent='Saving…'; try{ let last=null; for(const k in p){ const cur=PEOPLE[k]; const body=Object.assign({},p[k]); if(cur){ if(Array.isArray(cur.vegDays)) body.vegDays=cur.vegDays; if(cur.meals&&cur.mealsCustom) body.meals=cur.meals; ['age','height','activity','goalType','pace','diet','onboarded','why','wkType','wkTime','mealsPerDay','wkDays'].forEach(f=>{ if(cur[f]!=null&&cur[f]!==''&&!(f==='mealsPerDay'&&!(cur[f]>=3))) body[f]=cur[f]; }); body.cuisines=cur.cuisines; body.avoid=cur.avoid; body.rules=cur.rules||[]; body.fastDays=cur.fastDays||[]; } last=await api('profile_put',k,{profile:body}); } if(last) applyMe(last); save(); document.getElementById('ovProf').classList.remove('show'); render(); }catch(e){ msg.textContent= e.msg||(e.message==='auth'?'Sign in again.':'Could not reach the server.'); } };
+  msg.textContent='Saving…'; try{ let last=null; for(const k in p){ const cur=PEOPLE[k]; const body=Object.assign({},p[k]); if(cur){ if(Array.isArray(cur.vegDays)) body.vegDays=cur.vegDays; if(cur.meals&&cur.mealsCustom) body.meals=cur.meals; ['age','height','activity','goalType','pace','diet','onboarded','why','wkType','wkTime','mealsPerDay','wkDays','level','equip'].forEach(f=>{ if(cur[f]!=null&&cur[f]!==''&&!(f==='mealsPerDay'&&!(cur[f]>=3))) body[f]=cur[f]; }); body.cuisines=cur.cuisines; body.avoid=cur.avoid; body.rules=cur.rules||[]; body.fastDays=cur.fastDays||[]; } last=await api('profile_put',k,{profile:body}); } if(last) applyMe(last); save(); document.getElementById('ovProf').classList.remove('show'); render(); }catch(e){ msg.textContent= e.msg||(e.message==='auth'?'Sign in again.':'Could not reach the server.'); } };
 const PHOTOS={};   // member id -> {v, url}: photos come through the API with the session token, so they are fetched and kept as object URLs
 function photoUrl(k){ const P=PEOPLE[k]; if(!P||!P.photo||!CLOUD.key||DEMOMODE) return ''; const c=PHOTOS[k]; if(c&&c.v===P.photo) return c.url; if(!c||c.v!==P.photo){ PHOTOS[k]={v:P.photo,url:''}; fetch(apiUrl()+'?a=photo&who='+k,{headers:{'X-App-Token':CLOUD.key},cache:'no-store'}).then(r=>r.ok?r.blob():null).then(b=>{ if(!b) return; const rd=new FileReader(); rd.onload=()=>{ PHOTOS[k]={v:P.photo,url:rd.result}; renderNames(); acctCard(); if(document.getElementById('ovAcct').classList.contains('show')&&CLOUD.me&&String(CLOUD.me.id)===k){ const av=document.getElementById('acAv2'); av.textContent=''; av.style.backgroundImage=`url('${rd.result}')`; } if(document.getElementById('ovHh').classList.contains('show')) hhRender(); }; rd.readAsDataURL(b); }).catch(()=>{}); } return ''; }   // data: URLs, because the site's CSP allows img-src 'self' data: and not blob:
 function avStyle(k){ return ''; }   // photos are applied through the CSSOM after rendering (inline style attributes are blocked by the site's CSP)
@@ -2194,7 +2349,7 @@ document.getElementById('keySkip').onclick=()=>{ if(!confirm('Use this device on
 const ONB={step:0, d:null, who:null};
 const ONB_STEPS=['About you','Your goal','How you eat','Cuisines','Workouts','Your targets']; const ONB_LAST=5;
 function onbOpen(who){ const k=String(who||CLOUD.me.id); const P=PEOPLE[k]; if(!P) return; ONB.who=k; ONB.step=0;
-  ONB.d={units:(ONB.d&&ONB.d.units)||'metric', keepMaint:false, name:P.name, sex:P.sex||'x', age:P.age||'', height:P.height||'', kg:P.kg||'', goal:P.goal||'', goalType:P.goalType||'lose', pace:P.pace||0.5, activity:P.activity||'light', diet:P.diet||(S.people[k]&&S.people[k].allVeg?'veg':'nonveg'), vegDays:(S.people[k]&&S.people[k].vegDays)||P.vegDays||[], avoid:P.avoid||[], cuisines:P.cuisines||['in','ca'], rules:P.rules||[], fastDays:P.fastDays||[], mealsPerDay:P.mealsPerDay||0, why:P.why||'', wkType:P.wkType||'gym', wkDays:P.wkDays!=null?P.wkDays:3, wkTime:P.wkTime||'pm', t:null, notesTitle:P.notesTitle||'', notes:P.notesList||[], steps:P.steps};
+  ONB.d={units:(ONB.d&&ONB.d.units)||'metric', keepMaint:false, name:P.name, sex:P.sex||'x', age:P.age||'', height:P.height||'', kg:P.kg||'', goal:P.goal||'', goalType:P.goalType||'lose', pace:P.pace||0.5, activity:P.activity||'light', diet:P.diet||(S.people[k]&&S.people[k].allVeg?'veg':'nonveg'), vegDays:(S.people[k]&&S.people[k].vegDays)||P.vegDays||[], avoid:P.avoid||[], cuisines:P.cuisines||['in','ca'], rules:P.rules||[], fastDays:P.fastDays||[], mealsPerDay:P.mealsPerDay||0, why:P.why||'', wkType:P.wkType||'gym', wkDays:P.wkDays!=null?P.wkDays:3, wkTime:P.wkTime||'pm', level:P.level||'some', equip:P.equip||'dumbbells', t:null, notesTitle:P.notesTitle||'', notes:P.notesList||[], steps:P.steps};
   document.getElementById('ovOnb').classList.add('show'); onbRender(); }
 function onbRender(){ const d=ONB.d, st=ONB.step, b=document.getElementById('onbBody'); document.getElementById('onbTitle').textContent=ONB_STEPS[st]; document.getElementById('onbStep').textContent=(st+1)+' of '+(ONB_LAST+1); document.getElementById('onbMsg').textContent=''; document.getElementById('onbBack').textContent=st?'Back':'Later'; document.getElementById('onbNext').textContent=st===ONB_LAST?'Finish':'Next';
   const fld=(id,label,unit,val,attrs='')=>`<div class="fld"><span>${label}</span><div><input id="${id}" type="number" inputmode="decimal" ${attrs} value="${val===''||val==null?'':val}"><small>${unit}</small></div></div>`;
@@ -2221,7 +2376,7 @@ function onbRender(){ const d=ONB.d, st=ONB.step, b=document.getElementById('onb
     <div class="onb-q">Meals a day</div>${cards('mealsPerDay',[[3,'3','breakfast, lunch, dinner'],[4,'4','plus one snack'],[5,'5','two snacks'],[6,'6','small and often']])}`; }
   if(st===3){ b.innerHTML=`<div class="onb-q">What do you cook and eat? Pick any. The first one you pick leads the suggestions; the food list shows the rest too.</div>${multi('cuisines',[['in','Indian','South and North Indian home food'],['ca','Canadian and American','home cooking, grocery and chain items'],['med','Mediterranean','food list growing; menus soon'],['ea','East Asian','food list growing; menus soon'],['mx','Mexican','food list growing; menus soon']])}`; }
   if(st===4){ b.innerHTML=`<div class="onb-q">Shapes your day: a workout slot in the plan, your steps target and the pre- and post-workout meals.</div>${cards('wkType',[['gym','Gym','weights, classes'],['home','Home workouts'],['walk','Walking or running'],['yoga','Yoga or stretching'],['sport','A sport','badminton, cricket, football'],['none','Nothing yet','start with food and steps']])}
-    ${d.wkType==='none'?'':`<div class="onb-q">Days a week</div><div class="daychips">${[1,2,3,4,5,6,7].map(n=>`<button type="button" data-wkd="${n}" class="${d.wkDays===n?'on':''}">${n}</button>`).join('')}</div><div class="onb-q">Usually when</div>${cards('wkTime',[['am','Morning','before breakfast'],['pm','Evening','after work']])}`}`; }
+    ${d.wkType==='none'?'':`<div class="onb-q">Days a week</div><div class="daychips">${[1,2,3,4,5,6,7].map(n=>`<button type="button" data-wkd="${n}" class="${d.wkDays===n?'on':''}">${n}</button>`).join('')}</div><div class="onb-q">Usually when</div>${cards('wkTime',[['am','Morning','before breakfast'],['pm','Evening','after work']])}<div class="onb-q">Experience</div>${cards('level',[['new','New to it','first weeks, learn the moves'],['some','Some','a few months in'],['regular','Regular','a year or more']])}${d.wkType==='home'||d.wkType==='sport'?`<div class="onb-q">What you have at home</div>${cards('equip',[['dumbbells','Dumbbells','or kettlebell'],['bands','Resistance bands'],['body','Nothing','bodyweight only']])}`:''}`}`; }
   if(st===5){ const t=d.t=computeTargets(d); const cur=PEOPLE[ONB.who]; const had=!!(cur&&(cur.onboarded||ONB.rerun||!(cur.target.k===1900&&cur.target.p===150))); const cmp=(a,b)=>had&&a!==b?` <small class="muted">(now ${a})</small>`:'';
     b.innerHTML=`<div class="onb-q">Resting rate about ${t.bmr} kcal, maintenance about ${t.maint} kcal. ${d.goalType==='lose'?`At this intake you lose about ${t.weekly} kg a week${t.cutCapped?', the most that keeps you above your resting rate':''}.${t.aggressive?' This is a bigger cut than the usual 20 percent: fine for a few weeks if protein stays at target, but ease off if you feel wiped out or lose more than 1 percent of body weight a week.':''}`:d.goalType==='gain'?'A small surplus so most of the gain is muscle.':'Calories to hold your weight.'} Adjust anything you like.</div>
     <div class="grp"><div class="fld"><span>Calories a day${cmp(cur.target.k,t.kcal)}</span><div><input id="onbKcal" type="number" inputmode="decimal" value="${t.kcal}"><small>kcal</small></div></div><div class="fld"><span>Protein a day${cmp(cur.target.p,t.protein)}</span><div><input id="onbProt" type="number" inputmode="decimal" value="${t.protein}"><small>g</small></div></div>${fld('onbCarb','Carbs max','g',t.carbMax)}${fld('onbFat','Fat max','g',t.fatMax)}${fld('onbSteps','Steps a day','',t.steps)}</div>
@@ -2248,7 +2403,7 @@ document.getElementById('onbBack').onclick=async()=>{ if(ONB.step===0){ document
 document.getElementById('onbNext').onclick=async()=>{ onbRead(); if(!onbValid()) return; if(ONB.step<ONB_LAST){ ONB.step++; onbRender(); return; }
   const d=ONB.d, t=d.t, msg=document.getElementById('onbMsg'); msg.textContent='Saving…';
   if(d.rules.includes('vegan')){ d.diet='veg'; ['dairy','eggs'].forEach(x=>{ if(!d.avoid.includes(x)) d.avoid.push(x); }); }
-  const prof={name:d.name, sex:d.sex, age:d.age, height:d.height, kg:d.kg, goal:d.goal, goalType:d.goalType, pace:d.goalType==='maintain'?0:d.pace, activity:d.activity, diet:d.diet, vegDays:d.diet==='veg'?[]:d.vegDays.slice().sort(), avoid:d.avoid, cuisines:d.cuisines, rules:d.rules, fastDays:d.fastDays.slice().sort(), why:d.why||'habit', wkType:d.wkType, wkDays:d.wkType==='none'?0:d.wkDays, wkTime:d.wkTime, onboarded:1, kcal:t.kcal, protein:t.protein, floor:Math.max(d.sex==='f'?1200:1500,t.kcal-200), maint:t.maint, pMin:Math.round(t.protein*0.8/5)*5, carbMax:t.carbMax, fatMax:t.fatMax, steps:t.steps, restCut:t.restCut};
+  const prof={name:d.name, sex:d.sex, age:d.age, height:d.height, kg:d.kg, goal:d.goal, goalType:d.goalType, pace:d.goalType==='maintain'?0:d.pace, activity:d.activity, diet:d.diet, vegDays:d.diet==='veg'?[]:d.vegDays.slice().sort(), avoid:d.avoid, cuisines:d.cuisines, rules:d.rules, fastDays:d.fastDays.slice().sort(), why:d.why||'habit', wkType:d.wkType, wkDays:d.wkType==='none'?0:d.wkDays, wkTime:d.wkTime, level:d.level, equip:d.equip, onboarded:1, kcal:t.kcal, protein:t.protein, floor:Math.max(d.sex==='f'?1200:1500,t.kcal-200), maint:t.maint, pMin:Math.round(t.protein*0.8/5)*5, carbMax:t.carbMax, fatMax:t.fatMax, steps:t.steps, restCut:t.restCut};
   if(d.mealsPerDay>=3) prof.mealsPerDay=d.mealsPerDay;
   if(d.keepMaint){ const cur=PEOPLE[ONB.who]; prof.floor=cur.floor; prof.pMin=cur.pMin; prof.restCut=cur.restCut; }
   if(d.notesTitle) prof.notesTitle=d.notesTitle; if(d.notes.length) prof.notes=d.notes;

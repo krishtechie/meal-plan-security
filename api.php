@@ -332,6 +332,8 @@ function validateProfile($p): ?string {
     if ($f === 'why') { if (!in_array($v, ['fat', 'muscle', 'health', 'event', 'habit'], true)) return 'bad why'; continue; }
     if ($f === 'wkType') { if (!in_array($v, ['gym', 'home', 'walk', 'yoga', 'sport', 'none'], true)) return 'bad workout'; continue; }
     if ($f === 'wkTime') { if (!in_array($v, ['am', 'pm'], true)) return 'bad workout time'; continue; }
+    if ($f === 'level') { if (!in_array($v, ['new', 'some', 'regular'], true)) return 'bad level'; continue; }
+    if ($f === 'equip') { if (!in_array($v, ['gym', 'dumbbells', 'bands', 'body'], true)) return 'bad equipment'; continue; }
     if ($f === 'meals') { if (!is_array($v) || count($v) > 12) return 'bad meals'; foreach ($v as $m) { if (!is_array($m) || !isset($m['name'], $m['time']) || !is_string($m['name']) || mb_strlen($m['name']) > 40 || !is_string($m['time']) || mb_strlen($m['time']) > 30) return 'bad meal'; foreach (['nv', 'v', 'vNoEgg'] as $l) { if (isset($m[$l])) { if (!is_array($m[$l]) || count($m[$l]) > 20) return 'bad meal list'; foreach ($m[$l] as $it) { $id = is_array($it) ? ($it[0] ?? '') : $it; if (!is_string($id) || !preg_match('/^[a-z0-9_]{1,40}$/', $id)) return 'bad meal item'; } } } } continue; }
     if (in_array($f, ['id', 'role', 'verified', 'email', 'hasPassword'], true)) continue;   // read-only echoes from the app
     if (isset($num[$f])) { if (!is_numeric($v) || $v < $num[$f][0] || $v > $num[$f][1]) return "$f out of range"; continue; }
@@ -377,7 +379,7 @@ function validateDoc($d, int $depth = 0): ?string {
   return 'bad type';
 }
 function validateShape(array $d): ?string {
-  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','templates','vegPrev','gen','m3','m4','m5','m6','name','savedAt','favs'];   // v17: favs = favourite food ids
+  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','templates','vegPrev','gen','m3','m4','m5','m6','name','savedAt','favs','wsess'];   // wsess = finished workout sessions by date   // v17: favs = favourite food ids
   foreach (array_keys($d) as $k) { if (!in_array($k, $allowed, true) && !preg_match('/^m\d{1,2}$/', (string)$k)) return "unknown field $k"; }
   foreach (($d['weights'] ?? []) as $w) {
     if (!is_array($w) || !isset($w['d'], $w['w'])) return 'bad weight entry';
@@ -395,6 +397,7 @@ function validateShape(array $d): ?string {
       }
     }
   }
+  $ws = $d['wsess'] ?? []; if (!is_array($ws) || count($ws) > 2000) return 'too many sessions'; foreach ($ws as $k => $v) { if (!preg_match('/^\d{4}-\d\d-\d\d$/', (string)$k) || !is_array($v) || !isset($v['n']) || !is_string($v['n']) || mb_strlen($v['n']) > 60) return 'bad session'; }
   $fv = $d['favs'] ?? []; if (!is_array($fv) || count($fv) > 60) return 'too many favourites'; foreach ($fv as $f) { if (!is_string($f) || !preg_match('/^[a-z0-9_]{1,40}$/', $f)) return 'bad favourite'; }
   $tp = $d['templates'] ?? [];
   if (!is_array($tp) || count($tp) > 50) return 'too many templates';
@@ -422,7 +425,7 @@ if ($a === 'put') {
   $err = validateDoc($body['data']) ?: validateShape($body['data']);
   if ($err) { audit('rejected', ['why' => $err]); http_response_code(422); echo json_encode(['ok' => false, 'error' => 'rejected: ' . $err]); exit; }
   // PHP decodes an empty JSON object as an empty array and would write it back as []; keep maps as maps.
-  foreach (['days', 'log', 'wlog', 'manual'] as $mapField) { if (isset($body['data'][$mapField]) && $body['data'][$mapField] === []) { $body['data'][$mapField] = new stdClass(); } }
+  foreach (['days', 'log', 'wlog', 'manual', 'wsess'] as $mapField) { if (isset($body['data'][$mapField]) && $body['data'][$mapField] === []) { $body['data'][$mapField] = new stdClass(); } }
   db()->beginTransaction();
   $cur = row('SELECT rev FROM docs WHERE user_id=?', [$target['id']]); $rev = (int)($cur['rev'] ?? 0) + 1; $upd = gmdate('c');
   q('INSERT INTO docs(user_id,rev,updated,by_user,data) VALUES(?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET rev=excluded.rev, updated=excluded.updated, by_user=excluded.by_user, data=excluded.data', [$target['id'], $rev, $upd, $user['id'], json_encode($body['data'], JSON_UNESCAPED_UNICODE)]);

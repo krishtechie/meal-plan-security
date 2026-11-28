@@ -96,6 +96,17 @@ STEP 6c - logging fast (v17)
   item to another meal; "Copy to <name>" copies a meal to the other
   person; "Quick add" logs calories and protein only.
 
+STEP 6d - workouts (v18)
+  The Workout tab builds the week from the profile: type (gym, home,
+  walking, yoga, sport, none), days a week, goal, experience and home
+  equipment. Gym or home: 1 to 3 days = full body, 4 = upper/lower,
+  5 = body-part split, 6 to 7 = push/pull/legs; home swaps every lift
+  for a dumbbell, band or bodyweight version. Sets and reps follow the
+  goal (lose: 10 to 15, build: 6 to 10, maintain: 8 to 12); "new to it"
+  drops a set. Today's session sits at the top with a rest timer, last
+  time's weight, kg/reps/sets inputs and Finish, which records the
+  session. Change any of it from Profiles -> Run the setup again.
+
 STEP 7 - on each phone
   iPhone: open the link in Safari -> Share -> Add to Home Screen.
   Android: open in Chrome -> menu -> Add to Home screen / Install app.
