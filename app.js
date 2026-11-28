@@ -1276,7 +1276,11 @@ function applyAvatars(root){ root.querySelectorAll('[data-av]').forEach(el=>{ co
 function renderNames(){ const seg=document.querySelector('.seg'); if(!seg) return; const ids=memberIds(); const list=ids.length?ids:['guest']; seg.innerHTML=list.map(k=>{ const P=PEOPLE[k]; const u=photoUrl(k); return `<button class="who${k===S.who?' on':''}" data-who="${k}"><span class="av${u?' img':''}" data-av="${k}">${esc(P.name.slice(0,1).toUpperCase())}</span><span class="nm">${esc(P.name)}</span></button>`; }).join(''); applyAvatars(seg); seg.classList.toggle('many',list.length>2); seg.querySelectorAll('.who').forEach(b=>b.onclick=()=>{ S.who=b.dataset.who; save(); render(); });
   document.title=(CLOUD.household&&CLOUD.household.name&&CLOUD.household.name!=='Home'?CLOUD.household.name+' ':'')+'Meal Planner'; }
 function askKey(msg){ const ov=document.getElementById('ovKey'); ov.classList.add('show'); authMode('login'); document.getElementById('keyMsg').textContent=msg||''; setStatus('Not signed in','warn'); }
-async function cloudPull(){
+let PULLING=null, PULLED_AT=0;
+async function cloudPull(){ if(PULLING) return PULLING; PULLING=cloudPullRun().finally(()=>{ PULLING=null; PULLED_AT=Date.now(); }); return PULLING; }   // v16.5.6: one pull at a time; callers share it
+// Cheap refresh for 'app came back': only pulls when the server revision moved, and never within 15 s of the last pull.
+async function cloudRefresh(){ if(PULLING||Date.now()-PULLED_AT<15000) return; try{ for(const who of memberIds()){ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ await cloudPull(); return; } } setStatus('Synced','ok'); }catch(e){ if(e.message==='auth') askKey('Session ended. Sign in again.'); } }
+async function cloudPullRun(){
   setStatus('Syncing…');
   try{
     for(const who of memberIds()){ const r=await api('get',who); if(r.data){ fixMaps(r.data); CLOUD.rev[who]=r.rev; if(!CLOUD.dirty[who]||(r.data.gen||0)>((S.people[who]||{}).gen||0)){ S.people[who]=r.data; CLOUD.dirty[who]=false; } } else if(S.people[who]){ CLOUD.dirty[who]=true; schedulePush(who,0); } }
@@ -1300,8 +1304,8 @@ async function cloudPush(who){ if(CLOUD.busy[who]){ schedulePush(who,500); retur
   catch(e){ if(e.message==='auth') askKey('Wrong password. Try again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes.'); else if(/^rejected/.test(e.message)){ setStatus('Not saved: server rejected the data','warn'); console.warn(e.message); } else { setStatus('Offline, will retry','warn'); setTimeout(()=>schedulePush(who,0),15000); } }
   finally{ CLOUD.busy[who]=false; } }
 // refresh from the server when the app comes back to the foreground (other phone may have changed things)
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&CLOUD.on&&CLOUD.key&&!isLocked()&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
-window.addEventListener('focus',()=>{ if(CLOUD.on&&CLOUD.key&&!isLocked()&&!Object.values(CLOUD.dirty).some(Boolean)) cloudPull(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&CLOUD.on&&CLOUD.key&&!isLocked()&&!Object.values(CLOUD.dirty).some(Boolean)) cloudRefresh(); });
+window.addEventListener('focus',()=>{ if(CLOUD.on&&CLOUD.key&&!isLocked()&&!Object.values(CLOUD.dirty).some(Boolean)) cloudRefresh(); });
 // Live: every 20 s while the page is visible, ask the server for the revision numbers and pull only if the other phone changed something
 setInterval(async()=>{ if(document.visibilityState!=='visible'||!CLOUD.on||!CLOUD.key||isLocked()||Object.values(CLOUD.dirty).some(Boolean)||Object.values(CLOUD.busy).some(Boolean)) return;
   try{ for(const who of memberIds()){ const rv=await api('rev',who); if(rv.rev!==(CLOUD.rev[who]||0)){ await cloudPull(); break; } } }catch(e){ if(e.message==='auth') askKey('Password changed. Sign in again.'); else if(e.message==='locked') askKey('Too many wrong attempts. Wait 15 minutes, then sign in.'); } },20000);
@@ -2109,9 +2113,9 @@ if('serviceWorker' in navigator && /^https:/.test(location.protocol)){ window.ad
   const mo=new MutationObserver(sync); document.querySelectorAll('.ov').forEach(o=>mo.observe(o,{attributes:true,attributeFilter:['class']})); })();
 
 // ===== Activity log (fix 4b): reads data/audit.log through api.php, signed in only =====
-const AU={lines:[],you:'',f:'all'};
-const AU_OUT={ok:['OK','ok'],bad_password:['Wrong password','bad'],no_key:['Not signed in','warn'],locked:['Locked out','bad'],rejected:['Data rejected','bad'],bad_body:['Bad request','warn'],too_large:['Too large','warn'],unknown_action:['Unknown request','warn'],bad_request:['Bad request','warn']};
-const AU_ACT={ping:'Opened the app',get:'Loaded data',put:'Saved changes',rev:'Checked for changes',audit:'Viewed activity log',unknown:'Unknown request'};
+const AU={lines:[],you:'',f:'main'};   // v16.5.6: default view hides routine reads (loaded, checked, opened); 'all' shows everything
+const AU_OUT={ok:['OK','ok'],bad_password:['Wrong password','bad'],no_key:['Not signed in','warn'],locked:['Locked out','bad'],rejected:['Data rejected','bad'],bad_body:['Bad request','warn'],too_large:['Too large','warn'],unknown_action:['Unknown request','warn'],bad_request:['Bad request','warn'],bad_token:['Session expired','warn'],bad_code:['Bad invite','bad'],forbidden:['Not allowed','warn'],exists:['Already exists','warn'],bad_email:['Bad e-mail','warn'],mail_failed:['E-mail failed','warn'],unverified:['E-mail not confirmed','warn'],closed:['Sign-up needs an invite','warn'],method:['Bad request','warn']};
+const AU_ACT={ping:'Opened the app',get:'Loaded data',put:'Saved changes',rev:'Checked for changes',audit:'Viewed activity log',login:'Signed in',logout:'Signed out',logout_all:'Signed out other devices',profile_put:'Saved profile',household_put:'Renamed household',invite:'Invited someone',member_move:'Moved someone out',member_remove:'Deleted a member',join_accept:'Joined a household',email_change:'Asked to change e-mail',password_change:'Changed password',photo_put:'Changed photo',photo_del:'Removed photo',account_put:'Saved account',account_delete:'Deleted account',forgot:'Asked for a reset link',reset:'Set a password',verify:'Confirmed e-mail',signup:'Created an account',code_new:'Made a sign-up invite',code_revoke:'Revoked a sign-up invite',security:'Viewed security',households:'Viewed households',sessions:'Viewed devices',revoke:'Signed out a device',unknown:'Unknown request'};
 function auDevice(ua){ ua=ua||''; if(/iPhone/.test(ua)) return 'iPhone'; if(/iPad/.test(ua)) return 'iPad'; if(/Android/.test(ua)) return 'Android'; if(/Macintosh/.test(ua)) return 'Mac'; if(/Windows/.test(ua)) return 'Windows PC'; if(/Linux|X11/.test(ua)) return 'Linux'; if(/curl|python|wget/i.test(ua)) return 'Script ('+ua.split('/')[0]+')'; if(/ZAP|nmap|nikto|sqlmap/i.test(ua)) return 'Scanner'; return ua?ua.split(' ')[0]:'Unknown device'; }
 function auKind(l){ if(l.action==='ping'||l.outcome==='bad_password'||l.outcome==='no_key'||l.outcome==='locked') return 'signin'; if(l.action==='put') return 'save'; return 'other'; }
 function auProblem(l){ return l.outcome!=='ok'&&l.outcome!=='no_key'; }
@@ -2126,12 +2130,14 @@ function auRender(){
   const day=Date.now()-86400000; const recent=AU.lines.filter(l=>new Date(l.ts).getTime()>day);
   const fails=recent.filter(l=>l.outcome==='bad_password').length, locks=recent.filter(l=>l.outcome==='locked').length, saves=recent.filter(l=>l.action==='put'&&l.outcome==='ok').length, ips=new Set(recent.map(l=>l.ip)).size;
   document.getElementById('auStats').innerHTML=`<div><b>${saves}</b><small>saves, 24 h</small></div><div class="${fails?'bad':''}"><b>${fails}</b><small>wrong passwords</small></div><div class="${locks?'bad':''}"><b>${locks}</b><small>lockouts</small></div><div><b>${ips}</b><small>IP addresses</small></div>`;
-  const list=document.getElementById('auList'); const rows=AU.lines.filter(l=>AU.f==='all'||(AU.f==='problem'?auProblem(l):auKind(l)===AU.f));
+  const list=document.getElementById('auList'); const routine=(l)=>l.outcome==='ok'&&(l.action==='get'||l.action==='rev'||l.action==='ping'||l.action==='audit'||l.action==='security'||l.action==='photo'||l.action==='sessions'||l.action==='households'||l.action==='codes'); let rows=AU.lines.filter(l=>AU.f==='all'||(AU.f==='main'?!routine(l):AU.f==='problem'?auProblem(l):auKind(l)===AU.f));
+  // collapse runs of the same thing by the same person from the same device within 10 minutes into one row with a count
+  const grouped=[]; for(const l of rows){ const g=grouped[grouped.length-1]; if(g&&g.action===l.action&&g.outcome===l.outcome&&g.user===l.user&&g.who===l.who&&g.ip===l.ip&&g.ua===l.ua&&Math.abs(new Date(g.ts)-new Date(l.ts))<600000){ g.n=(g.n||1)+1; } else grouped.push(Object.assign({},l)); } rows=grouped;
   if(!rows.length){ list.innerHTML='<div class="empty">Nothing here yet.</div>'; return; }
   let html='', lastD='';
   for(const l of rows){ const d=new Date(l.ts); const dk=d.toDateString(); if(dk!==lastD){ lastD=dk; const td=new Date().toDateString(), yd=new Date(Date.now()-86400000).toDateString(); html+=`<div class="aud">${dk===td?'Today':dk===yd?'Yesterday':d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}</div>`; }
     const o=AU_OUT[l.outcome]||[l.outcome,'warn']; const act=AU_ACT[l.action]||l.action; const who=l.who&&l.who!==l.user&&PEOPLE[l.who]?` for ${PEOPLE[l.who].name}`:'';
-    html+=`<div class="aur${l.ip===AU.you?' you':''}"><span class="aut">${d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</span><span class="aum">${act}${who}<small>${auName(l.user)}${l.user?' · ':''}${auDevice(l.ua)} · ${l.ip||''}</small></span><span class="aus ${o[1]}">${o[0]}</span></div>`; }
+    html+=`<div class="aur${l.ip===AU.you?' you':''}"><span class="aut">${d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</span><span class="aum">${act}${who}${l.n>1?` <i class="aun">×${l.n}</i>`:''}<small>${auName(l.user)}${l.user?' · ':''}${auDevice(l.ua)} · ${l.ip||''}</small></span><span class="aus ${o[1]}">${o[0]}</span></div>`; }
   list.innerHTML=html;
 }
 document.getElementById('openAudit').onclick=()=>{ document.getElementById('ovSet').classList.remove('show'); document.getElementById('ovAudit').classList.add('show'); auLoad(); };

@@ -969,3 +969,4 @@ body.ro #meals button,body.ro #meals .sugg,body.ro #checkin,body.ro #wtForm,body
 .opt-card.warnopt span{color:#b25e00}
 html[data-theme=dark] .opt-card.warnopt span{color:#ffb340}
 .acmsg{padding:0 14px 10px;min-height:0}.acmsg:empty{display:none}
+.aun{font-style:normal;font-size:12px;color:var(--muted);background:var(--card2);border-radius:8px;padding:1px 6px;margin-left:4px}
