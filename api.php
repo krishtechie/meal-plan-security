@@ -33,7 +33,7 @@ function audit(string $outcome, array $extra = []): void {
   $line = ['ts' => gmdate('c'), 'ip' => $ip, 'user' => $user ? (int)$user['id'] : '', 'action' => $a, 'who' => $who ?: '', 'outcome' => $outcome, 'ua' => $ua] + $extra;
   @file_put_contents(DATA_DIR . '/audit.log', json_encode($line) . "\n", FILE_APPEND | LOCK_EX);
 }
-function fail(int $code, string $outcome, string $msg): void { audit($outcome); http_response_code($code); echo json_encode(['ok' => false, 'error' => $msg]); exit; }
+function fail(int $code, string $outcome, string $msg): void { audit($outcome); http_response_code($code); echo json_encode(['ok' => false, 'error' => $msg, 'code' => $outcome]); exit; }
 function ok(array $o = []): void { echo json_encode(['ok' => true] + $o); exit; }
 function needPost(): void { global $method; if ($method !== 'POST') fail(405, 'method', 'POST required'); }
 
@@ -45,6 +45,12 @@ $ipKey = 'ip:' . $ip; $acKey = $emailIn !== '' ? 'acct:' . $emailIn : '';
 $fails = fn($k) => $k === '' ? 0 : (int)(row('SELECT n FROM attempts WHERE key=?', [$k])['n'] ?? 0);
 function bump(string $k): void { global $now; if ($k === '') return; q('INSERT INTO attempts(key,n,t) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET n=n+1, t=excluded.t', [$k, $now]); }
 function clearAttempts(array $ks): void { foreach ($ks as $k) { if ($k !== '') q('DELETE FROM attempts WHERE key=?', [$k]); } }
+// v16.5.7: a signed-in person re-entering their password (change e-mail or password, delete a member) gets its own counter:
+// five wrong tries block those actions for 15 minutes but never lock the whole app or the IP, which the sign-in gate does.
+function confirmPw(array $user, string $pw): void { global $fails; $k = 'pw:' . $user['id'];
+  if ($fails($k) >= 5) { header('Retry-After: 900'); fail(429, 'pw_locked', 'Too many wrong passwords. Wait 15 minutes before trying this again.'); }
+  if (!password_verify($pw, $user['pass_hash'])) { bump($k); $left = 5 - $fails($k); fail(403, 'bad_password', $left > 0 ? "Wrong password. $left " . ($left === 1 ? 'try' : 'tries') . ' left before a 15-minute wait.' : 'Wrong password. Wait 15 minutes before trying this again.'); }
+  clearAttempts([$k]); }
 if ($fails($ipKey) >= 5 || $fails($acKey) >= 20) { header('Retry-After: 900'); fail(429, 'locked', 'too many attempts, try again in 15 minutes'); }
 
 // ---- sessions (fix 10) ----
@@ -148,7 +154,7 @@ if ($a === 'resend') { if ((int)$user['verified']) ok(['sent' => false]); bump($
 if ($a === 'account_put') { needPost(); $name = cleanName($body['name'] ?? ''); if ($name === '') fail(422, 'rejected', 'Enter your name.'); q('UPDATE users SET name=? WHERE id=?', [$name, $user['id']]); audit('ok'); ok(meOut(row('SELECT * FROM users WHERE id=?', [$user['id']]))); }
 if ($a === 'email_change') {
   needPost(); $pw = (string)($body['password'] ?? '');
-  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(403, 'bad_password', 'Wrong password.'); }
+  confirmPw($user, $pw);
   if ($emailIn === '') fail(422, 'rejected', 'Enter a valid e-mail address.');
   if ($emailIn === strtolower($user['email'])) fail(422, 'rejected', 'That is already your e-mail.');
   if (row('SELECT id FROM users WHERE email=? OR pending_email=?', [$emailIn, $emailIn])) fail(409, 'exists', 'That e-mail is already in use.');
@@ -158,7 +164,7 @@ if ($a === 'email_change') {
 }
 if ($a === 'password_change') {
   needPost(); $pw = (string)($body['password'] ?? ''); $new = (string)($body['newPassword'] ?? '');
-  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(403, 'bad_password', 'Wrong current password.'); }
+  confirmPw($user, $pw);
   if ($e = validPassword($new, $user['email'])) fail(422, 'rejected', $e);
   q('UPDATE users SET pass_hash=? WHERE id=?', [password_hash($new, PASSWORD_BCRYPT), $user['id']]);
   q('DELETE FROM sessions WHERE user_id=? AND id<>?', [$user['id'], $sess['id']]);   // every other device signs in again
@@ -275,13 +281,13 @@ if ($a === 'member_remove') {
   needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can remove members.');
   $id = (int)($body['id'] ?? 0); if ($id === (int)$user['id']) fail(422, 'rejected', 'The owner cannot remove themselves. Delete the account instead.');
   $m = row('SELECT pass_hash FROM users WHERE id=? AND household_id=?', [$id, $hhId]); if (!$m) fail(422, 'rejected', 'Not a member of this household.');
-  if ($m['pass_hash'] !== '') { $pw = (string)($body['password'] ?? ''); if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(403, 'bad_password', 'Enter your own password to delete a member.'); } }   // v16.5: deleting someone's data needs the owner's password (403, not 401: a wrong re-entered password must not end the session); cancelling an unused invite does not
+  if ($m['pass_hash'] !== '') { $pw = (string)($body['password'] ?? ''); if ($pw === '') fail(403, 'bad_password', 'Enter your own password to delete a member.'); confirmPw($user, $pw); }   // v16.5: deleting someone's data needs the owner's password (403, not 401: a wrong re-entered password must not end the session); cancelling an unused invite does not
   $n = q('DELETE FROM users WHERE id=? AND household_id=?', [$id, $hhId])->rowCount();   // cascades to docs, sessions, tokens
   audit('ok', ['member' => $id, 'removed' => $n]); ok(meOut($user));
 }
 if ($a === 'account_delete') {   // owner: whole household. member: just themselves.
   needPost(); $pw = (string)($body['password'] ?? '');
-  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(403, 'bad_password', 'Wrong password.'); }
+  confirmPw($user, $pw);
   if ($isOwner) q('DELETE FROM households WHERE id=?', [$hhId]); else q('DELETE FROM users WHERE id=?', [$user['id']]);
   audit('ok', ['household' => $isOwner ? $hhId : '']); ok();
 }
