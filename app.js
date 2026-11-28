@@ -2277,6 +2277,27 @@ render();
 cloudInit();
 
 // Offline: register the service worker (shell cache; api.php stays live)
+
+// ================= v17.2: PULL TO REFRESH =================
+// Drag down from the top of the page: pulls the latest data from the server and, if a newer app version has been deployed, reloads into it.
+const PTR={y0:null,dy:0,busy:false,el:null};
+function ptrInit(){ const el=document.createElement('div'); el.id='ptr'; el.innerHTML='<span class="ptrsp"></span><span class="ptrt">Pull to refresh</span>'; document.body.prepend(el); PTR.el=el;
+  const ok=()=>!PTR.busy&&window.scrollY<=0&&!document.querySelector('.ov.show')&&!DEMOMODE;
+  document.addEventListener('touchstart',e=>{ if(ok()) { PTR.y0=e.touches[0].clientY; PTR.dy=0; } else PTR.y0=null; },{passive:true});
+  document.addEventListener('touchmove',e=>{ if(PTR.y0===null) return; const dy=e.touches[0].clientY-PTR.y0; if(dy<=0||window.scrollY>0){ ptrShow(0); PTR.dy=0; return; } PTR.dy=Math.min(dy,140); ptrShow(PTR.dy); },{passive:true});
+  document.addEventListener('touchend',()=>{ if(PTR.y0===null) return; const go=PTR.dy>=70; PTR.y0=null; if(go) ptrRun(); else ptrShow(0); },{passive:true});
+}
+function ptrShow(dy){ const el=PTR.el; if(!el) return; el.style.height=dy?Math.round(Math.min(dy,80)*0.75)+'px':'0px'; el.style.opacity=dy?Math.min(1,dy/60):0; el.classList.toggle('ready',dy>=70); el.querySelector('.ptrt').textContent=dy>=70?'Release to refresh':'Pull to refresh'; }
+async function ptrRun(){ if(PTR.busy) return; PTR.busy=true; const el=PTR.el; el.classList.add('busy'); el.querySelector('.ptrt').textContent='Refreshing…'; el.style.height='60px'; el.style.opacity=1;
+  let updated=false;
+  try{ if(CLOUD.on&&CLOUD.key&&!isLocked()){ PULLED_AT=0; if(Object.values(CLOUD.dirty).some(Boolean)){ for(const w of Object.keys(CLOUD.dirty)){ if(CLOUD.dirty[w]) await cloudPush(w); } } await cloudPull(); } }catch(e){}
+  try{ updated=await checkAppUpdate(); }catch(e){}
+  if(!updated){ el.querySelector('.ptrt').textContent='Up to date'; setTimeout(()=>{ el.classList.remove('busy'); ptrShow(0); PTR.busy=false; },700); }
+}
+// Compares the deployed index.html with the one running; a different asset version means a new deploy. Lets the service worker fetch the new shell, then reloads.
+async function checkAppUpdate(){ const cur=(document.querySelector('script[src^="app.js"]')||{}).getAttribute?.('src')||''; const r=await fetch('index.html?fresh='+Date.now(),{cache:'no-store'}); if(!r.ok) return false; const html=await r.text(); const m=html.match(/app\.js\?v=(\d+)/); if(!m||('app.js?v='+m[1])===cur) return false;
+  toast('Updating to the new version…'); try{ const reg=await navigator.serviceWorker?.getRegistration(); if(reg){ await reg.update(); await Promise.all(['index.html','app.js?v='+m[1],'app.css?v='+m[1]].map(u=>fetch(u,{cache:'reload'}).catch(()=>{}))); } }catch(e){} setTimeout(()=>location.reload(),600); return true; }
+document.addEventListener('DOMContentLoaded',ptrInit);
 if('serviceWorker' in navigator && /^https:/.test(location.protocol)){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 
 // Lock the page behind an open sheet (iOS otherwise scrolls the page and the sheet drifts off screen)

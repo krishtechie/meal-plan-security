@@ -984,3 +984,10 @@ html[data-theme=dark] .opt-card.warnopt span{color:#ffb340}
 .optr{display:flex;align-items:center;gap:6px;flex-shrink:0}.favbtn{background:none;border:0;font-size:18px;line-height:1;color:var(--muted);padding:2px 4px}.favbtn.on{color:#ff3b30}
 .partsbtn,.quickbtn{align-self:flex-start;margin:4px 0 2px}
 .btn.add.ty{color:var(--acc)}
+
+/* v17.2 pull to refresh */
+#ptr{height:0;opacity:0;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--muted);transition:height .15s,opacity .15s}
+#ptr .ptrsp{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--acc);transform:rotate(0deg)}
+#ptr.ready .ptrsp{transform:rotate(180deg);border-top-color:var(--acc)}
+#ptr.busy .ptrsp{animation:ptrspin .8s linear infinite}
+@keyframes ptrspin{to{transform:rotate(360deg)}}
