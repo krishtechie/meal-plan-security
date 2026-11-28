@@ -148,7 +148,7 @@ if ($a === 'resend') { if ((int)$user['verified']) ok(['sent' => false]); bump($
 if ($a === 'account_put') { needPost(); $name = cleanName($body['name'] ?? ''); if ($name === '') fail(422, 'rejected', 'Enter your name.'); q('UPDATE users SET name=? WHERE id=?', [$name, $user['id']]); audit('ok'); ok(meOut(row('SELECT * FROM users WHERE id=?', [$user['id']]))); }
 if ($a === 'email_change') {
   needPost(); $pw = (string)($body['password'] ?? '');
-  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(401, 'bad_password', 'Wrong password.'); }
+  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(403, 'bad_password', 'Wrong password.'); }
   if ($emailIn === '') fail(422, 'rejected', 'Enter a valid e-mail address.');
   if ($emailIn === strtolower($user['email'])) fail(422, 'rejected', 'That is already your e-mail.');
   if (row('SELECT id FROM users WHERE email=? OR pending_email=?', [$emailIn, $emailIn])) fail(409, 'exists', 'That e-mail is already in use.');
@@ -158,7 +158,7 @@ if ($a === 'email_change') {
 }
 if ($a === 'password_change') {
   needPost(); $pw = (string)($body['password'] ?? ''); $new = (string)($body['newPassword'] ?? '');
-  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(401, 'bad_password', 'Wrong current password.'); }
+  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(403, 'bad_password', 'Wrong current password.'); }
   if ($e = validPassword($new, $user['email'])) fail(422, 'rejected', $e);
   q('UPDATE users SET pass_hash=? WHERE id=?', [password_hash($new, PASSWORD_BCRYPT), $user['id']]);
   q('DELETE FROM sessions WHERE user_id=? AND id<>?', [$user['id'], $sess['id']]);   // every other device signs in again
@@ -275,13 +275,13 @@ if ($a === 'member_remove') {
   needPost(); if (!$isOwner) fail(403, 'forbidden', 'Only the household owner can remove members.');
   $id = (int)($body['id'] ?? 0); if ($id === (int)$user['id']) fail(422, 'rejected', 'The owner cannot remove themselves. Delete the account instead.');
   $m = row('SELECT pass_hash FROM users WHERE id=? AND household_id=?', [$id, $hhId]); if (!$m) fail(422, 'rejected', 'Not a member of this household.');
-  if ($m['pass_hash'] !== '') { $pw = (string)($body['password'] ?? ''); if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(401, 'bad_password', 'Enter your own password to delete a member.'); } }   // v16.5: deleting someone's data needs the owner's password; cancelling an unused invite does not
+  if ($m['pass_hash'] !== '') { $pw = (string)($body['password'] ?? ''); if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(403, 'bad_password', 'Enter your own password to delete a member.'); } }   // v16.5: deleting someone's data needs the owner's password (403, not 401: a wrong re-entered password must not end the session); cancelling an unused invite does not
   $n = q('DELETE FROM users WHERE id=? AND household_id=?', [$id, $hhId])->rowCount();   // cascades to docs, sessions, tokens
   audit('ok', ['member' => $id, 'removed' => $n]); ok(meOut($user));
 }
 if ($a === 'account_delete') {   // owner: whole household. member: just themselves.
   needPost(); $pw = (string)($body['password'] ?? '');
-  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(401, 'bad_password', 'Wrong password.'); }
+  if (!password_verify($pw, $user['pass_hash'])) { bump($ipKey); fail(403, 'bad_password', 'Wrong password.'); }
   if ($isOwner) q('DELETE FROM households WHERE id=?', [$hhId]); else q('DELETE FROM users WHERE id=?', [$user['id']]);
   audit('ok', ['household' => $isOwner ? $hhId : '']); ok();
 }
