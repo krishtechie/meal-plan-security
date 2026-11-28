@@ -1,7 +1,7 @@
 // ================= FOOD DATABASE =================
 // [id, name, portion, kcal, protein, carbs, fat, type] type: v veg, e egg, n non-veg, t treat(veg), tn treat non-veg, te treat egg
 const CATS = {
-  all:'All foods', custom:'Custom / what we ate', mine:'My foods', bf:'Breakfast', carb:'Rice, roti, millets', prot:'Protein', veg:'Vegetables', side:'Dal, rasam, sides', treat:'Treat meals', snack:'Snacks', sweet:'Sweets', fruit:'Fruit', drink:'Drinks & tablets', gym:'Gym'
+  type:'✎ Type it', all:'All foods', custom:'Custom / what we ate', mine:'My foods', bf:'Breakfast', carb:'Rice, roti, millets', prot:'Protein', veg:'Vegetables', side:'Dal, rasam, sides', treat:'Treat meals', snack:'Snacks', sweet:'Sweets', fruit:'Fruit', drink:'Drinks & tablets', gym:'Gym'
 };
 const RAW = {
 bf:[
@@ -1424,18 +1424,19 @@ function renderPlan(){
     let html=`<div class="hd" role="button" tabindex="0" aria-expanded="${opn}" data-fold="${mi}"><span class="ico ${mcat} tile">${ICON[mcat]||ICON.mine}</span><div class="hdt"><b>${mname}</b><span><em>${tshort}</em> · ${m.items.length?`${m.items.length} item${m.items.length>1?'s':''} · `:''}${mt.k} kcal${ptgt?` · <b class="pcol" data-c="${pc}">${mt.p} / ${ptgt} g protein</b>`:''}</span></div>${fut?'':`<button class="btn addr" data-a="add" data-mi="${mi}" title="Add food" aria-label="Add food to ${m.name}">+</button>`}<span class="fchev" aria-hidden="true"></span></div><div class="mbody">`;
     m.items.forEach((x,ii)=>{ const it=F[x.id]; if(!it) return;
       html+=`<div class="item" data-cat="${it.cat}">${ic(it.cat)}<div><div class="n">${it.n}</div><div class="eat">Eat <b>${fmtG(it,x.q)||'as listed'}</b> · ${Math.round(it.k*x.q)} kcal</div><div class="chips"><span class="chip p">Protein ${Math.round(it.p*x.q)} g</span><span class="chip c">Carbs ${Math.round(it.c*x.q)} g</span><span class="chip f">Fat ${Math.round(it.f*x.q)} g</span>${tagHtml(it.t)}</div></div>
-        ${fut?'':`<div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit==='pcs'?(b.n*x.q===1?'pc':'pcs'):b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div>`}</div>`; });
+        ${fut?'':`<div class="ctl">${(it.cat==='gym'||it.cat==='drink')?'':(()=>{ const b=baseOf(it); return b ? `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><input class="amt" type="number" inputmode="decimal" step="${b.step}" min="0" value="${+(b.n*x.q).toFixed(1)}" data-mi="${mi}" data-ii="${ii}"><span class="unit">${b.unit==='pcs'?(b.n*x.q===1?'pc':'pcs'):b.unit}</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>` : `<button class="btn q" data-a="dec" data-mi="${mi}" data-ii="${ii}">−</button><span class="qty">${x.q}x</span><button class="btn q" data-a="inc" data-mi="${mi}" data-ii="${ii}">+</button>`; })()}<button class="btn sw" data-a="swap" data-mi="${mi}" data-ii="${ii}">Swap</button><select class="mvsel" data-mi="${mi}" data-ii="${ii}" aria-label="Move to another meal"><option value="">Move…</option>${plan.map((mm,j)=>j===mi||/^gym$/i.test(mm.name.trim())?'':`<option value="${j}">${esc(mm.name.replace(/ \(.*\)/,''))}</option>`).join('')}</select><button class="btn x" data-a="del" data-mi="${mi}" data-ii="${ii}">×</button></div>`}</div>`; });
     if(!m.items.length){ const sg=(template(S.day)[mi]||{}).items||[]; if(sg.length&&!/^gym$/i.test(m.name.trim())){ const st=tot(sg); html+=`<div class="sugg"><div class="sgh"><span>Suggested for ${isVeg()?'a veg':'a non-veg'} day · ${st.k} kcal · ${st.p} g protein</span>${fut?'':`<button class="btn q sgall" data-a="suggall" data-mi="${mi}">Add all</button>`}</div>${sg.map((x,si)=>{ const it=F[x.id]; if(!it) return ''; return `<div class="sgi"><span>${ic(it.cat)}</span><span class="sgn">${it.n}${fmtG(it,x.q)?' · '+fmtG(it,x.q):''}<small>${Math.round(it.k*x.q)} kcal · ${Math.round(it.p*x.q)} g protein</small></span>${fut?'':`<button class="btn q sgadd" data-a="sugg" data-mi="${mi}" data-ii="${si}" aria-label="Add ${it.n}">+</button>`}</div>`; }).join('')}</div>`; } else if(fut) html+=`<div class="addrow dim"><span class="note">Nothing suggested</span></div>`; }
     if(fut){}
     else if(!m.items.length){
-      const y=yesterdayMeal(mi); const tp=(ps.templates||[]).filter(t=>t.meal.toLowerCase()===m.name.toLowerCase()); html+=`<div class="addrow"><button class="btn add" data-a="add" data-mi="${mi}">+ Add food</button>${y?`<button class="btn add yd" data-a="yday" data-mi="${mi}" title="${y.map(x=>F[x.id]?F[x.id].n:'').join(', ')}">↺ Same as yesterday</button>`:''}${tp.length?`<button class="btn add yd" data-a="usual" data-mi="${mi}" title="${tp[0].name}">☆ ${tp.length===1?tp[0].name:'My usual'}</button>`:''}</div>`; }
-    else if(!/^gym$/i.test(m.name.trim())&&!/waking/i.test(m.name)){ html+=`<div class="tplrow"><button class="btn q" data-a="savetpl" data-mi="${mi}">☆ Save as my usual ${m.name.replace(/ \(.*\)/,'').toLowerCase()}</button></div>`; }
+      const lm=lastMeal(mi); const tp=(ps.templates||[]).filter(t=>t.meal.toLowerCase()===m.name.toLowerCase()); html+=`<div class="addrow"><button class="btn add" data-a="add" data-mi="${mi}">+ Add food</button><button class="btn add ty" data-a="type" data-mi="${mi}" title="Type what you ate">✎ Type it</button>${lm?`<button class="btn add yd" data-a="yday" data-mi="${mi}" title="${lm.items.map(x=>F[x.id]?F[x.id].n:'').join(', ')}">↺ Same as ${lm.label}</button>`:''}${tp.length?`<button class="btn add yd" data-a="usual" data-mi="${mi}" title="${tp[0].name}">☆ ${tp.length===1?tp[0].name:'My usual'}</button>`:''}</div>`; }
+    else if(!/^gym$/i.test(m.name.trim())&&!/waking/i.test(m.name)){ const others=memberIds().filter(k=>k!==S.who&&canWriteWho(k)); html+=`<div class="tplrow"><button class="btn q" data-a="savetpl" data-mi="${mi}">☆ Save as my usual ${m.name.replace(/ \(.*\)/,'').toLowerCase()}</button>${fut||!others.length?'':`<button class="btn q" data-a="copyto" data-mi="${mi}">⇢ Copy to ${others.length===1?esc(PEOPLE[others[0]].name):'…'}</button>`}</div>`; }
     box.innerHTML=html+'</div>'; wrap.appendChild(box);
   });
   wrap.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>action(b.dataset.a,+b.dataset.mi,+b.dataset.ii));
   wrap.querySelectorAll('.hd[data-fold]').forEach(h=>{ const go=(e)=>{ if(e.target.closest('button')) return; const mi=+h.dataset.fold; const o=openSet(); if(o.has(mi)) o.delete(mi); else o.add(mi); const box=h.parentElement; box.classList.toggle('closed',!o.has(mi)); h.setAttribute('aria-expanded',o.has(mi)); }; h.onclick=go; h.onkeydown=(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(e); } }; });
   const gy=document.getElementById('goY'); if(gy) gy.onclick=()=>{ const y=yesterdayPos(); S.week=y.week; S.day=y.day; render(); window.scrollTo(0,0); };
   const dy=document.getElementById('disY'); if(dy) dy.onclick=()=>{ localStorage.setItem('kl-ydis',ymd(new Date())); render(); };
+  wrap.querySelectorAll('select.mvsel').forEach(sel=>{ sel.onclick=(e)=>e.stopPropagation(); sel.onchange=()=>{ if(sel.value==='') return; if(!canWriteWho(S.who)){ toast('View only'); sel.value=''; return; } moveItem(+sel.dataset.mi,+sel.dataset.ii,+sel.value); }; });
   wrap.querySelectorAll('input.amt').forEach(inp=>{ inp.onchange=()=>{ const mi=+inp.dataset.mi, ii=+inp.dataset.ii; const x=plan[mi].items[ii]; const b=baseOf(F[x.id]); const v=parseFloat(inp.value); if(b&&v>0){ x.q=+(v/b.n).toFixed(3); save(); render(); } else render(); }; });
   wrap.querySelectorAll('.pcol').forEach(el=>{ el.style.color=el.dataset.c; });
   const T=fut?tot(template(S.day).flatMap(m=>m.items)):tot(all); const rest=document.getElementById('rest').checked; const tk=P().target.k-(rest?P().restCut:0); const tp=P().target.p; const maint=P().maint;
@@ -1717,7 +1718,9 @@ function action(a,mi,ii){
   else if(a==='del'){ plan[mi].items.splice(ii,1); }
   else if(a==='swap'){ openSheet(mi,ii); return; }
   else if(a==='add'){ openSheet(mi,null); return; }
-  if(a==='yday'){ const y=yesterdayMeal(mi); if(y){ plan[mi].items=y.map(x=>({id:x.id,q:x.q})); save(); render(); } return; }
+  if(a==='yday'){ const y=lastMeal(mi); if(y){ plan[mi].items=y.items.map(x=>({id:x.id,q:x.q})); save(); render(); } return; }
+  if(a==='type'){ openSheet(mi,null); sheet.cat='type'; NL.rows=[]; NL.text=''; renderSheet(); return; }
+  if(a==='copyto'){ const others=memberIds().filter(k=>k!==S.who&&canWriteWho(k)); if(!others.length) return; const who=others.length===1?others[0]:(()=>{ const pick=prompt('Copy to whom? '+others.map((k,i)=>(i+1)+' = '+PEOPLE[k].name).join(', ')); const n=parseInt(pick,10); return others[n-1]; })(); if(!who) return; copyMealTo(mi,who); toast(`Copied ${plan[mi].name} to ${PEOPLE[who].name}`); return; }
   save(); render();
 }
 let sheet={mi:0,ii:null,cat:null};
@@ -1729,14 +1732,19 @@ function openSheet(mi,ii){
     document.getElementById('shTitle').textContent='Add to '+plan[mi].name; document.getElementById('shSub').textContent='Search any food (rice, carrot fry, curd, mushroom curry...) or pick a group. Set the exact grams, ml or pieces after adding.'; }
   cRows=[]; sheet.cname=''; document.getElementById('search').value=''; renderSheet(); document.getElementById('ov').classList.add('show'); if(ii===null) setTimeout(()=>document.getElementById('search').focus(),50);
 }
+// v17: one food search for the picker and for typed logging. Scores name and alias word matches; favourites, recommended and shorter names rank first.
+function foodSearch(q,typed){ const words=q.toLowerCase().split(/\s+/).filter(Boolean).map(w=>w.length>3&&/s$/.test(w)&&!/ss$/.test(w)?w.replace(/s$/,''):w); if(!words.length) return []; const esc=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); const favs=new Set((PS().favs||[]));
+  return Object.values(F).filter(x=>x.cat!=='gym'&&!x.hidden).map(x=>{ const name=x.n.toLowerCase(), al=(ALIAS[x.id]||'').toLowerCase(); let sc=0; words.forEach((w,wi)=>{ if(sc<0) return; const ww=/^\d/.test(w)?new RegExp('(^|[^0-9a-z/.])'+esc(w)+'([^0-9a-z/.]|$)'):new RegExp('(^|[^a-z])'+esc(w)+'([^a-z]|$)'); if(ww.test(name)){ sc+=8; if(wi===0&&name.startsWith(w)) sc+=3; } else if(name.split(/[\s,/()+·-]+/).some(t=>t.startsWith(w))) sc+=5; else if(ww.test(al)) sc+=4; else if(al.split(/\s+/).some(t=>t.startsWith(w))) sc+=3; else if((name+' '+al).includes(w)) sc+=1; else sc=-1; }); if(sc<0) return null; if(favs.has(x.id)) sc+=3; if(x.custom) sc+=1;
+    if(typed){ if(/\+/.test(name)) sc-=2; if(/^(\d+\s*)?[a-z /()-]+$/.test(name)&&name.split(/\s+/).length<=4) sc+=1; }   // typed: plain single foods beat combos unless the words say otherwise
+    return {x,sc}; }).filter(Boolean).sort((a,b)=>b.sc-a.sc||(typed?0:(REC.has(b.x.id)?1:0)-(REC.has(a.x.id)?1:0))||a.x.n.length-b.x.n.length).map(o=>o.x); }
 function renderSheet(){
   const plan=dayPlan(); const cur = sheet.ii!==null ? F[plan[sheet.mi].items[sheet.ii].id] : null;
   const cats=document.getElementById('cats'); cats.innerHTML='';
-  Object.keys(CATS).filter(c=>(c!=='gym'||sheet.cat==='gym')&&(c!=='mine'||PS().customs.length)).forEach(c=>{ const b=document.createElement('button'); b.className='btn'+(c===sheet.cat?' on':''); b.textContent=CATS[c]; b.onclick=()=>{sheet.cat=c;renderSheet();}; cats.appendChild(b); });
+  Object.keys(CATS).filter(c=>(c!=='gym'||sheet.cat==='gym')&&(c!=='mine'||PS().customs.length)&&(c!=='type'||sheet.ii===null)).forEach(c=>{ const b=document.createElement('button'); b.className='btn'+(c===sheet.cat?' on':''); b.textContent=CATS[c]; b.onclick=()=>{sheet.cat=c;renderSheet();}; cats.appendChild(b); });
   const q=document.getElementById('search').value.trim().toLowerCase();
-  document.getElementById('search').style.display = sheet.cat==='custom' ? 'none' : 'block';
+  document.getElementById('search').style.display = (sheet.cat==='custom'||sheet.cat==='type') ? 'none' : 'block';
   if(sheet.cat==='custom'){ renderCustomForm(); return; }
-  const foodSearch=(q)=>{ const words=q.split(/\s+/).filter(Boolean); const esc=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); return Object.values(F).filter(x=>x.cat!=='gym'&&!x.hidden).map(x=>{ const name=x.n.toLowerCase(), al=(ALIAS[x.id]||'').toLowerCase(); let sc=0; for(const w of words){ const ww=new RegExp('(^|[^a-z])'+esc(w)+'([^a-z]|$)'); if(ww.test(name)) sc+=8; else if(name.split(/[\s,/()+·-]+/).some(t=>t.startsWith(w))) sc+=5; else if(ww.test(al)) sc+=4; else if(al.split(/\s+/).some(t=>t.startsWith(w))) sc+=3; else if((name+' '+al).includes(w)) sc+=1; else return null; } return {x,sc}; }).filter(Boolean).sort((a,b)=>b.sc-a.sc||(REC.has(b.x.id)?1:0)-(REC.has(a.x.id)?1:0)||a.x.n.length-b.x.n.length).map(o=>o.x); };
+  if(sheet.cat==='type'){ nlRender(); if(!NL.text) setTimeout(()=>{ const ta=document.getElementById('nlIn'); if(ta) ta.focus(); },60); return; }
   let list = q ? foodSearch(q) : (sheet.cat==='all' ? Object.values(F).filter(x=>x.cat!=='gym'&&!x.hidden&&cuOk(x)) : sheet.cat==='mine' ? PS().customs.slice().reverse() : RAW[sheet.cat].map(r=>F[r[0]]).filter(x=>!x.hidden&&cuOk(x)));
   const hiddenN=list.filter(it=>!allowed(it)).length; if(!sheet.showAll) list=list.filter(it=>allowed(it));   // v15.7 fix: filter(allowed) passed the array index as the day
   if(cur) list.sort((a,b)=>Math.abs(a.p-cur.p)-Math.abs(b.p-cur.p));
@@ -1746,12 +1754,14 @@ function renderSheet(){
   if(hiddenN&&!q){ const t=document.createElement('button'); t.type='button'; t.className='btn q hiddenbtn'; t.textContent=sheet.showAll?`Hide the ${hiddenN} non-veg / egg items again`:`${hiddenN} non-veg / egg items hidden on this veg day · show anyway`; t.onclick=()=>{ sheet.showAll=!sheet.showAll; renderSheet(); }; o.appendChild(t); }
   const recentIds=(()=>{ const ps=PS(); const m=new Map(); const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-14); Object.keys(ps.days).sort().reverse().forEach(k=>{ if(!/^\d{4}/.test(k)||new Date(k.slice(0,10)+'T12:00')<cutoff) return; ps.days[k].forEach(mm=>mm.items.forEach(x=>{ if(!m.has(x.id)) m.set(x.id,1); })); }); return m; })();
   const hd=(t)=>{ const h=document.createElement('div'); h.className='chd'; h.textContent=t; o.appendChild(h); };
+  if(!q&&!cur&&sheet.cat==='all'){ const qa=document.createElement('button'); qa.type='button'; qa.className='btn q quickbtn'; qa.textContent='Quick add: just calories and protein'; qa.onclick=()=>{ sheet.cat='custom'; renderSheet(); setTimeout(()=>{ const mk=document.getElementById('mk'); if(mk) mk.focus(); },50); }; o.appendChild(qa); }
+  const favSet=new Set(favIds());
   if(!q&&!cur&&sheet.cat==='all'){ const mn=plan[sheet.mi].name.replace(/ \(.*\)/,'').toLowerCase(); const tps=PS().templates.filter(t=>t.meal.toLowerCase()===mn); if(tps.length){ hd('My usual'); tps.forEach(t=>{ const tt=tot(t.items); const d=document.createElement('div'); d.className='opt tpl'; d.innerHTML=`<div><div class="n">☆ ${t.name}</div><div class="m">${t.items.map(x=>F[x.id]?F[x.id].n+(x.q!==1?' ×'+x.q:''):'').filter(Boolean).join(', ')} · ${tt.k} kcal · ${tt.p} g protein</div></div><button class="btn x tdel" aria-label="Delete template">×</button>`; d.onclick=()=>{ plan[sheet.mi].items.push(...t.items.map(x=>({id:x.id,q:x.q}))); save(); closeSheet(); render(); }; d.querySelector('.tdel').onclick=(e)=>{ e.stopPropagation(); if(!confirm(`Delete "${t.name}"?`)) return; const ps=PS(); ps.templates=ps.templates.filter(x=>x.id!==t.id); save(); renderSheet(); }; o.appendChild(d); }); } }
   const mealName=plan[sheet.mi].name.toLowerCase(); const fitCats = /breakfast/.test(mealName)?['bf','prot','fruit','side']:/waking/.test(mealName)?['drink','fruit']:/mid-morning|pre-gym|evening|snack/.test(mealName)?['snack','fruit','prot','drink']:['prot','carb','veg','side'];
   const recFor=(it)=>REC.has(it.id)&&fitCats.includes(it.cat);
   const sugg=(!q&&!cur&&sheet.cat==='all')?suggestFor(sheet.mi):new Set();
-  let lastGrp=null; const grpOf=(it)=>!q&&!cur&&sheet.cat==='all' ? (sugg.has(it.id)?'Suggested now · fills today\'s gap':recFor(it)?'Recommended for '+plan[sheet.mi].name.replace(/ \(.*\)/,'').toLowerCase():recentIds.has(it.id)?'Eaten recently':'All foods') : null;
-  if(!q&&!cur&&sheet.cat==='all') list.sort((a,b)=>{ const ga=sugg.has(a.id)?0:recFor(a)?1:recentIds.has(a.id)?2:3, gb=sugg.has(b.id)?0:recFor(b)?1:recentIds.has(b.id)?2:3; return ga-gb; });
+  let lastGrp=null; const grpOf=(it)=>!q&&!cur&&sheet.cat==='all' ? (favSet.has(it.id)?'Favourites':sugg.has(it.id)?'Suggested now · fills today\'s gap':recFor(it)?'Recommended for '+plan[sheet.mi].name.replace(/ \(.*\)/,'').toLowerCase():recentIds.has(it.id)?'Eaten recently':'All foods') : null;
+  if(!q&&!cur&&sheet.cat==='all') list.sort((a,b)=>{ const ga=favSet.has(a.id)?-1:sugg.has(a.id)?0:recFor(a)?1:recentIds.has(a.id)?2:3, gb=favSet.has(b.id)?-1:sugg.has(b.id)?0:recFor(b)?1:recentIds.has(b.id)?2:3; return ga-gb; });
   list.forEach(it=>{ const g=grpOf(it); if(g&&g!==lastGrp){ hd(g); lastGrp=g; } const d=document.createElement('div'); d.className='opt'+(cur&&it.id===cur.id?' cur':'');
     const diff=cur?it.p-cur.p:null; const lbl=cur?(it.id===cur.id?'current':(diff>=0?'+':'')+diff+' g protein'):(it.custom?'my food':it.t==='v'?'veg':it.t==='e'||it.t==='te'?'egg':it.t==='n'||it.t==='tn'?'non-veg':'treat');
     const b00=baseOf(it); const combo=/\+/.test(it.g||'');
@@ -1764,9 +1774,12 @@ function renderSheet(){
       else { chips=[0.5,1,1.5,2].map(qq=>{ const c=b00.n*qq; return chip(qq,frac(c)+' '+b00.unit+(c>1&&!/tbsp|tsp/.test(b00.unit)?'s':'')); }).join(''); }
     }
     const pre=chips?`<div class="pre">${chips}</div>`:'';
-    d.innerHTML=`<div class="optmain"><div><div class="n">${REC.has(it.id)?'<span data-s="s16">★</span> ':''}${it.n}${it.g?' · '+it.g:''}</div><div class="m">${it.k} kcal · ${it.p} g protein · ${it.c} c · ${it.f} f${costTxt(it.id)?' · <span data-s="s16">'+costTxt(it.id)+'</span>':''}</div></div><span class="pill ${pill(it.t)}">${lbl}</span></div>${pre}`;
+    const partsBtn=(!cur&&BUNDLES[it.id])?`<button type="button" class="btn q partsbtn">as parts</button>`:'';
+    d.innerHTML=`<div class="optmain"><div><div class="n">${REC.has(it.id)?'<span data-s="s16">★</span> ':''}${it.n}${it.g?' · '+it.g:''}</div><div class="m">${it.k} kcal · ${it.p} g protein · ${it.c} c · ${it.f} f${costTxt(it.id)?' · <span data-s="s16">'+costTxt(it.id)+'</span>':''}</div></div><span class="optr"><button type="button" class="favbtn${favSet.has(it.id)?' on':''}" aria-label="${favSet.has(it.id)?'Remove from favourites':'Add to favourites'}">${favSet.has(it.id)?'♥':'♡'}</button><span class="pill ${pill(it.t)}">${lbl}</span></span></div>${pre}${partsBtn}`;
     const addWith=(qq)=>{ if(sheet.ii!==null) plan[sheet.mi].items[sheet.ii]={id:it.id,q:qq}; else plan[sheet.mi].items.push({id:it.id,q:qq}); save(); closeSheet(); render(); };
     d.onclick=()=>addWith(1);
+    d.querySelector('.favbtn').onclick=(e)=>{ e.stopPropagation(); toggleFav(it.id); renderSheet(); };
+    const pb=d.querySelector('.partsbtn'); if(pb) pb.onclick=(e)=>{ e.stopPropagation(); logParts(sheet.mi,it.id,1); save(); closeSheet(); render(); toast('Logged '+it.n.split(':')[0]+' as '+BUNDLES[it.id].length+' parts'); };
     d.querySelectorAll('.pre button').forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); addWith(+b.dataset.q); });
     o.appendChild(d); });
 }
@@ -1830,6 +1843,84 @@ function saveCustom(){
   PS().customs.push(item); F[item.id]=item; const plan=dayPlan(); if(sheet.ii!==null) plan[sheet.mi].items[sheet.ii]={id:item.id,q:1}; else plan[sheet.mi].items.push({id:item.id,q:1}); cRows=[]; sheet.cname=''; save(); closeSheet(); render();
 }
 function closeSheet(){ document.getElementById('ov').classList.remove('show'); }
+
+// ================= v17: TYPED LOGGING ("3 eggs, 2 rotis, dal") =================
+// Everything here runs on the phone against the person's own food list. Nothing is sent anywhere.
+const NL_SYN=[[/\bchapat(?:h)?is?\b|\bphulkas?\b|\bchappathis?\b/g,'roti'],[/\bdahi\b|\byog(?:h)?urt\b|\bperugu\b|\bthayir\b/g,'curd'],[/\bannam\b|\bchawal\b|\bsadam\b/g,'rice'],[/\bpappu\b|\bdaal\b|\bdhal\b/g,'dal'],[/\bguddu\b|\bandaa?\b|\bgudlu\b|\bmutta\b/g,'egg'],[/\bmeal ?maker\b|\bsoya chunk\b/g,'soya chunks'],[/\bkichidi\b|\bkhichadi\b|\bkitchari\b|\bkichdi\b/g,'khichdi'],[/\bpaalu\b|\bdoodh\b|\bpaal\b/g,'milk'],[/\bchai\b|\btee\b/g,'tea'],[/\bkodi\b|\bmurgh\b|\bchiken\b|\bchicke\b/g,'chicken'],[/\bomlet(?:te)?\b|\bomellete\b|\bomelet\b/g,'omelette'],[/\bpeanut butter\b|\bpb\b/g,'peanut butter'],[/\bprotein shake\b|\bprotein powder\b|\bwhey shake\b|\bwhey protein\b/g,'whey'],[/\bveggies?\b|\bvegetables?\b|\bkura\b|\bkoora\b|\bsabji\b|\bsabzi\b/g,'veg'],[/\bbf\b/g,'breakfast'],[/\bcurd rice\b|\bperugannam\b|\bthayir sadam\b/g,'curd rice'],[/\bpesaratt?u\b|\bpesarat\b/g,'pesarattu'],[/\bsambhar\b|\bsaambar\b/g,'sambar'],[/\bcharu\b/g,'rasam'],[/\bbadam\b/g,'almonds'],[/\bkhajoor\b|\bkhajur\b/g,'dates'],[/\bnimbu\b/g,'lemon'],[/\baloo\b|\bbangaladumpa\b/g,'potato'],[/\bgobi\b/g,'cauliflower'],[/\bbhindi\b|\bbendakaya\b/g,'okra'],[/\bpalak\b|\bpalakura\b/g,'spinach'],[/\bchana\b|\bchole\b|\bsenagalu\b/g,'chickpeas'],[/\brajma\b/g,'kidney beans'],[/\bpaneer\b/g,'paneer'],[/\bsenagapindi\b/g,'besan'],[/\bgreek yog\w*\b/g,'greek yogurt'],[/\bboiled eggs?\b|\beggs? boiled\b/g,'boiled egg'],[/\bbrown bread\b/g,'bread']];
+const NL_NUM={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,half:0.5,quarter:0.25,'½':0.5,'¼':0.25,'¾':0.75,'1½':1.5,'1/2':0.5,'1/4':0.25,'3/4':0.75,'1 1/2':1.5,'2 1/2':2.5,double:2,couple:2,few:3};
+const NL_UNIT={g:'g',gm:'g',gms:'g',gram:'g',grams:'g',ml:'ml',cup:'cup',cups:'cup',bowl:'bowl',bowls:'bowl',katori:'bowl',katoris:'bowl',plate:'plate',plates:'plate',scoop:'scoop',scoops:'scoop',tbsp:'tbsp',tablespoon:'tbsp',tablespoons:'tbsp',tsp:'tsp',teaspoon:'tsp',teaspoons:'tsp',glass:'glass',glasses:'glass',slice:'pcs',slices:'pcs',piece:'pcs',pieces:'pcs',pcs:'pcs',pc:'pcs',handful:'handful',handfuls:'handful',serving:'serve',servings:'serve',portion:'serve',portions:'serve',small:'small',large:'large',big:'large'};
+const NL_GRAMS={cup:150,bowl:100,plate:200,glass:250,scoop:30,tbsp:15,tsp:5,handful:30};
+function nlNorm(t){ t=' '+t.toLowerCase().replace(/[“”"']/g,'').replace(/\s+/g,' ')+' '; NL_SYN.forEach(([rx,to])=>{ t=t.replace(rx,to); }); return t.trim(); }
+function nlSplit(text){ return nlNorm(text).split(/\s*(?:,|\n|;|\+|\bthen\b|\band\b|\balso\b|\bplus\b)\s*/).map(x=>x.trim()).filter(x=>x&&!/^(i had|had|ate|i ate|for|at|with)$/.test(x)); }
+// "2 rotis", "half plate rice", "100 g chicken", "dal 1 katori", "roti x2", "eggs 3"
+function nlPhrase(ph){ ph=ph.replace(/^(?:i had|i ate|had|ate|some|a bit of|a little|for (?:breakfast|lunch|dinner|snack)\s*:?)\s+/,'').trim();
+  let n=null, unit=null, size=null; const numRx='(\\d+(?:[.,]\\d+)?(?:\\s+\\d\\/\\d)?|\\d\\/\\d|½|¼|¾|1½|a|an|one|two|three|four|five|six|seven|eight|nine|ten|half|quarter|double|couple|few)';
+  const unitRx='(g|gm|gms|grams?|ml|cups?|bowls?|katoris?|plates?|scoops?|tbsp|tablespoons?|tsp|teaspoons?|glass(?:es)?|slices?|pieces?|pcs|pc|handfuls?|servings?|portions?)';
+  const takeNum=(w)=>{ if(NL_NUM[w]!=null) return NL_NUM[w]; const m=w.match(/^(\d+)\s+(\d)\/(\d)$/); if(m) return +m[1]+(+m[2]/+m[3]); const f=w.match(/^(\d)\/(\d)$/); if(f) return +f[1]/+f[2]; return +w.replace(',','.'); };
+  let m=ph.match(new RegExp('^'+numRx+'\\s*(?:x\\s*)?(?:'+unitRx+'\\b\\s*(?:of\\s+)?)?(.+)$'));
+  if(m){ n=takeNum(m[1]); unit=m[2]?NL_UNIT[m[2].toLowerCase()]||null:null; ph=m[3]; }
+  else { m=ph.match(new RegExp('^(.+?)\\s+(?:x\\s*)?'+numRx+'\\s*(?:'+unitRx+')?$')); if(m){ n=takeNum(m[2]); unit=m[3]?NL_UNIT[m[3].toLowerCase()]||null:null; ph=m[1]; } else { m=ph.match(/^(.+?)\s+x\s*(\d+(?:\.\d+)?)$/); if(m){ n=+m[2]; ph=m[1]; } } }
+  const sm=ph.match(/^(small|large|big)\s+(.+)$/)||ph.match(/^(.+?)\s+(small|large|big)$/); if(sm){ size=NL_UNIT[(sm[1].length<=5&&/^(small|large|big)$/.test(sm[1]))?sm[1]:sm[2]]; ph=/^(small|large|big)$/.test(sm[1])?sm[2]:sm[1]; }
+  ph=ph.replace(/^(?:of|the)\s+/,'').replace(/\s+(?:pcs|pieces?|nos?)$/,'').trim();
+  return {text:ph, n, unit, size}; }
+// turn a typed amount into the item's multiplier q (1 = the listed portion)
+function nlQty(it, pr){ const b=baseOf(it); let n=pr.n, unit=pr.unit; let note='';
+  if(n==null&&!unit){ return {q:pr.size==='small'?0.75:pr.size==='large'?1.5:1, note:''}; }
+  if(n==null) n=1;
+  if(!b) return {q:Math.max(0.25,Math.min(5,n)), note:unit?'listed portion ×'+n:''};
+  const head=(it.g||'').match(/^(\d+(?:\.\d+)?)\s*[a-z]/i); if((unit==null||unit==='pcs')&&head&&b.unit!=='pcs'&&!/^\d+(?:\.\d+)?\s*(g|ml)\b/i.test(it.g)) return {q:n/+head[1], note:''};   // "2 idli + 150 g sambar": the count leads
+  const gramsOf=(grams)=>{ if(b.unit==='g'||b.unit==='ml') return grams/b.n; if(b.gper) return grams/(b.n*b.gper); return null; };
+  if(unit==='g'||unit==='ml'){ const q=gramsOf(n); if(q!=null) return {q, note:''}; return {q:1, note:'no gram weight listed; logged as 1 portion'}; }
+  if(unit==='serve') return {q:n, note:''};
+  if(unit==='pcs'||unit==null){ if(b.unit==='pcs') return {q:n/b.n, note:''}; return {q:n, note:unit==='pcs'?'counted as portions':''}; }
+  if(b.unit===unit) return {q:n/b.n, note:''};
+  if(NL_GRAMS[unit]){ const q=gramsOf(n*NL_GRAMS[unit]); if(q!=null) return {q, note:`${unit} taken as ${NL_GRAMS[unit]} ${b.unit==='ml'?'ml':'g'}`}; }
+  return {q:n, note:'counted as portions'}; }
+function nlTemplates(text){ const ps=PS(); const t=text.replace(/^(?:my\s+)?(?:usual|regular|normal)\s+/,'').trim(); return (ps.templates||[]).filter(x=>x.name.toLowerCase()===text||x.meal.toLowerCase()===t||x.name.toLowerCase().includes(text)); }
+const NL_PLAIN={egg:'pc_egg1',eggs:'pc_egg1',rice:'c_rice150',dal:'s_pappu',chicken:'p_chk150',whey:'p_whey',coffee:'d_coffee',milk:'d_milk',curd:'s_curd100',roti:'c_roti1',idli:'c_idli2',banana:'f_banana',apple:'f_apple',peanuts:'k_peanuts',almonds:'k_almonds',sambar:'s_sambar',rasam:'s_rasam',khichdi:'p_khichdi',paneer:'p_paneer100',fish:'p_fish150',oats:'b_oats'};   // what a bare word means; typed "3 eggs" is three boiled eggs, not egg curry
+function nlResolve(text){ const parts=nlSplit(text); const out=[];
+  for(const ph of parts){ const pr=nlPhrase(ph); if(!pr.text) continue;
+    const tp=/usual|regular|normal/.test(ph)?nlTemplates(pr.text):[]; if(tp.length){ out.push({ph, kind:'tpl', tpl:tp[0], items:tp[0].items.map(x=>({id:x.id,q:x.q}))}); continue; }
+    let cands=foodSearch(pr.text,true); const plain=NL_PLAIN[pr.text]||NL_PLAIN[pr.text.replace(/s$/,'')]; if(plain&&F[plain]&&!F[plain].hidden){ cands=[F[plain]].concat(cands.filter(x=>x.id!==plain)); } if(!cands.length&&pr.text.includes(' ')){ const ws=pr.text.split(' '); cands=foodSearch(ws.slice(-2).join(' '),true)||[]; if(!cands.length) cands=foodSearch(ws[ws.length-1],true); }
+    const ok=cands.filter(x=>allowed(x)&&cuOk(x)); const list=(ok.length?ok.concat(cands.filter(x=>!ok.includes(x))):cands).slice(0,6);
+    if(!list.length){ out.push({ph, kind:'none', text:pr.text}); continue; }
+    const it=list[0]; const {q,note}=nlQty(it,pr); out.push({ph, kind:'food', pr, cands:list, pick:0, q:+Math.max(0.1,Math.min(6,q)).toFixed(3), note}); }
+  return out; }
+const NL={rows:[], text:''};
+function nlRender(){ const o=document.getElementById('opts'); const plan=dayPlan(); const mi=sheet.mi;
+  const tgt=`<div class="nlwrap"><textarea id="nlIn" class="nlin" rows="2" placeholder="e.g. 3 eggs, 2 rotis, dal 1 katori, black coffee" autocapitalize="none" autocorrect="off" enterkeyhint="done">${esc(NL.text)}</textarea><div class="nlhint">Separate foods with commas. Amounts work before or after: "100 g chicken", "roti x2", "half plate rice". Say "my usual lunch" for a saved set.</div></div>`;
+  const rows=NL.rows; const sum={k:0,p:0};
+  const body=rows.map((r,i)=>{ if(r.kind==='none') return `<div class="opt nl none"><div><div class="n">“${esc(r.ph)}”</div><div class="m">No match. <button type="button" class="lnk" data-nl="search" data-i="${i}">search for it</button> or <button type="button" class="lnk" data-nl="quick" data-i="${i}">quick add</button></div></div></div>`;
+    if(r.kind==='tpl'){ const tt=tot(r.items); sum.k+=tt.k; sum.p+=tt.p; return `<div class="opt nl"><div><div class="n">☆ ${esc(r.tpl.name)}</div><div class="m">${r.items.map(x=>F[x.id]?F[x.id].n+(x.q!==1?' ×'+x.q:''):'').filter(Boolean).join(', ')} · ${tt.k} kcal · ${tt.p} g protein</div></div><button type="button" class="btn x" data-nl="del" data-i="${i}" aria-label="Remove">×</button></div>`; }
+    const it=r.cands[r.pick]; const k=Math.round(it.k*r.q), p=Math.round(it.p*r.q); sum.k+=k; sum.p+=p; const b=baseOf(it);
+    return `<div class="opt nl"><div class="optmain"><div><div class="n">${esc(it.n)} <small class="nlph">from “${esc(r.ph)}”</small></div><div class="m">${fmtG(it,r.q)||'as listed'} · ${k} kcal · ${p} g protein${r.note?' · <i>'+esc(r.note)+'</i>':''}</div></div><span class="pill ${pill(it.t)}">${it.custom?'my food':it.t==='v'?'veg':it.t==='e'||it.t==='te'?'egg':it.t==='n'||it.t==='tn'?'non-veg':'treat'}</span></div>
+      <div class="nlctl">${b?`<button type="button" class="btn q" data-nl="dec" data-i="${i}">−</button><span class="qty">${fmtG(it,r.q)||r.q+'x'}</span><button type="button" class="btn q" data-nl="inc" data-i="${i}">+</button>`:''}${r.cands.length>1?`<select class="nlsel" data-i="${i}" aria-label="Pick another match">${r.cands.map((c,ci)=>`<option value="${ci}"${ci===r.pick?' selected':''}>${esc(c.n)}${c.g?' · '+esc(c.g):''}</option>`).join('')}</select>`:''}${BUNDLES[it.id]?`<button type="button" class="btn q" data-nl="parts" data-i="${i}">as parts</button>`:''}<button type="button" class="btn x" data-nl="del" data-i="${i}" aria-label="Remove">×</button></div></div>`; }).join('');
+  const n=rows.filter(r=>r.kind!=='none').length;
+  o.innerHTML=tgt+(rows.length?`<div class="chd">What I understood</div>${body}`:'')+(n?`<div class="nlfoot"><span>${sum.k} kcal · ${sum.p} g protein</span><button type="button" class="btn primary" id="nlLog">Log ${n} ${n===1?'item':'items'} to ${esc(plan[mi].name)}</button></div>`:'');
+  const ta=document.getElementById('nlIn'); let t=null; ta.oninput=()=>{ NL.text=ta.value; clearTimeout(t); t=setTimeout(()=>{ NL.rows=nlResolve(NL.text); const pos=ta.selectionStart; nlRender(); const ta2=document.getElementById('nlIn'); ta2.focus(); try{ ta2.setSelectionRange(pos,pos); }catch(e){} },350); };
+  ta.onkeydown=(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); clearTimeout(t); NL.rows=nlResolve(ta.value); NL.text=ta.value; nlRender(); } };
+  o.querySelectorAll('[data-nl]').forEach(el=>el.onclick=(e)=>{ e.stopPropagation(); const i=+el.dataset.i, r=NL.rows[i]; const a=el.dataset.nl;
+    if(a==='del'){ NL.rows.splice(i,1); nlRender(); return; }
+    if(a==='search'){ sheet.cat='all'; document.getElementById('search').value=r.text; renderSheet(); return; }
+    if(a==='quick'){ sheet.cat='custom'; sheet.cname=r.text; renderSheet(); setTimeout(()=>{ const mk=document.getElementById('mk'); if(mk) mk.focus(); },50); return; }
+    if(a==='parts'){ const it=r.cands[r.pick]; const parts=BUNDLES[it.id].map(x=>({id:x.id,q:+(x.q*r.q).toFixed(3)})); NL.rows.splice(i,1,...parts.filter(x=>F[x.id]).map(x=>({ph:r.ph,kind:'food',cands:[F[x.id]],pick:0,q:x.q,note:'part of '+it.n.split(':')[0]}))); nlRender(); return; }
+    const it=r.cands[r.pick]; const b=baseOf(it); const step=b?b.step/b.n:0.5; if(a==='inc') r.q=+Math.min(6,r.q+step).toFixed(3); if(a==='dec') r.q=+Math.max(step,r.q-step).toFixed(3); nlRender(); });
+  o.querySelectorAll('.nlsel').forEach(sel=>sel.onchange=()=>{ const r=NL.rows[+sel.dataset.i]; r.pick=+sel.value; const {q,note}=nlQty(r.cands[r.pick],r.pr); r.q=+Math.max(0.1,Math.min(6,q)).toFixed(3); r.note=note; nlRender(); });
+  const lg=document.getElementById('nlLog'); if(lg) lg.onclick=()=>{ const items=[]; NL.rows.forEach(r=>{ if(r.kind==='tpl') items.push(...r.items); else if(r.kind==='food') items.push({id:r.cands[r.pick].id,q:r.q}); }); if(!items.length) return; plan[mi].items.push(...items); NL.rows=[]; NL.text=''; save(); closeSheet(); render(); toast(`Logged ${items.length} ${items.length===1?'item':'items'} to ${plan[mi].name}`); };
+}
+// v17: bundles. A thali or combo logs as one line, or "as parts" so one part can be dropped or halved. Parts are approximate and add up to about the listed total.
+const BUNDLES={ t_thaliveg:[{id:'c_rice150',q:1},{id:'p_dalveg',q:0.5},{id:'v_mixed',q:1},{id:'v_mixedfry',q:1},{id:'s_curd100',q:1},{id:'s_pickle',q:1},{id:'s_papad',q:1}],
+  t_thalichk:[{id:'c_rice150',q:1},{id:'p_chk120',q:1},{id:'p_dalveg',q:0.5},{id:'v_mixed',q:1},{id:'s_curd100',q:1},{id:'s_pickle',q:1},{id:'s_papad',q:1}],
+  b_pesarattuwhey:[{id:'b_pesarattu',q:1},{id:'p_whey',q:1}], t_idli4:[{id:'c_idli2',q:2},{id:'s_sambar',q:1}], b_idli2:[{id:'c_idli2',q:1},{id:'s_sambar',q:0.75}], k_wheymilk:[{id:'p_whey',q:1},{id:'d_milk200',q:1}] };
+Object.keys(BUNDLES).forEach(k=>{ BUNDLES[k]=BUNDLES[k].filter(x=>F[x.id]); if(BUNDLES[k].length<2) delete BUNDLES[k]; });
+function logParts(mi, bundleId, q){ const plan=dayPlan(); plan[mi].items.push(...BUNDLES[bundleId].map(x=>({id:x.id,q:+(x.q*q).toFixed(3)}))); }
+// favourites
+function favIds(){ const ps=PS(); if(!ps.favs) ps.favs=[]; return ps.favs; }
+function toggleFav(id){ const f=favIds(); const i=f.indexOf(id); if(i>=0) f.splice(i,1); else f.unshift(id); if(f.length>40) f.length=40; save(); }
+// same meal on the most recent earlier day that has it (up to 14 days back), used when yesterday's slot is empty
+function lastMeal(mi){ const ps=PS(); const name=dayPlan()[mi].name; const d=weekDate(S.day); for(let i=1;i<=14;i++){ d.setDate(d.getDate()-1); const key=ymd(d); const k=Object.keys(ps.days).find(x=>x.startsWith(key)); if(!k) continue; const m=ps.days[k].find(mm=>mm.name===name); if(m&&m.items.length) return {items:m.items.filter(x=>F[x.id]), ago:i, label:i===1?'yesterday':'last '+DAYS[(d.getDay()+6)%7]}; } return null; }
+function copyMealTo(mi, who){ const src=dayPlan()[mi]; const sw=S.who; S.who=who; const dst=dayPlan(); const tgt=dst.find(m=>m.name===src.name)||dst[mi]||dst[dst.length-1]; tgt.items.push(...src.items.map(x=>({id:x.id,q:x.q}))); save(); S.who=sw; }
+function moveItem(mi, ii, toMi){ const plan=dayPlan(); if(toMi===mi||!plan[toMi]) return; const [x]=plan[mi].items.splice(ii,1); plan[toMi].items.push(x); openSet().add(toMi); save(); render(); }
 document.getElementById('search').oninput=renderSheet;
 document.getElementById('shClose').onclick=closeSheet;
 document.getElementById('ov').onclick=e=>{ if(e.target.id==='ov') closeSheet(); };

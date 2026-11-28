@@ -84,6 +84,18 @@ STEP 6b - nightly backups
   Download a copy off the server now and then; a backup next to the data
   does not survive a lost hosting account.
 
+STEP 6c - logging fast (v17)
+  Every meal has "+ Add food", "Type it" and "Same as yesterday" (or
+  "Same as last Fri" when yesterday was empty). Type it takes a line like
+  "3 eggs, 2 rotis, dal 1 katori, black coffee"; amounts work before or
+  after the food, in g, ml, cups, bowls or katoris, plates, scoops,
+  pieces; "my usual lunch" logs a saved set. Everything is matched on the
+  phone against the food list; nothing is sent to any service. Tap the
+  heart in the picker to pin a favourite; thalis and combos offer "as
+  parts" so one part can be dropped; the chevron next to Swap moves an
+  item to another meal; "Copy to <name>" copies a meal to the other
+  person; "Quick add" logs calories and protein only.
+
 STEP 7 - on each phone
   iPhone: open the link in Safari -> Share -> Add to Home Screen.
   Android: open in Chrome -> menu -> Add to Home screen / Install app.

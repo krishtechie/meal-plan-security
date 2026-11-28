@@ -970,3 +970,17 @@ body.ro #meals button,body.ro #meals .sugg,body.ro #checkin,body.ro #wtForm,body
 html[data-theme=dark] .opt-card.warnopt span{color:#ffb340}
 .acmsg{padding:0 14px 10px;min-height:0}.acmsg:empty{display:none}
 .aun{font-style:normal;font-size:12px;color:var(--muted);background:var(--card2);border-radius:8px;padding:1px 6px;margin-left:4px}
+
+/* v17 typed logging, favourites, move, bundles */
+.nlwrap{padding:4px 0 8px}.nlin{width:100%;box-sizing:border-box;font:inherit;font-size:16px;line-height:1.35;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);resize:vertical;min-height:58px}
+.nlhint{font-size:12px;color:var(--muted);padding:6px 4px 0;line-height:1.35}
+.opt.nl{flex-direction:column;align-items:stretch;gap:6px}.opt.nl.none .n{color:var(--muted)}.nlph{font-weight:400;color:var(--muted);font-size:12px}
+.nlctl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.nlctl .qty{min-width:60px;font-size:13px;color:var(--muted)}
+.nlsel,.mvsel{font:inherit;font-size:13px;padding:5px 8px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);max-width:170px}
+.mvsel{max-width:96px;padding:4px 4px;font-size:12px}
+.nlfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px 20px;position:sticky;bottom:0;background:var(--bg)}.nlfoot span{font-size:13px;color:var(--muted)}
+.btn.primary{background:var(--acc);color:#fff;border-color:transparent;font-weight:600}
+.lnk{background:none;border:0;padding:0;color:var(--acc);font:inherit;font-size:inherit;text-decoration:underline}
+.optr{display:flex;align-items:center;gap:6px;flex-shrink:0}.favbtn{background:none;border:0;font-size:18px;line-height:1;color:var(--muted);padding:2px 4px}.favbtn.on{color:#ff3b30}
+.partsbtn,.quickbtn{align-self:flex-start;margin:4px 0 2px}
+.btn.add.ty{color:var(--acc)}

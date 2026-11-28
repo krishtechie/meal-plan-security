@@ -49,6 +49,7 @@ Live instance: private. The code is public; the people, targets and data are not
 | 9 | Personal data removed from the public code and reports; served from server config after sign-in | A01 Broken Access Control, A04 Insecure Design | done |
 | 10 | Session tokens: the password is sent once at sign-in and never stored on the device; sessions expire, are listed in the app and can be revoked per device | A07 Identification and Authentication Failures, A02 Cryptographic Failures | done |
 | 11 | security.txt (RFC 9116) with private vulnerability reporting | A05 Security Misconfiguration | done |
+| 12 | Typed food logging parsed on the device; new document fields allow-listed and validated server-side | A03 Injection, A08 Software and Data Integrity | done |
 
 ## Results
 

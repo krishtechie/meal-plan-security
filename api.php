@@ -377,7 +377,7 @@ function validateDoc($d, int $depth = 0): ?string {
   return 'bad type';
 }
 function validateShape(array $d): ?string {
-  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','templates','vegPrev','gen','m3','m4','m5','m6','name','savedAt'];
+  $allowed = ['days','log','weights','customs','wlog','vegDays','eggsVeg','seafood','allVeg','allNonVeg','manual','templates','vegPrev','gen','m3','m4','m5','m6','name','savedAt','favs'];   // v17: favs = favourite food ids
   foreach (array_keys($d) as $k) { if (!in_array($k, $allowed, true) && !preg_match('/^m\d{1,2}$/', (string)$k)) return "unknown field $k"; }
   foreach (($d['weights'] ?? []) as $w) {
     if (!is_array($w) || !isset($w['d'], $w['w'])) return 'bad weight entry';
@@ -395,6 +395,7 @@ function validateShape(array $d): ?string {
       }
     }
   }
+  $fv = $d['favs'] ?? []; if (!is_array($fv) || count($fv) > 60) return 'too many favourites'; foreach ($fv as $f) { if (!is_string($f) || !preg_match('/^[a-z0-9_]{1,40}$/', $f)) return 'bad favourite'; }
   $tp = $d['templates'] ?? [];
   if (!is_array($tp) || count($tp) > 50) return 'too many templates';
   foreach ($tp as $t) {
